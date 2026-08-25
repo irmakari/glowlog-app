@@ -5,9 +5,9 @@ import { useRouter } from 'expo-router';
 import { Screen } from '../../src/components/ui/Screen';
 import { IconButton } from '../../src/components/ui/IconButton';
 import { GlowScoreCard } from '../../src/components/dashboard/GlowScoreCard';
+import { StreakCard } from '../../src/components/dashboard/StreakCard';
 import { RoutineCard } from '../../src/components/routine/RoutineCard';
 import { WaterTracker } from '../../src/components/hydration/WaterTracker';
-import { StreakCard } from '../../src/components/dashboard/StreakCard';
 import { ProductAlertCard } from '../../src/components/dashboard/ProductAlertCard';
 import { useTodayRoutine } from '../../src/features/routines/hooks/useTodayRoutine';
 import { getTimeBasedGreeting } from '../../src/utils/glowScore';
@@ -39,14 +39,6 @@ export default function TodayScreen() {
     });
   }, []);
 
-  const handleAlertAction = () => {
-    Alert.alert(
-      'Mascara Expiration Notice',
-      'Mascara is recommended to be replaced every 3–6 months after opening to maintain fresh eye hygiene.',
-      [{ text: 'Got it ✨', style: 'default' }]
-    );
-  };
-
   return (
     <Screen scrollable padding={Spacing.md}>
       {/* Top Header */}
@@ -73,6 +65,9 @@ export default function TodayScreen() {
         streakDays={streakDays}
       />
 
+      {/* 7-Day Horizontal Streak Strip (Placed above Morning Routine) */}
+      <StreakCard streakDays={streakDays} />
+
       {/* Morning Routine Card */}
       <RoutineCard
         type="morning"
@@ -94,9 +89,6 @@ export default function TodayScreen() {
         onIncrement={incrementWater}
         onDecrement={decrementWater}
       />
-
-      {/* Streak Card */}
-      <StreakCard streakDays={streakDays} />
 
       {/* Product Notice Card */}
       <ProductAlertCard
