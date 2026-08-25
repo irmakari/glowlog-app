@@ -1,98 +1,134 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useMemo } from 'react';
+import { StyleSheet, Text, View, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { Screen } from '../../src/components/ui/Screen';
+import { IconButton } from '../../src/components/ui/IconButton';
+import { GlowScoreCard } from '../../src/components/dashboard/GlowScoreCard';
+import { RoutineCard } from '../../src/components/routine/RoutineCard';
+import { WaterTracker } from '../../src/components/hydration/WaterTracker';
+import { StreakCard } from '../../src/components/dashboard/StreakCard';
+import { ProductAlertCard } from '../../src/components/dashboard/ProductAlertCard';
+import { useTodayRoutine } from '../../src/features/routines/hooks/useTodayRoutine';
+import { getTimeBasedGreeting } from '../../src/utils/glowScore';
+import { Typography } from '../../src/constants/typography';
+import { Spacing } from '../../src/constants/spacing';
+import { Colors } from '../../src/constants/colors';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+export default function TodayScreen() {
+  const router = useRouter();
+  const {
+    morningSteps,
+    eveningSteps,
+    hydrationCurrent,
+    hydrationGoal,
+    streakDays,
+    glowScoreBreakdown,
+    toggleStep,
+    incrementWater,
+    decrementWater,
+  } = useTodayRoutine();
 
-export default function HomeScreen() {
+  const { greeting, emoji } = useMemo(() => getTimeBasedGreeting(), []);
+
+  const formattedDate = useMemo(() => {
+    return new Date().toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+    });
+  }, []);
+
+  const handleAlertAction = () => {
+    Alert.alert(
+      'Mascara Expiration Notice',
+      'Mascara is recommended to be replaced every 3–6 months after opening to maintain fresh eye hygiene.',
+      [{ text: 'Got it ✨', style: 'default' }]
+    );
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+    <Screen scrollable padding={Spacing.md}>
+      {/* Top Header */}
+      <View style={styles.headerRow}>
+        <View style={styles.headerTextCol}>
+          <Text style={styles.dateCaption}>{formattedDate}</Text>
+          <Text style={styles.greetingTitle}>
+            {greeting} {emoji}
+          </Text>
+        </View>
+        <IconButton
+          icon={<Ionicons name="person-outline" size={18} color={Colors.text} />}
+          onPress={() => router.push('/(tabs)/profile')}
+          backgroundColor={Colors.white}
+          size={36}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+      </View>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      {/* Hero Glow Score Card */}
+      <GlowScoreCard
+        scoreBreakdown={glowScoreBreakdown}
+        currentHydration={hydrationCurrent}
+        hydrationGoal={hydrationGoal}
+        streakDays={streakDays}
+      />
+
+      {/* Morning Routine Card */}
+      <RoutineCard
+        type="morning"
+        steps={morningSteps}
+        onToggleStep={(id) => toggleStep(id, 'morning')}
+      />
+
+      {/* Evening Routine Card */}
+      <RoutineCard
+        type="evening"
+        steps={eveningSteps}
+        onToggleStep={(id) => toggleStep(id, 'evening')}
+      />
+
+      {/* Hydration Card */}
+      <WaterTracker
+        current={hydrationCurrent}
+        goal={hydrationGoal}
+        onIncrement={incrementWater}
+        onDecrement={decrementWater}
+      />
+
+      {/* Streak Card */}
+      <StreakCard streakDays={streakDays} />
+
+      {/* Product Notice Card */}
+      <ProductAlertCard
+        title="Shelf check 🧴"
+        message="Check opened product dates on your Shelf periodically."
+        actionText="View Shelf"
+        onAction={() => router.push('/(tabs)/shelf')}
+      />
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'space-between',
+    marginTop: Spacing.xs,
+    marginBottom: Spacing.xs,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  headerTextCol: {
+    flex: 1,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  dateCaption: {
+    ...Typography.caption,
+    fontSize: 12,
+    color: Colors.textSecondary,
+  },
+  greetingTitle: {
+    ...Typography.h1,
+    fontSize: 24,
+    lineHeight: 28,
+    marginTop: 1,
   },
 });
