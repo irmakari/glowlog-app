@@ -24,7 +24,7 @@ export const GlowScoreCard: React.FC<GlowScoreCardProps> = ({
       <Text style={styles.heroTitle}>Today's Glow ✨</Text>
 
       <View style={styles.ringWrapper}>
-        <GlowRing scoreBreakdown={scoreBreakdown} size={150} />
+        <GlowRing scoreBreakdown={scoreBreakdown} size={170} />
       </View>
 
       {/* Floating Pill Action Badges (Reference UI Style) */}
@@ -55,14 +55,16 @@ const styles = StyleSheet.create({
   heroContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: Spacing.md,
-    marginBottom: Spacing.sm,
+    paddingVertical: Spacing.sm,
+    marginBottom: Spacing.xs,
   },
   heroTitle: {
     ...Typography.h3,
     fontSize: 16,
+    lineHeight: 24,
+    paddingVertical: 4,
     color: Colors.textSecondary,
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.xs,
     letterSpacing: 0.2,
   },
   ringWrapper: {
@@ -92,5 +94,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     color: Colors.text,
+    fontFamily: 'PlusJakartaSans_700Bold',
   },
 });
