@@ -55,9 +55,18 @@ export const WaterTracker: React.FC<WaterTrackerProps> = ({
 
   return (
     <GlowCard variant="softBlue" padding={16} style={styles.card}>
-      {/* Top Header */}
+      {/* Top Header matching RoutineCard style system */}
       <View style={styles.header}>
-        <Text style={styles.caption}>Water today</Text>
+        <View style={styles.titleRow}>
+          <View style={styles.iconCircle}>
+            <Ionicons name="water" size={16} color={Colors.text} />
+          </View>
+          <View style={styles.titleTextCol}>
+            <Text style={Typography.h3}>Hydration</Text>
+            <Text style={styles.caption}>Water today</Text>
+          </View>
+        </View>
+
         <Text style={styles.headline}>{current} of {goal} glasses</Text>
         <Text style={styles.subtext}>
           {isGoalReached
@@ -120,17 +129,35 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   header: {
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.xs,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  iconCircle: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: Colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Spacing.sm + 2,
+  },
+  titleTextCol: {
+    flex: 1,
   },
   caption: {
     ...Typography.caption,
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.textSecondary,
+    marginTop: 1,
   },
   headline: {
     ...Typography.h1,
-    fontSize: 26,
-    lineHeight: 30,
+    fontSize: 24,
+    lineHeight: 28,
     marginTop: 2,
     marginBottom: 4,
   },
