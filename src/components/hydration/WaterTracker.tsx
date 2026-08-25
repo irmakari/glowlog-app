@@ -14,7 +14,7 @@ import { Spacing } from '../../constants/spacing';
 
 interface WaterTrackerProps {
   current: number;
-  goal: number;
+  goal?: number;
   onIncrement: () => void;
   onDecrement: () => void;
 }
@@ -25,13 +25,13 @@ export const WaterTracker: React.FC<WaterTrackerProps> = ({
   onIncrement,
   onDecrement,
 }) => {
-  const buttonScale = useSharedValue(1);
+  const scaleVal = useSharedValue(1);
 
   const handleAdd = () => {
     if (current < goal) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      buttonScale.value = withSpring(0.94, {}, () => {
-        buttonScale.value = withSpring(1);
+      scaleVal.value = withSpring(0.92, {}, () => {
+        scaleVal.value = withSpring(1);
       });
       onIncrement();
     }
@@ -44,38 +44,30 @@ export const WaterTracker: React.FC<WaterTrackerProps> = ({
     }
   };
 
-  const buttonAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: buttonScale.value }],
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scaleVal.value }],
   }));
+
+  const remaining = Math.max(0, goal - current);
+  const isGoalReached = current >= goal;
 
   const indicators = Array.from({ length: goal }, (_, i) => i < current);
 
   return (
-    <GlowCard variant="softBlue" padding={12} style={styles.card}>
+    <GlowCard variant="softBlue" padding={16} style={styles.card}>
+      {/* Top Header */}
       <View style={styles.header}>
-        <View style={styles.titleRow}>
-          <View style={styles.iconCircle}>
-            <Ionicons name="water" size={16} color={Colors.text} />
-          </View>
-          <View>
-            <Text style={Typography.h3}>Hydration</Text>
-            <Text style={styles.goalText}>{current} of {goal} glasses</Text>
-          </View>
-        </View>
-
-        {current > 0 && (
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={handleRemove}
-            style={styles.minusButton}
-          >
-            <Ionicons name="remove" size={16} color={Colors.text} />
-          </TouchableOpacity>
-        )}
+        <Text style={styles.caption}>Water today</Text>
+        <Text style={styles.headline}>{current} of {goal} glasses</Text>
+        <Text style={styles.subtext}>
+          {isGoalReached
+            ? `Goal reached! You've drunk ${current}/${goal} glasses of water today. You are glowing 💧✨`
+            : `You drank ${current}/${goal} glasses of water. Keep going, only ${remaining} ${remaining === 1 ? 'glass' : 'glasses'} left for today.`}
+        </Text>
       </View>
 
-      {/* Single-row 8-droplet grid */}
-      <View style={styles.indicatorRow}>
+      {/* Interactive Water Droplets & Plus Buttons Grid */}
+      <Animated.View style={[styles.grid, animatedStyle]}>
         {indicators.map((filled, index) => (
           <TouchableOpacity
             key={index}
@@ -85,126 +77,131 @@ export const WaterTracker: React.FC<WaterTrackerProps> = ({
               else handleAdd();
             }}
             style={[
-              styles.droplet,
-              filled ? styles.dropletFilled : styles.dropletEmpty,
+              styles.dropletCell,
+              filled ? styles.cellFilled : styles.cellEmptyPlus,
             ]}
           >
-            <Ionicons
-              name="water"
-              size={13}
-              color={filled ? Colors.white : Colors.textMuted}
-            />
+            {filled ? (
+              <Ionicons name="water" size={18} color={Colors.white} />
+            ) : (
+              <Ionicons name="add" size={18} color={Colors.text} />
+            )}
           </TouchableOpacity>
         ))}
-      </View>
-
-      {/* Compact Action Button */}
-      <Animated.View style={buttonAnimatedStyle}>
-        <TouchableOpacity
-          activeOpacity={0.85}
-          onPress={handleAdd}
-          disabled={current >= goal}
-          style={[
-            styles.addButton,
-            current >= goal && styles.addButtonDisabled,
-          ]}
-        >
-          <Ionicons
-            name="add-circle"
-            size={16}
-            color={current >= goal ? Colors.textMuted : Colors.white}
-          />
-          <Text
-            style={[
-              styles.addButtonText,
-              current >= goal && styles.addButtonTextDisabled,
-            ]}
-          >
-            {current >= goal ? 'Goal reached ✨' : '+ Add a glass'}
-          </Text>
-        </TouchableOpacity>
       </Animated.View>
+
+      {/* Target Goal Info Card (Pinterest Style) */}
+      <View style={styles.targetGoalCard}>
+        <View style={styles.targetTextCol}>
+          <Text style={styles.targetTitle}>Daily goal: {goal} glasses</Text>
+          <View style={styles.targetStatsRow}>
+            <View>
+              <Text style={styles.statValue}>1.8 l/d</Text>
+              <Text style={styles.statLabel}>AVERAGE</Text>
+            </View>
+            <View>
+              <Text style={styles.statValue}>2.0 l/d</Text>
+              <Text style={styles.statLabel}>TARGET</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Decorative Water Droplet */}
+        <View style={styles.decorIconBox}>
+          <Ionicons name="water" size={32} color="rgba(33, 91, 166, 0.25)" />
+        </View>
+      </View>
     </GlowCard>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    marginVertical: Spacing.xs,
-    flex: 1,
+    marginVertical: 10,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  iconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: Colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: Spacing.sm + 2,
-  },
-  goalText: {
+  caption: {
     ...Typography.caption,
-    fontSize: 11,
-    marginTop: 1,
+    fontSize: 12,
     color: Colors.textSecondary,
   },
-  minusButton: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: Colors.white,
+  headline: {
+    ...Typography.h1,
+    fontSize: 26,
+    lineHeight: 30,
+    marginTop: 2,
+    marginBottom: 4,
+  },
+  subtext: {
+    ...Typography.body,
+    fontSize: 12,
+    color: Colors.textSecondary,
+    lineHeight: 16,
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginVertical: Spacing.md,
+    justifyContent: 'flex-start',
+  },
+  dropletCell: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  indicatorRow: {
+  cellFilled: {
+    backgroundColor: '#6BA4E8',
+    shadowColor: '#4A7BB8',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  cellEmptyPlus: {
+    backgroundColor: 'rgba(255, 255, 255, 0.75)',
+    borderWidth: 1,
+    borderColor: 'rgba(107, 164, 232, 0.3)',
+  },
+  targetGoalCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginVertical: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.65)',
+    borderRadius: 18,
+    padding: Spacing.md,
+    marginTop: 4,
   },
-  droplet: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
+  targetTextCol: {
+    flex: 1,
   },
-  dropletFilled: {
-    backgroundColor: Colors.text,
+  targetTitle: {
+    ...Typography.bodyBold,
+    fontSize: 15,
+    color: Colors.text,
+    marginBottom: 6,
   },
-  dropletEmpty: {
-    backgroundColor: Colors.white,
-  },
-  addButton: {
+  targetStatsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.text,
-    paddingVertical: 8,
-    paddingHorizontal: Spacing.md,
-    borderRadius: Spacing.radiusPill,
-    marginTop: 6,
+    gap: Spacing.lg,
   },
-  addButtonDisabled: {
-    backgroundColor: Colors.mutedGray,
-  },
-  addButtonText: {
-    ...Typography.button,
+  statValue: {
+    ...Typography.bodyBold,
     fontSize: 13,
-    color: Colors.white,
-    marginLeft: 4,
+    color: Colors.text,
   },
-  addButtonTextDisabled: {
-    color: Colors.textMuted,
+  statLabel: {
+    ...Typography.caption,
+    fontSize: 9,
+    fontWeight: '700',
+    color: Colors.textSecondary,
+    letterSpacing: 0.5,
+  },
+  decorIconBox: {
+    marginLeft: Spacing.md,
   },
 });
