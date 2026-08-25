@@ -1,0 +1,85 @@
+import { Product } from '../../products/types/product.types';
+
+export const MOCK_PRODUCTS: Record<string, Product> = {
+  productA: {
+    id: 'mock-p-1',
+    name: 'Foaming Facial Cleanser',
+    brand: 'CeraVe',
+    category: 'cleanser',
+    openedAt: new Date().toISOString().split('T')[0],
+    paoMonths: 12,
+    imageUri: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=200',
+    notes: 'Gentle morning cleanser.',
+    archived: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  productB: {
+    id: 'mock-p-2',
+    name: 'Niacinamide 10% + Zinc 1%',
+    brand: 'The Ordinary',
+    category: 'serum',
+    openedAt: '2026-07-26',
+    paoMonths: 6,
+    notes: 'Blemish formula.',
+    archived: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  productC: {
+    id: 'mock-p-3',
+    name: 'Relief Sun : Rice + Probiotics SPF50+ PA++++ Extra Hydrating Sunscreen',
+    brand: 'Beauty of Joseon',
+    category: 'sunscreen',
+    openedAt: '2026-08-01',
+    paoMonths: 12,
+    archived: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  productD: {
+    id: 'mock-p-4',
+    name: 'Cicaplast Baume B5+ Ultra-Nourishing Soothing Balm',
+    brand: 'La Roche-Posay',
+    category: 'moisturizer',
+    openedAt: '2025-09-01', // PAO expired/approaching limit
+    paoMonths: 6,
+    archived: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  productE: {
+    id: 'mock-p-5',
+    name: 'C-Glow 15% Vitamin C Serum',
+    brand: 'Geek & Gorgeous',
+    category: 'serum',
+    openedAt: '2026-05-15',
+    paoMonths: 3,
+    archived: true, // Archived
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  productF: {
+    id: 'mock-p-6',
+    name: 'BHA Blackhead Power Liquid',
+    brand: 'COSRX',
+    category: 'exfoliant',
+    paoMonths: 12, // Never opened/used
+    archived: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  productG: {
+    id: 'mock-p-7',
+    name: 'Daily Moisturizing Lotion for Normal to Dry Skin',
+    brand: 'CeraVe',
+    category: 'moisturizer',
+    openedAt: '2026-08-10',
+    paoMonths: 12,
+    archived: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+};
+
+export const MOCK_PRODUCT_LIST: Product[] = Object.values(MOCK_PRODUCTS);
