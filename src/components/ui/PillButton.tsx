@@ -22,6 +22,7 @@ interface PillButtonProps {
   onPress: () => void;
   variant?: ButtonVariant;
   pastelColor?: ColorVariant;
+  customColor?: string;
   size?: ButtonSize;
   disabled?: boolean;
   loading?: boolean;
@@ -36,6 +37,7 @@ export const PillButton: React.FC<PillButtonProps> = ({
   onPress,
   variant = 'primary',
   pastelColor = 'pink',
+  customColor,
   size = 'md',
   disabled = false,
   loading = false,
@@ -56,11 +58,11 @@ export const PillButton: React.FC<PillButtonProps> = ({
     let borderWidth = 0;
 
     if (variant === 'secondary') {
-      bg = CARD_COLORS[pastelColor] || Colors.pink;
+      bg = customColor || CARD_COLORS[pastelColor] || Colors.pink;
     } else if (variant === 'outline') {
       bg = 'transparent';
       border = Colors.text;
-      borderWidth = 2;
+      borderWidth = 1.5;
     } else if (variant === 'ghost') {
       bg = 'transparent';
     }

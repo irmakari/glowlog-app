@@ -1,7 +1,7 @@
-import React from 'react';
-import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { Tabs } from 'expo-router';
+import React from 'react';
 import { Platform, StyleSheet } from 'react-native';
 import { Colors } from '../../src/constants/colors';
 import { Spacing } from '../../src/constants/spacing';

@@ -177,13 +177,13 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ id }) 
         </GlowCard>
       ) : null}
 
-      {/* Action Buttons */}
+      {/* Action Buttons with Dynamic Category Color Theme */}
       <View style={styles.actionRow}>
         <PillButton
           title="Edit Product"
           onPress={handleEdit}
           variant="secondary"
-          pastelColor="pink"
+          customColor={categoryInfo.color}
           size="md"
           style={styles.buttonFlex}
         />
