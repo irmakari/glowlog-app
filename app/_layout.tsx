@@ -88,7 +88,13 @@ export default function RootLayout() {
         />
         <Stack.Screen
           name="day/[date]"
-          options={{ presentation: 'modal', title: 'Daily Summary' }}
+          options={{
+            presentation: 'formSheet',
+            sheetAllowedDetents: [0.65, 0.9],
+            sheetGrabberVisible: true,
+            sheetCornerRadius: 24,
+            title: 'Daily Summary',
+          }}
         />
         <Stack.Screen
           name="dev/components"

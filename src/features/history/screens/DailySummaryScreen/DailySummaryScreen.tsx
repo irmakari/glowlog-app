@@ -44,20 +44,25 @@ export const DailySummaryScreen: React.FC<DailySummaryScreenProps> = ({ date }) 
   const eveningCompleted = summary.eveningSteps.filter((s) => s.completed).length;
 
   return (
-    <Screen scrollable padding={16}>
+    <Screen scrollable padding={14}>
+      {/* Top Drag Handle / Grabber Bar */}
+      <View style={styles.grabberContainer}>
+        <View style={styles.grabberBar} />
+      </View>
+
       {/* Header */}
       <View style={styles.headerNav}>
         <Text style={styles.title}>{summary.formattedDate}</Text>
         <IconButton
-          icon={<Ionicons name="close" size={20} color={Colors.text} />}
+          icon={<Ionicons name="close" size={18} color={Colors.text} />}
           onPress={() => router.back()}
           backgroundColor={Colors.white}
-          size={36}
+          size={32}
         />
       </View>
 
       {/* Morning Routine Card */}
-      <GlowCard variant="pink" padding={14} style={styles.card}>
+      <GlowCard variant="pink" padding={12} style={styles.card}>
         <View style={styles.sectionTitleRow}>
           <Text style={styles.sectionTitle}>Morning Routine ☀️</Text>
           <Text style={styles.countBadge}>
@@ -78,7 +83,7 @@ export const DailySummaryScreen: React.FC<DailySummaryScreenProps> = ({ date }) 
             >
               <Ionicons
                 name={step.completed ? 'checkmark-circle' : 'ellipse-outline'}
-                size={18}
+                size={16}
                 color={step.completed ? Colors.text : Colors.textMuted}
                 style={styles.stepIcon}
               />
@@ -94,7 +99,7 @@ export const DailySummaryScreen: React.FC<DailySummaryScreenProps> = ({ date }) 
       </GlowCard>
 
       {/* Evening Routine Card */}
-      <GlowCard variant="softLilac" padding={14} style={styles.card}>
+      <GlowCard variant="softLilac" padding={12} style={styles.card}>
         <View style={styles.sectionTitleRow}>
           <Text style={styles.sectionTitle}>Evening Routine 🌙</Text>
           <Text style={styles.countBadge}>
@@ -115,7 +120,7 @@ export const DailySummaryScreen: React.FC<DailySummaryScreenProps> = ({ date }) 
             >
               <Ionicons
                 name={step.completed ? 'checkmark-circle' : 'ellipse-outline'}
-                size={18}
+                size={16}
                 color={step.completed ? Colors.text : Colors.textMuted}
                 style={styles.stepIcon}
               />
@@ -131,7 +136,7 @@ export const DailySummaryScreen: React.FC<DailySummaryScreenProps> = ({ date }) 
       </GlowCard>
 
       {/* Hydration Card */}
-      <GlowCard variant="softBlue" padding={14} style={styles.card}>
+      <GlowCard variant="softBlue" padding={12} style={styles.card}>
         <View style={styles.sectionTitleRow}>
           <Text style={styles.sectionTitle}>Hydration 💧</Text>
           <Text style={styles.countBadge}>
