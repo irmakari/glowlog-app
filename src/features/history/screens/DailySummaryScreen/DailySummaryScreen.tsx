@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '../../../../components/ui/Screen';
 import { IconButton } from '../../../../components/ui/IconButton';
+import { PillButton } from '../../../../components/ui/PillButton';
 import { GlowCard } from '../../../../components/ui/GlowCard';
 import { ProductUsageList } from '../../components/ProductUsageList';
 import { useDailySummary } from '../../hooks/useDailySummary';
+import { getLocalDateString } from '../../../routines/utils/routineDate.utils';
 import { DailySummaryScreenProps } from './DailySummaryScreen.types';
 import { styles } from './DailySummaryScreen.styles';
 import { Colors } from '../../../../constants/colors';
@@ -14,6 +16,12 @@ import { Colors } from '../../../../constants/colors';
 export const DailySummaryScreen: React.FC<DailySummaryScreenProps> = ({ date }) => {
   const router = useRouter();
   const { summary, loading, toggleStep, incrementWater, decrementWater } = useDailySummary(date);
+
+  const todayKey = useMemo(() => getLocalDateString(), []);
+  const isToday = date === todayKey;
+
+  // For today, editing is active by default. For past days, editing is toggled via "Edit Day" button.
+  const [isEditing, setIsEditing] = useState<boolean>(isToday);
 
   if (loading && !summary) {
     return (
@@ -52,14 +60,45 @@ export const DailySummaryScreen: React.FC<DailySummaryScreenProps> = ({ date }) 
 
       {/* Header */}
       <View style={styles.headerNav}>
-        <Text style={styles.title}>{summary.formattedDate}</Text>
-        <IconButton
-          icon={<Ionicons name="close" size={18} color={Colors.text} />}
-          onPress={() => router.back()}
-          backgroundColor={Colors.white}
-          size={32}
-        />
+        <View style={localStyles.headerTextWrapper}>
+          <Text style={styles.title}>{summary.formattedDate}</Text>
+          {isToday && (
+            <View style={localStyles.todayBadge}>
+              <Text style={localStyles.todayBadgeText}>Today</Text>
+            </View>
+          )}
+        </View>
+
+        <View style={localStyles.headerActions}>
+          {!isToday && (
+            <PillButton
+              title={isEditing ? 'Done' : 'Edit Day'}
+              onPress={() => setIsEditing((prev) => !prev)}
+              variant={isEditing ? 'primary' : 'outline'}
+              size="sm"
+              style={{ marginRight: 6 }}
+            />
+          )}
+          <IconButton
+            icon={<Ionicons name="close" size={18} color={Colors.text} />}
+            onPress={() => router.back()}
+            backgroundColor={Colors.white}
+            size={32}
+          />
+        </View>
       </View>
+
+      {/* Past Day Edit Notice */}
+      {!isToday && isEditing && (
+        <GlowCard variant="butterYellow" padding={10} style={localStyles.noticeCard}>
+          <View style={localStyles.rowCenter}>
+            <Ionicons name="create-outline" size={16} color={Colors.text} style={{ marginRight: 6 }} />
+            <Text style={localStyles.noticeText}>
+              Editing log for {summary.formattedDate}. Tap steps to check/uncheck.
+            </Text>
+          </View>
+        </GlowCard>
+      )}
 
       {/* Morning Routine Card */}
       <GlowCard variant="pink" padding={12} style={styles.card}>
@@ -79,8 +118,9 @@ export const DailySummaryScreen: React.FC<DailySummaryScreenProps> = ({ date }) 
           summary.morningSteps.map((step, index) => (
             <TouchableOpacity
               key={step.id}
-              activeOpacity={0.7}
-              onPress={() => toggleStep(step.id, step.productId)}
+              activeOpacity={isEditing ? 0.7 : 1}
+              disabled={!isEditing}
+              onPress={() => isEditing && toggleStep(step.id, step.productId)}
               style={[
                 styles.stepRow,
                 index === summary.morningSteps.length - 1 && { borderBottomWidth: 0 },
@@ -100,6 +140,13 @@ export const DailySummaryScreen: React.FC<DailySummaryScreenProps> = ({ date }) 
                   <Text style={styles.productSubtext}>{step.productName}</Text>
                 ) : null}
               </View>
+              {isEditing && (
+                <Ionicons
+                  name={step.completed ? 'checkbox' : 'square-outline'}
+                  size={16}
+                  color={Colors.textSecondary}
+                />
+              )}
             </TouchableOpacity>
           ))
         )}
@@ -123,8 +170,9 @@ export const DailySummaryScreen: React.FC<DailySummaryScreenProps> = ({ date }) 
           summary.eveningSteps.map((step, index) => (
             <TouchableOpacity
               key={step.id}
-              activeOpacity={0.7}
-              onPress={() => toggleStep(step.id, step.productId)}
+              activeOpacity={isEditing ? 0.7 : 1}
+              disabled={!isEditing}
+              onPress={() => isEditing && toggleStep(step.id, step.productId)}
               style={[
                 styles.stepRow,
                 index === summary.eveningSteps.length - 1 && { borderBottomWidth: 0 },
@@ -144,6 +192,13 @@ export const DailySummaryScreen: React.FC<DailySummaryScreenProps> = ({ date }) 
                   <Text style={styles.productSubtext}>{step.productName}</Text>
                 ) : null}
               </View>
+              {isEditing && (
+                <Ionicons
+                  name={step.completed ? 'checkbox' : 'square-outline'}
+                  size={16}
+                  color={Colors.textSecondary}
+                />
+              )}
             </TouchableOpacity>
           ))
         )}
@@ -157,23 +212,29 @@ export const DailySummaryScreen: React.FC<DailySummaryScreenProps> = ({ date }) 
             <Ionicons name="water" size={16} color="#5294E2" style={{ marginLeft: 6 }} />
           </View>
 
-          <View style={localStyles.waterControls}>
-            <IconButton
-              icon={<Ionicons name="remove" size={14} color={Colors.text} />}
-              onPress={decrementWater}
-              backgroundColor={Colors.white}
-              size={28}
-            />
+          {isEditing ? (
+            <View style={localStyles.waterControls}>
+              <IconButton
+                icon={<Ionicons name="remove" size={14} color={Colors.text} />}
+                onPress={decrementWater}
+                backgroundColor={Colors.white}
+                size={28}
+              />
+              <Text style={styles.countBadge}>
+                {summary.hydration} / {summary.hydrationGoal}
+              </Text>
+              <IconButton
+                icon={<Ionicons name="add" size={14} color={Colors.text} />}
+                onPress={incrementWater}
+                backgroundColor={Colors.white}
+                size={28}
+              />
+            </View>
+          ) : (
             <Text style={styles.countBadge}>
-              {summary.hydration} / {summary.hydrationGoal}
+              {summary.hydration} of {summary.hydrationGoal} glasses
             </Text>
-            <IconButton
-              icon={<Ionicons name="add" size={14} color={Colors.text} />}
-              onPress={incrementWater}
-              backgroundColor={Colors.white}
-              size={28}
-            />
-          </View>
+          )}
         </View>
       </GlowCard>
 
@@ -184,6 +245,40 @@ export const DailySummaryScreen: React.FC<DailySummaryScreenProps> = ({ date }) 
 };
 
 const localStyles = {
+  headerTextWrapper: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    flex: 1,
+    gap: 8,
+  },
+  todayBadge: {
+    backgroundColor: Colors.sageGreen,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+  todayBadgeText: {
+    fontSize: 10,
+    fontWeight: '700' as const,
+    color: Colors.text,
+  },
+  headerActions: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+  },
+  noticeCard: {
+    marginBottom: 8,
+  },
+  rowCenter: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+  },
+  noticeText: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: Colors.text,
+    flex: 1,
+  },
   waterControls: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
