@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, Platform } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import Animated, {
   useAnimatedStyle,
@@ -188,22 +188,34 @@ const styles = StyleSheet.create({
     position: 'absolute',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: Colors.text,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.12,
-    shadowRadius: 3,
-    elevation: 2,
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.text,
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.12,
+        shadowRadius: 3,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   innerCircle: {
     position: 'absolute',
     backgroundColor: Colors.white,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: Colors.text,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 3,
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.text,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.06,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
   },
   scoreText: {
     fontWeight: '800',

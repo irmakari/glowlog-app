@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import { Colors } from '../../../../constants/colors';
 import { Typography } from '../../../../constants/typography';
 import { Spacing } from '../../../../constants/spacing';
@@ -12,11 +12,17 @@ export const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     borderRadius: Spacing.radiusMd,
     marginVertical: 4,
-    shadowColor: Colors.text,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.03,
-    shadowRadius: 3,
-    elevation: 1,
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.text,
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.03,
+        shadowRadius: 3,
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
   },
   reorderCol: {
     marginRight: Spacing.sm,

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { GlowCard } from '../ui/GlowCard';
 import { Colors } from '../../constants/colors';
@@ -134,11 +134,17 @@ const styles = StyleSheet.create({
   },
   circleActive: {
     backgroundColor: Colors.white,
-    shadowColor: '#E86339',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.12,
-    shadowRadius: 3,
-    elevation: 1,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#E86339',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.12,
+        shadowRadius: 3,
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
   },
   circleInactive: {
     backgroundColor: 'transparent',

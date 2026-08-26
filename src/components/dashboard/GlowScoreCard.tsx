@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { GlowRing } from './GlowRing';
 import { Colors } from '../../constants/colors';
@@ -93,11 +93,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: Spacing.radiusPill,
-    shadowColor: Colors.text,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.text,
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.04,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
   },
   pillText: {
     fontSize: 12,

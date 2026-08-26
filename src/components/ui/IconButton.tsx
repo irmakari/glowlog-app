@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, TouchableOpacity, ViewStyle, StyleProp } from 'react-native';
+import { StyleSheet, TouchableOpacity, ViewStyle, StyleProp, Platform } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '../../constants/colors';
 
@@ -47,10 +47,16 @@ const styles = StyleSheet.create({
   button: {
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: Colors.text,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.text,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
   },
 });

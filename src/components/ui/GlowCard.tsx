@@ -5,6 +5,7 @@ import {
   View,
   ViewStyle,
   StyleProp,
+  Platform,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { Colors, ColorVariant, CARD_COLORS } from '../../constants/colors';
@@ -66,10 +67,16 @@ export const GlowCard: React.FC<GlowCardProps> = ({
 const styles = StyleSheet.create({
   card: {
     marginVertical: Spacing.sm,
-    shadowColor: Colors.text,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 10,
-    elevation: 2,
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.text,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.04,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
 });
