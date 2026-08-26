@@ -1,4 +1,4 @@
-export const Colors = {
+export const LightColors = {
   background: '#F6F1E7',
   text: '#151515',
   textSecondary: '#6E6B65',
@@ -30,6 +30,40 @@ export const Colors = {
   alert: '#E87D7D',
 };
 
+export const DarkColors: typeof LightColors = {
+  background: '#121214',
+  text: '#F5F5F7',
+  textSecondary: '#A1A1A6',
+  textMuted: '#6E6E73',
+
+  // Dark Pastel Variants
+  pink: '#4E2D3E',
+  softBlue: '#2B394A',
+  butterYellow: '#4A4022',
+  sageGreen: '#2D3B26',
+  softLilac: '#3D304E',
+  softPeach: '#4C3529',
+  mutedGray: '#242428',
+  white: '#1C1C1E',
+  cardCream: '#222226',
+
+  // UI state colors
+  border: '#2C2C30',
+  borderDark: '#F5F5F7',
+  darkCard: '#2C2C30',
+  tint: '#F5F5F7',
+  icon: '#F5F5F7',
+  tabIconDefault: '#6E6E73',
+  tabIconSelected: '#F5F5F7',
+
+  // Status colors
+  success: '#98C98B',
+  warning: '#F5C65D',
+  alert: '#E87D7D',
+};
+
+export const Colors = LightColors;
+
 export type ColorVariant =
   | 'cream'
   | 'pink'
@@ -51,4 +85,16 @@ export const CARD_COLORS: Record<ColorVariant, string> = {
   softPeach: Colors.softPeach,
   white: Colors.white,
   mutedGray: Colors.mutedGray,
+};
+
+export const DARK_CARD_COLORS: Record<ColorVariant, string> = {
+  cream: DarkColors.cardCream,
+  pink: DarkColors.pink,
+  softBlue: DarkColors.softBlue,
+  butterYellow: DarkColors.butterYellow,
+  sageGreen: DarkColors.sageGreen,
+  softLilac: DarkColors.softLilac,
+  softPeach: DarkColors.softPeach,
+  white: DarkColors.white,
+  mutedGray: DarkColors.mutedGray,
 };

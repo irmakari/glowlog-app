@@ -13,6 +13,8 @@ import {
 import { initDatabase } from '../src/services/database/db';
 import { Colors } from '../src/constants/colors';
 
+import { ThemeProvider } from '../src/context/ThemeContext';
+
 // Prevent splash screen auto hide until database and fonts ready
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -57,8 +59,8 @@ export default function RootLayout() {
   }
 
   return (
-    <>
-      <StatusBar style="dark" />
+    <ThemeProvider>
+      <StatusBar style="auto" />
       <Stack
         screenOptions={{
           headerShown: false,
@@ -101,7 +103,7 @@ export default function RootLayout() {
           options={{ presentation: 'modal', title: 'Component Gallery' }}
         />
       </Stack>
-    </>
+    </ThemeProvider>
   );
 }
 
