@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { routineService } from '../services/routineService';
 import { waterService } from '../../history/services/waterService';
+import { settingsService } from '../../../services/settingsService';
 import { TodayRoutineStepState } from '../types/routine.types';
 import { getLocalDateString, calculateStreakFromLogs } from '../utils/routineDate.utils';
 import { calculateGlowScore } from '../../../utils/glowScore';
@@ -11,7 +12,7 @@ export function useTodayRoutine() {
   const [morningSteps, setMorningSteps] = useState<TodayRoutineStepState[]>([]);
   const [eveningSteps, setEveningSteps] = useState<TodayRoutineStepState[]>([]);
   const [hydrationCurrent, setHydrationCurrent] = useState<number>(0);
-  const [hydrationGoal] = useState<number>(8);
+  const [hydrationGoal, setHydrationGoal] = useState<number>(8);
   const [streakDays, setStreakDays] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,13 +24,14 @@ export function useTodayRoutine() {
       setLoading(true);
       setError(null);
 
-      // 1. Fetch morning & evening routine steps, completion logs, water intake, & streak from SQLite
-      const [mSteps, eSteps, todayLogs, waterGlasses, completedDates] = await Promise.all([
+      // Fetch routine steps, completion logs, water intake, settings & streak from SQLite
+      const [mSteps, eSteps, todayLogs, waterGlasses, completedDates, appSettings] = await Promise.all([
         routineService.getRoutineStepsWithProducts('morning'),
         routineService.getRoutineStepsWithProducts('evening'),
         routineService.getRoutineLogsForDate(todayDateStr),
         waterService.getWaterForDate(todayDateStr),
         routineService.getAllCompletedDates(),
+        settingsService.getSettings(),
       ]);
 
       const completedStepIds = new Set(todayLogs.map((l) => l.routineStepId));
@@ -47,6 +49,7 @@ export function useTodayRoutine() {
       setMorningSteps(morningState);
       setEveningSteps(eveningState);
       setHydrationCurrent(waterGlasses);
+      setHydrationGoal(appSettings.hydrationGoal);
 
       // 2. Calculate streak from real database logs
       const streak = calculateStreakFromLogs(completedDates, todayDateStr);
