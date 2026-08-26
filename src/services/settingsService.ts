@@ -1,8 +1,12 @@
 import { getDb } from './database/db';
 import { AppSettings } from '../types';
 
+export type SkinType = 'Combination' | 'Oily' | 'Dry' | 'Sensitive' | 'Normal';
+
 export interface ExtendedAppSettings extends AppSettings {
   themeMode: 'light' | 'dark' | 'system';
+  userName?: string;
+  skinType?: SkinType;
 }
 
 export const DEFAULT_SETTINGS: ExtendedAppSettings = {
@@ -13,6 +17,8 @@ export const DEFAULT_SETTINGS: ExtendedAppSettings = {
   eveningReminderEnabled: false,
   eveningReminderTime: '21:00',
   themeMode: 'system',
+  userName: '',
+  skinType: 'Combination',
 };
 
 export const settingsService = {
@@ -34,6 +40,8 @@ export const settingsService = {
     const eveningReminderEnabled = settingsMap.get('eveningReminderEnabled') === 'true';
     const eveningReminderTime = settingsMap.get('eveningReminderTime') || DEFAULT_SETTINGS.eveningReminderTime;
     const themeMode = (settingsMap.get('themeMode') as ExtendedAppSettings['themeMode']) || DEFAULT_SETTINGS.themeMode;
+    const userName = settingsMap.get('userName') || DEFAULT_SETTINGS.userName;
+    const skinType = (settingsMap.get('skinType') as SkinType) || DEFAULT_SETTINGS.skinType;
 
     return {
       hydrationGoal: isNaN(hydrationGoal) || hydrationGoal <= 0 ? 8 : hydrationGoal,
@@ -43,6 +51,8 @@ export const settingsService = {
       eveningReminderEnabled,
       eveningReminderTime,
       themeMode,
+      userName,
+      skinType,
     };
   },
 

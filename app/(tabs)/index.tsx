@@ -22,6 +22,7 @@ export default function TodayScreen() {
     eveningSteps,
     hydrationCurrent,
     hydrationGoal,
+    userName,
     streakDays,
     glowScoreBreakdown,
     toggleStep,
@@ -39,6 +40,8 @@ export default function TodayScreen() {
     });
   }, []);
 
+  const displayGreeting = userName ? `${greeting}, ${userName}` : greeting;
+
   return (
     <Screen scrollable padding={Spacing.md}>
       {/* Top Header */}
@@ -46,7 +49,7 @@ export default function TodayScreen() {
         <View style={styles.headerTextCol}>
           <Text style={styles.dateCaption}>{formattedDate}</Text>
           <Text style={styles.greetingTitle}>
-            {greeting} {emoji}
+            {displayGreeting} {emoji}
           </Text>
         </View>
         <IconButton

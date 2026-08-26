@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { routineService } from '../services/routineService';
 import { waterService } from '../../history/services/waterService';
 import { settingsService } from '../../../services/settingsService';
@@ -9,10 +9,13 @@ import { calculateGlowScore } from '../../../utils/glowScore';
 import { GlowScoreBreakdown } from '../../../types';
 
 export function useTodayRoutine() {
+  const router = useRouter();
   const [morningSteps, setMorningSteps] = useState<TodayRoutineStepState[]>([]);
   const [eveningSteps, setEveningSteps] = useState<TodayRoutineStepState[]>([]);
   const [hydrationCurrent, setHydrationCurrent] = useState<number>(0);
   const [hydrationGoal, setHydrationGoal] = useState<number>(8);
+  const [userName, setUserName] = useState<string>('');
+  const [skinType, setSkinType] = useState<string>('Combination');
   const [streakDays, setStreakDays] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,6 +37,11 @@ export function useTodayRoutine() {
         settingsService.getSettings(),
       ]);
 
+      if (!appSettings.onboardingCompleted) {
+        router.replace('/onboarding');
+        return;
+      }
+
       const completedStepIds = new Set(todayLogs.map((l) => l.routineStepId));
 
       const morningState: TodayRoutineStepState[] = mSteps.map((step) => ({
@@ -50,6 +58,8 @@ export function useTodayRoutine() {
       setEveningSteps(eveningState);
       setHydrationCurrent(waterGlasses);
       setHydrationGoal(appSettings.hydrationGoal);
+      setUserName(appSettings.userName || '');
+      setSkinType(appSettings.skinType || 'Combination');
 
       // 2. Calculate streak from real database logs
       const streak = calculateStreakFromLogs(completedDates, todayDateStr);
@@ -144,6 +154,8 @@ export function useTodayRoutine() {
     eveningSteps,
     hydrationCurrent,
     hydrationGoal,
+    userName,
+    skinType,
     streakDays,
     glowScoreBreakdown,
     loading,

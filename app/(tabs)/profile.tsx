@@ -128,6 +128,47 @@ export default function ProfileScreen() {
     );
   };
 
+  const handleEditName = () => {
+    Alert.prompt(
+      'Update Name',
+      'Enter your name to personalize your greetings:',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Save',
+          onPress: async (newName?: string) => {
+            if (!newName || !newName.trim()) return;
+            const trimmed = newName.trim();
+            setSettings((prev) => ({ ...prev, userName: trimmed }));
+            await settingsService.updateSetting('userName', trimmed);
+          },
+        },
+      ],
+      'plain-text',
+      settings.userName || ''
+    );
+  };
+
+  const handleSelectSkinType = () => {
+    Alert.alert(
+      'Select Skin Type 🧴',
+      'Choose your skin type to personalize your profile:',
+      [
+        { text: 'Combination (Karma)', onPress: () => updateSkinType('Combination') },
+        { text: 'Dry (Kuru)', onPress: () => updateSkinType('Dry') },
+        { text: 'Oily (Yağlı)', onPress: () => updateSkinType('Oily') },
+        { text: 'Sensitive (Hassas)', onPress: () => updateSkinType('Sensitive') },
+        { text: 'Normal', onPress: () => updateSkinType('Normal') },
+        { text: 'Cancel', style: 'cancel' },
+      ]
+    );
+  };
+
+  const updateSkinType = async (st: any) => {
+    setSettings((prev) => ({ ...prev, skinType: st }));
+    await settingsService.updateSetting('skinType', st);
+  };
+
   return (
     <Screen scrollable padding={16}>
       <View style={styles.header}>
@@ -136,6 +177,31 @@ export default function ProfileScreen() {
           Your skincare preferences & app settings
         </Text>
       </View>
+
+      {/* User Profile Card */}
+      <GlowCard variant="pink" padding={Spacing.lg} style={styles.card}>
+        <View style={styles.rowBetween}>
+          <View style={styles.flex1}>
+            <Text style={[Typography.h2, { color: colors.text }]}>
+              {settings.userName ? settings.userName : 'Skincare Enthusiast'} 🌸
+            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
+              <TouchableOpacity onPress={handleSelectSkinType} style={styles.skinBadgeBtn}>
+                <Ionicons name="sparkles" size={12} color={Colors.white} style={{ marginRight: 4 }} />
+                <Text style={styles.skinBadgeText}>
+                  {settings.skinType || 'Combination'} Skin
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+          <IconButton
+            icon={<Ionicons name="pencil" size={16} color={colors.text} />}
+            onPress={handleEditName}
+            backgroundColor={colors.white}
+            size={36}
+          />
+        </View>
+      </GlowCard>
 
       {/* Daily Hydration Goal Setting */}
       <GlowCard variant="cream" padding={Spacing.lg} style={styles.card}>
@@ -434,5 +500,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginTop: Spacing.md,
     gap: 10,
+  },
+  skinBadgeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.text,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+  },
+  skinBadgeText: {
+    ...Typography.caption,
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.white,
   },
 });
