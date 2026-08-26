@@ -21,6 +21,7 @@ import { settingsService, ExtendedAppSettings } from '../../src/services/setting
 import { notificationService } from '../../src/services/notificationService';
 import { backupService } from '../../src/services/backupService';
 import { useTheme, ThemeMode } from '../../src/context/ThemeContext';
+import { useTranslation } from '../../src/hooks/useTranslation';
 
 const MORNING_TIMES = ['07:00', '08:00', '08:30', '09:00'];
 const EVENING_TIMES = ['20:00', '20:30', '21:00', '22:00'];
@@ -28,6 +29,7 @@ const EVENING_TIMES = ['20:00', '20:30', '21:00', '22:00'];
 export default function ProfileScreen() {
   const router = useRouter();
   const { themeMode, setThemeMode, colors } = useTheme();
+  const { language, setLanguage, t } = useTranslation();
 
   const [settings, setSettings] = useState<ExtendedAppSettings>({
     hydrationGoal: 8,
@@ -331,15 +333,15 @@ export default function ProfileScreen() {
       {/* Appearance / Theme Selector */}
       <GlowCard variant="softBlue" padding={Spacing.lg} style={styles.card}>
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-          <Text style={[Typography.h3, { color: colors.text }]}>Appearance</Text>
+          <Text style={[Typography.h3, { color: colors.text }]}>{t('profile.appearanceTitle')}</Text>
           <Ionicons name="color-palette" size={16} color="#5294E2" style={{ marginLeft: 6 }} />
         </View>
-        <Text style={styles.cardSubtext}>Choose your preferred app display theme.</Text>
+        <Text style={styles.cardSubtext}>{t('profile.appearanceDesc')}</Text>
         <View style={styles.themeChipsRow}>
           {[
-            { id: 'light', label: 'Light', icon: 'sunny-outline' },
-            { id: 'dark', label: 'Dark', icon: 'moon-outline' },
-            { id: 'system', label: 'System', icon: 'settings-outline' },
+            { id: 'light', label: t('profile.themeLight'), icon: 'sunny-outline' },
+            { id: 'dark', label: t('profile.themeDark'), icon: 'moon-outline' },
+            { id: 'system', label: t('profile.themeSystem'), icon: 'settings-outline' },
           ].map((modeOpt) => {
             const isSelected = themeMode === modeOpt.id;
             return (
@@ -366,6 +368,42 @@ export default function ProfileScreen() {
                     {modeOpt.label}
                   </Text>
                 </View>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </GlowCard>
+
+      {/* Language Selector */}
+      <GlowCard variant="cream" padding={Spacing.lg} style={styles.card}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+          <Text style={[Typography.h3, { color: colors.text }]}>{t('profile.languageTitle')}</Text>
+          <Ionicons name="language" size={16} color="#E59935" style={{ marginLeft: 6 }} />
+        </View>
+        <Text style={styles.cardSubtext}>{t('profile.languageDesc')}</Text>
+        <View style={styles.themeChipsRow}>
+          {[
+            { id: 'en', label: t('profile.langEnglish') },
+            { id: 'tr', label: t('profile.langTurkish') },
+          ].map((langOpt) => {
+            const isSelected = language === langOpt.id;
+            return (
+              <TouchableOpacity
+                key={langOpt.id}
+                style={[
+                  styles.themeChip,
+                  isSelected && styles.themeChipSelected,
+                ]}
+                onPress={() => setLanguage(langOpt.id as any)}
+              >
+                <Text
+                  style={[
+                    styles.themeChipText,
+                    isSelected && styles.themeChipTextSelected,
+                  ]}
+                >
+                  {langOpt.label}
+                </Text>
               </TouchableOpacity>
             );
           })}

@@ -7,6 +7,7 @@ export interface ExtendedAppSettings extends AppSettings {
   themeMode: 'light' | 'dark' | 'system';
   userName?: string;
   skinType?: SkinType;
+  language?: 'en' | 'tr';
 }
 
 export const DEFAULT_SETTINGS: ExtendedAppSettings = {
@@ -19,6 +20,7 @@ export const DEFAULT_SETTINGS: ExtendedAppSettings = {
   themeMode: 'system',
   userName: '',
   skinType: 'Combination',
+  language: 'en',
 };
 
 export const settingsService = {
@@ -42,6 +44,7 @@ export const settingsService = {
     const themeMode = (settingsMap.get('themeMode') as ExtendedAppSettings['themeMode']) || DEFAULT_SETTINGS.themeMode;
     const userName = settingsMap.get('userName') || DEFAULT_SETTINGS.userName;
     const skinType = (settingsMap.get('skinType') as SkinType) || DEFAULT_SETTINGS.skinType;
+    const language = (settingsMap.get('language') as ExtendedAppSettings['language']) || DEFAULT_SETTINGS.language;
 
     return {
       hydrationGoal: isNaN(hydrationGoal) || hydrationGoal <= 0 ? 8 : hydrationGoal,
@@ -53,6 +56,7 @@ export const settingsService = {
       themeMode,
       userName,
       skinType,
+      language,
     };
   },
 

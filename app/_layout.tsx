@@ -15,6 +15,8 @@ import { Colors } from '../src/constants/colors';
 
 import { ThemeProvider } from '../src/context/ThemeContext';
 
+import { LanguageProvider } from '../src/context/LanguageContext';
+
 // Prevent splash screen auto hide until database and fonts ready
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -60,50 +62,52 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
-      <StatusBar style="auto" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: Colors.background },
-        }}
-      >
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />
-        <Stack.Screen
-          name="product/add"
-          options={{ presentation: 'modal', title: 'Add Product' }}
-        />
-        <Stack.Screen
-          name="product/[id]"
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="product/edit/[id]"
-          options={{ presentation: 'modal', title: 'Edit Product' }}
-        />
-        <Stack.Screen
-          name="routine/edit"
-          options={{ presentation: 'modal', title: 'Edit Routine' }}
-        />
-        <Stack.Screen
-          name="routine/index"
-          options={{ presentation: 'modal', title: 'Routines' }}
-        />
-        <Stack.Screen
-          name="day/[date]"
-          options={{
-            presentation: 'formSheet',
-            sheetAllowedDetents: [0.65, 0.9],
-            sheetGrabberVisible: true,
-            sheetCornerRadius: 24,
-            title: 'Daily Summary',
+      <LanguageProvider>
+        <StatusBar style="auto" />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: Colors.background },
           }}
-        />
-        <Stack.Screen
-          name="dev/components"
-          options={{ presentation: 'modal', title: 'Component Gallery' }}
-        />
-      </Stack>
+        >
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />
+          <Stack.Screen
+            name="product/add"
+            options={{ presentation: 'modal', title: 'Add Product' }}
+          />
+          <Stack.Screen
+            name="product/[id]"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="product/edit/[id]"
+            options={{ presentation: 'modal', title: 'Edit Product' }}
+          />
+          <Stack.Screen
+            name="routine/edit"
+            options={{ presentation: 'modal', title: 'Edit Routine' }}
+          />
+          <Stack.Screen
+            name="routine/index"
+            options={{ presentation: 'modal', title: 'Routines' }}
+          />
+          <Stack.Screen
+            name="day/[date]"
+            options={{
+              presentation: 'formSheet',
+              sheetAllowedDetents: [0.65, 0.9],
+              sheetGrabberVisible: true,
+              sheetCornerRadius: 24,
+              title: 'Daily Summary',
+            }}
+          />
+          <Stack.Screen
+            name="dev/components"
+            options={{ presentation: 'modal', title: 'Component Gallery' }}
+          />
+        </Stack>
+      </LanguageProvider>
     </ThemeProvider>
   );
 }
