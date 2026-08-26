@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, ActivityIndicator, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '../../../../components/ui/Screen';
@@ -12,11 +12,14 @@ import { productService } from '../../services/productService';
 import { PRODUCT_CATEGORIES } from '../../../../constants/productCategories';
 import { styles } from './ShelfScreen.styles';
 import { Colors } from '../../../../constants/colors';
+import { Spacing } from '../../../../constants/spacing';
+import { Typography } from '../../../../constants/typography';
 
 export const ShelfScreen: React.FC = () => {
   const router = useRouter();
   const { products, loading, refreshProducts } = useProducts();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   const handleAddProduct = () => {
     router.push('/product/add');
@@ -57,11 +60,20 @@ export const ShelfScreen: React.FC = () => {
     return items;
   }, [products]);
 
-  // Filter products based on selected category
+  // Filter products based on selected category & search query
   const filteredProducts = useMemo(() => {
-    if (selectedCategory === 'all') return products;
-    return products.filter((p) => p.category.toLowerCase() === selectedCategory);
-  }, [products, selectedCategory]);
+    return products.filter((p) => {
+      const matchesCategory =
+        selectedCategory === 'all' || p.category.toLowerCase() === selectedCategory;
+      const q = searchQuery.toLowerCase().trim();
+      const matchesSearch =
+        !q ||
+        p.name.toLowerCase().includes(q) ||
+        (p.brand && p.brand.toLowerCase().includes(q));
+
+      return matchesCategory && matchesSearch;
+    });
+  }, [products, selectedCategory, searchQuery]);
 
   return (
     <Screen scrollable padding={12}>
@@ -80,6 +92,29 @@ export const ShelfScreen: React.FC = () => {
           size={38}
         />
       </View>
+
+      {/* Search Bar */}
+      {products.length > 0 && (
+        <View style={localStyles.searchContainer}>
+          <Ionicons name="search-outline" size={18} color={Colors.textSecondary} style={{ marginRight: 8 }} />
+          <TextInput
+            style={localStyles.searchInput}
+            placeholder="Search products or brands..."
+            placeholderTextColor={Colors.textMuted}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            clearButtonMode="while-editing"
+          />
+          {searchQuery ? (
+            <IconButton
+              icon={<Ionicons name="close-circle" size={18} color={Colors.textSecondary} />}
+              onPress={() => setSearchQuery('')}
+              size={24}
+              backgroundColor="transparent"
+            />
+          ) : null}
+        </View>
+      )}
 
       {/* Category Filter Chips Bar */}
       {products.length > 0 && (
@@ -118,3 +153,26 @@ export const ShelfScreen: React.FC = () => {
     </Screen>
   );
 };
+
+const localStyles = StyleSheet.create({
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 10,
+    marginTop: Spacing.xs,
+    marginBottom: Spacing.xs,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  searchInput: {
+    flex: 1,
+    ...Typography.body,
+    fontSize: 14,
+    color: Colors.text,
+    padding: 0,
+  },
+});
+
