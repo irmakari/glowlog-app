@@ -24,7 +24,7 @@ export const GlowScoreCard: React.FC<GlowScoreCardProps> = ({
       <Text style={styles.heroTitle}>Today's Glow ✨</Text>
 
       <View style={styles.ringWrapper}>
-        <GlowRing scoreBreakdown={scoreBreakdown} size={170} />
+        <GlowRing scoreBreakdown={scoreBreakdown} size={210} />
       </View>
 
       {/* Floating Pill Action Badges (Reference UI Style) */}

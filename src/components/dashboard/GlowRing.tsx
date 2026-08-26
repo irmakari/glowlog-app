@@ -18,7 +18,7 @@ interface GlowRingProps {
 
 export const GlowRing: React.FC<GlowRingProps> = ({
   scoreBreakdown,
-  size = 170,
+  size = 210,
 }) => {
   const scaleVal = useSharedValue(0.92);
   const opacityVal = useSharedValue(0);
@@ -33,8 +33,8 @@ export const GlowRing: React.FC<GlowRingProps> = ({
     opacity: opacityVal.value,
   }));
 
-  const strokeWidth = 10;
-  const radius = (size - strokeWidth) / 2 - 8;
+  const strokeWidth = 12;
+  const radius = (size - strokeWidth) / 2 - 10;
   const center = size / 2;
 
   // Function to calculate SVG arc path string with padding gap
@@ -52,12 +52,34 @@ export const GlowRing: React.FC<GlowRingProps> = ({
     return `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`;
   };
 
+  // Compute exact coordinates for mini orbiting badge centers
+  // Badge 1: Top Right (45°) -> center of Arc 1 (10° - 80°)
+  // Badge 2: Bottom Right (135°) -> center of Arc 2 (100° - 170°)
+  // Badge 3: Bottom Left (225°) -> center of Arc 3 (190° - 260°)
+  // Badge 4: Top Left (315°) -> center of Arc 4 (280° - 350°)
+  const badgeSize = 24;
+  const badgeHalf = badgeSize / 2;
+
+  const getBadgeStyle = (angleDeg: number) => {
+    const rad = ((angleDeg - 90) * Math.PI) / 180;
+    const x = center + radius * Math.cos(rad);
+    const y = center + radius * Math.sin(rad);
+    return {
+      left: x - badgeHalf,
+      top: y - badgeHalf,
+      width: badgeSize,
+      height: badgeSize,
+      borderRadius: badgeHalf,
+    };
+  };
+
   const routineActive = scoreBreakdown.routinePercent > 0;
   const hydrationActive = scoreBreakdown.hydrationPercent > 0;
   const streakActive = scoreBreakdown.streakScore > 0;
   const perfectGlow = scoreBreakdown.score >= 9.0;
 
-  const innerSize = size - 54;
+  const innerSize = size - 64;
+  const scoreFontSize = Math.round(size * 0.26);
 
   return (
     <Animated.View
@@ -110,24 +132,24 @@ export const GlowRing: React.FC<GlowRingProps> = ({
       </Svg>
 
       {/* Mini Icon Badges Orbiting the Ring */}
-      {/* 1. Morning Routine (Sun) - Top Right */}
-      <View style={[styles.badgeCircle, { top: 12, right: 18, backgroundColor: Colors.pink }]}>
-        <Ionicons name="sunny" size={10} color={Colors.text} />
+      {/* 1. Morning Routine (Sun) - Top Right (45°) */}
+      <View style={[styles.badgeCircle, getBadgeStyle(45), { backgroundColor: Colors.pink }]}>
+        <Ionicons name="sunny" size={12} color={Colors.text} />
       </View>
 
-      {/* 2. Evening Routine (Moon) - Bottom Right */}
-      <View style={[styles.badgeCircle, { bottom: 12, right: 18, backgroundColor: Colors.softLilac }]}>
-        <Ionicons name="moon" size={10} color={Colors.text} />
+      {/* 2. Evening Routine (Moon) - Bottom Right (135°) */}
+      <View style={[styles.badgeCircle, getBadgeStyle(135), { backgroundColor: Colors.softLilac }]}>
+        <Ionicons name="moon" size={12} color={Colors.text} />
       </View>
 
-      {/* 3. Water Hydration (Water Drop) - Bottom Left */}
-      <View style={[styles.badgeCircle, { bottom: 12, left: 18, backgroundColor: Colors.softBlue }]}>
-        <Ionicons name="water" size={10} color={Colors.text} />
+      {/* 3. Water Hydration (Water Drop) - Bottom Left (225°) */}
+      <View style={[styles.badgeCircle, getBadgeStyle(225), { backgroundColor: Colors.softBlue }]}>
+        <Ionicons name="water" size={12} color={Colors.text} />
       </View>
 
-      {/* 4. Daily Streak (Flame) - Top Left */}
-      <View style={[styles.badgeCircle, { top: 12, left: 18, backgroundColor: Colors.sageGreen }]}>
-        <Ionicons name="flame" size={10} color={Colors.text} />
+      {/* 4. Daily Streak (Flame) - Top Left (315°) */}
+      <View style={[styles.badgeCircle, getBadgeStyle(315), { backgroundColor: Colors.sageGreen }]}>
+        <Ionicons name="flame" size={12} color={Colors.text} />
       </View>
 
       {/* Floating Center Score Circle */}
@@ -141,7 +163,7 @@ export const GlowRing: React.FC<GlowRingProps> = ({
           },
         ]}
       >
-        <Text style={styles.scoreText}>
+        <Text style={[styles.scoreText, { fontSize: scoreFontSize, lineHeight: scoreFontSize + 4 }]}>
           {scoreBreakdown.score.toFixed(1)}
         </Text>
         <Text style={styles.scoreLabel}>today's glow</Text>
@@ -164,16 +186,13 @@ const styles = StyleSheet.create({
   },
   badgeCircle: {
     position: 'absolute',
-    width: 20,
-    height: 20,
-    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: Colors.text,
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 1,
+    shadowOpacity: 0.12,
+    shadowRadius: 3,
+    elevation: 2,
   },
   innerCircle: {
     position: 'absolute',
@@ -183,19 +202,17 @@ const styles = StyleSheet.create({
     shadowColor: Colors.text,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.06,
-    shadowRadius: 10,
+    shadowRadius: 12,
     elevation: 3,
   },
   scoreText: {
-    fontSize: 40,
     fontWeight: '800',
     color: Colors.text,
     letterSpacing: -1.5,
-    lineHeight: 44,
     fontFamily: 'PlusJakartaSans_800ExtraBold',
   },
   scoreLabel: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
     color: Colors.textSecondary,
     letterSpacing: 0.2,
@@ -204,10 +221,10 @@ const styles = StyleSheet.create({
   },
   sparkleBadge: {
     position: 'absolute',
-    top: 6,
-    right: 12,
+    top: 8,
+    right: 14,
   },
   sparkleText: {
-    fontSize: 14,
+    fontSize: 16,
   },
 });
