@@ -36,6 +36,10 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: Spacing.xs,
   },
+  rowIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   sectionTitle: {
     ...Typography.h3,
     fontSize: 15,
@@ -43,12 +47,13 @@ export const styles = StyleSheet.create({
   countBadge: {
     ...Typography.caption,
     fontSize: 11,
+    fontWeight: '600',
     color: Colors.textSecondary,
   },
   stepRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 6,
+    paddingVertical: 8,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(21, 21, 21, 0.06)',
   },
@@ -62,6 +67,10 @@ export const styles = StyleSheet.create({
     ...Typography.bodyBold,
     fontSize: 13,
     color: Colors.text,
+  },
+  completedText: {
+    textDecorationLine: 'line-through',
+    opacity: 0.7,
   },
   productSubtext: {
     ...Typography.caption,

@@ -41,6 +41,7 @@ export interface DailySummaryStepItem {
   id: string;
   title: string;
   completed: boolean;
+  productId?: string;
   productName?: string;
   brand?: string;
   isProductArchived?: boolean;

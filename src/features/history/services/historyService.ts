@@ -163,6 +163,7 @@ export const historyService = {
         id: r.id,
         title: r.title,
         completed: Boolean(r.completed),
+        productId: r.product_id ?? undefined,
         productName: r.prod_name ? `${r.prod_brand ? r.prod_brand + ' ' : ''}${r.prod_name}` : undefined,
         isProductArchived: Boolean(r.prod_archived),
       };

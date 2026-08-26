@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '../../../../components/ui/Screen';
@@ -13,9 +13,9 @@ import { Colors } from '../../../../constants/colors';
 
 export const DailySummaryScreen: React.FC<DailySummaryScreenProps> = ({ date }) => {
   const router = useRouter();
-  const { summary, loading } = useDailySummary(date);
+  const { summary, loading, toggleStep, incrementWater, decrementWater } = useDailySummary(date);
 
-  if (loading) {
+  if (loading && !summary) {
     return (
       <Screen scrollable padding={16}>
         <View style={styles.loadingContainer}>
@@ -64,7 +64,10 @@ export const DailySummaryScreen: React.FC<DailySummaryScreenProps> = ({ date }) 
       {/* Morning Routine Card */}
       <GlowCard variant="pink" padding={12} style={styles.card}>
         <View style={styles.sectionTitleRow}>
-          <Text style={styles.sectionTitle}>Morning Routine ☀️</Text>
+          <View style={styles.rowIcon}>
+            <Text style={styles.sectionTitle}>Morning Routine</Text>
+            <Ionicons name="sunny" size={16} color="#E59935" style={{ marginLeft: 6 }} />
+          </View>
           <Text style={styles.countBadge}>
             {morningCompleted} of {summary.morningSteps.length} completed
           </Text>
@@ -74,8 +77,10 @@ export const DailySummaryScreen: React.FC<DailySummaryScreenProps> = ({ date }) 
           <Text style={styles.emptySubtext}>No morning steps configured for this day.</Text>
         ) : (
           summary.morningSteps.map((step, index) => (
-            <View
+            <TouchableOpacity
               key={step.id}
+              activeOpacity={0.7}
+              onPress={() => toggleStep(step.id, step.productId)}
               style={[
                 styles.stepRow,
                 index === summary.morningSteps.length - 1 && { borderBottomWidth: 0 },
@@ -83,17 +88,19 @@ export const DailySummaryScreen: React.FC<DailySummaryScreenProps> = ({ date }) 
             >
               <Ionicons
                 name={step.completed ? 'checkmark-circle' : 'ellipse-outline'}
-                size={16}
+                size={20}
                 color={step.completed ? Colors.text : Colors.textMuted}
                 style={styles.stepIcon}
               />
               <View style={styles.stepTextCol}>
-                <Text style={styles.stepTitle}>{step.title}</Text>
+                <Text style={[styles.stepTitle, step.completed && styles.completedText]}>
+                  {step.title}
+                </Text>
                 {step.productName ? (
                   <Text style={styles.productSubtext}>{step.productName}</Text>
                 ) : null}
               </View>
-            </View>
+            </TouchableOpacity>
           ))
         )}
       </GlowCard>
@@ -101,7 +108,10 @@ export const DailySummaryScreen: React.FC<DailySummaryScreenProps> = ({ date }) 
       {/* Evening Routine Card */}
       <GlowCard variant="softLilac" padding={12} style={styles.card}>
         <View style={styles.sectionTitleRow}>
-          <Text style={styles.sectionTitle}>Evening Routine 🌙</Text>
+          <View style={styles.rowIcon}>
+            <Text style={styles.sectionTitle}>Evening Routine</Text>
+            <Ionicons name="moon" size={16} color="#7C5CBF" style={{ marginLeft: 6 }} />
+          </View>
           <Text style={styles.countBadge}>
             {eveningCompleted} of {summary.eveningSteps.length} completed
           </Text>
@@ -111,8 +121,10 @@ export const DailySummaryScreen: React.FC<DailySummaryScreenProps> = ({ date }) 
           <Text style={styles.emptySubtext}>No evening steps configured for this day.</Text>
         ) : (
           summary.eveningSteps.map((step, index) => (
-            <View
+            <TouchableOpacity
               key={step.id}
+              activeOpacity={0.7}
+              onPress={() => toggleStep(step.id, step.productId)}
               style={[
                 styles.stepRow,
                 index === summary.eveningSteps.length - 1 && { borderBottomWidth: 0 },
@@ -120,17 +132,19 @@ export const DailySummaryScreen: React.FC<DailySummaryScreenProps> = ({ date }) 
             >
               <Ionicons
                 name={step.completed ? 'checkmark-circle' : 'ellipse-outline'}
-                size={16}
+                size={20}
                 color={step.completed ? Colors.text : Colors.textMuted}
                 style={styles.stepIcon}
               />
               <View style={styles.stepTextCol}>
-                <Text style={styles.stepTitle}>{step.title}</Text>
+                <Text style={[styles.stepTitle, step.completed && styles.completedText]}>
+                  {step.title}
+                </Text>
                 {step.productName ? (
                   <Text style={styles.productSubtext}>{step.productName}</Text>
                 ) : null}
               </View>
-            </View>
+            </TouchableOpacity>
           ))
         )}
       </GlowCard>
@@ -138,10 +152,28 @@ export const DailySummaryScreen: React.FC<DailySummaryScreenProps> = ({ date }) 
       {/* Hydration Card */}
       <GlowCard variant="softBlue" padding={12} style={styles.card}>
         <View style={styles.sectionTitleRow}>
-          <Text style={styles.sectionTitle}>Hydration 💧</Text>
-          <Text style={styles.countBadge}>
-            {summary.hydration} of {summary.hydrationGoal} glasses
-          </Text>
+          <View style={styles.rowIcon}>
+            <Text style={styles.sectionTitle}>Hydration</Text>
+            <Ionicons name="water" size={16} color="#5294E2" style={{ marginLeft: 6 }} />
+          </View>
+
+          <View style={localStyles.waterControls}>
+            <IconButton
+              icon={<Ionicons name="remove" size={14} color={Colors.text} />}
+              onPress={decrementWater}
+              backgroundColor={Colors.white}
+              size={28}
+            />
+            <Text style={styles.countBadge}>
+              {summary.hydration} / {summary.hydrationGoal}
+            </Text>
+            <IconButton
+              icon={<Ionicons name="add" size={14} color={Colors.text} />}
+              onPress={incrementWater}
+              backgroundColor={Colors.white}
+              size={28}
+            />
+          </View>
         </View>
       </GlowCard>
 
@@ -149,4 +181,12 @@ export const DailySummaryScreen: React.FC<DailySummaryScreenProps> = ({ date }) 
       <ProductUsageList products={summary.productsUsed} />
     </Screen>
   );
+};
+
+const localStyles = {
+  waterControls: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 8,
+  },
 };
