@@ -12,6 +12,7 @@ const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export const HistoryCalendar: React.FC<HistoryCalendarProps> = ({
   history,
+  selectedDateKey,
   canGoNext,
   onPrevMonth,
   onNextMonth,
@@ -72,6 +73,7 @@ export const HistoryCalendar: React.FC<HistoryCalendarProps> = ({
                 key={gridDay.dateKey}
                 gridDay={gridDay}
                 summary={history.days[gridDay.dateKey]}
+                isSelected={gridDay.dateKey === selectedDateKey}
                 onPressDay={onPressDay}
               />
             ))}

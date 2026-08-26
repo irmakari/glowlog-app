@@ -1,16 +1,21 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '../../../../components/ui/Screen';
 import { HistoryCalendar } from '../../components/HistoryCalendar';
+import { DayStatsGrid } from '../../components/DayStatsGrid/DayStatsGrid';
 import { MonthlyStats } from '../../components/MonthlyStats';
 import { useHistoryMonth } from '../../hooks/useHistoryMonth';
+import { getLocalDateString } from '../../../routines/utils/routineDate.utils';
 import { styles } from './HistoryScreen.styles';
 import { Colors } from '../../../../constants/colors';
 
 export const HistoryScreen: React.FC = () => {
   const router = useRouter();
+  const todayKey = useMemo(() => getLocalDateString(), []);
+  const [selectedDateKey, setSelectedDateKey] = useState<string>(todayKey);
+
   const {
     history,
     stats,
@@ -21,7 +26,11 @@ export const HistoryScreen: React.FC = () => {
   } = useHistoryMonth();
 
   const handlePressDay = (dateKey: string) => {
-    router.push(`/day/${dateKey}`);
+    setSelectedDateKey(dateKey);
+  };
+
+  const handleOpenDetails = () => {
+    router.push(`/day/${selectedDateKey}`);
   };
 
   return (
@@ -42,14 +51,28 @@ export const HistoryScreen: React.FC = () => {
         </View>
       ) : history && stats ? (
         <View>
+          {/* 1. History Calendar */}
           <HistoryCalendar
             history={history}
+            selectedDateKey={selectedDateKey}
             canGoNext={canGoNext}
             onPrevMonth={goToPrevMonth}
             onNextMonth={goToNextMonth}
             onPressDay={handlePressDay}
           />
-          <MonthlyStats stats={stats} />
+
+          {/* 2. Selected Day Statistics Grid ("This Day") */}
+          <DayStatsGrid
+            dateKey={selectedDateKey}
+            onOpenDetails={handleOpenDetails}
+          />
+
+          {/* 3. Monthly Overview ("This Month") */}
+          <MonthlyStats
+            stats={stats}
+            onOpenMonthlyReport={() => router.push(`/month/${history.year}/${history.month}`)}
+            onOpenFullReports={() => router.push('/reports')}
+          />
         </View>
       ) : null}
     </Screen>

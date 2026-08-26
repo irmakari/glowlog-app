@@ -9,6 +9,7 @@ import { Colors } from '../../../../constants/colors';
 export const CalendarDay: React.FC<CalendarDayProps> = ({
   gridDay,
   summary,
+  isSelected,
   onPressDay,
 }) => {
   const { dateKey, dayNumber, isCurrentMonth, isToday, isFuture } = gridDay;
@@ -41,6 +42,7 @@ export const CalendarDay: React.FC<CalendarDayProps> = ({
         { backgroundColor: getBackgroundColor() },
         !isCurrentMonth && styles.cellOtherMonth,
         isToday && styles.cellToday,
+        isSelected && { borderWidth: 2.5, borderColor: Colors.text },
       ]}
     >
       <Text
