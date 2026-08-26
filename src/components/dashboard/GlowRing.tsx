@@ -170,7 +170,7 @@ export const GlowRing: React.FC<GlowRingProps> = ({
 
         {perfectGlow && (
           <View style={styles.sparkleBadge}>
-            <Text style={styles.sparkleText}>✨</Text>
+            <Ionicons name="sparkles" size={14} color="#E59935" />
           </View>
         )}
       </View>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '../../../../components/ui/Screen';
 import { HistoryCalendar } from '../../components/HistoryCalendar';
 import { MonthlyStats } from '../../components/MonthlyStats';
@@ -27,7 +28,10 @@ export const HistoryScreen: React.FC = () => {
     <Screen scrollable padding={12}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>History ✨</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text style={styles.title}>History</Text>
+          <Ionicons name="sparkles-outline" size={20} color={Colors.text} style={{ marginLeft: 6 }} />
+        </View>
         <Text style={styles.subtitle}>Your month in glow</Text>
       </View>
 

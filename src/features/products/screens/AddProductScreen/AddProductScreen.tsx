@@ -30,7 +30,7 @@ export const AddProductScreen: React.FC = () => {
   return (
     <Screen scrollable padding={16}>
       <View style={styles.headerRow}>
-        <Text style={styles.title}>Add New Product 🧴</Text>
+        <Text style={styles.title}>Add New Product</Text>
         <IconButton
           icon={<Ionicons name="close" size={20} color={Colors.text} />}
           onPress={() => router.back()}

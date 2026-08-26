@@ -45,7 +45,7 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ id }) 
           />
         </View>
         <View style={styles.notFoundContainer}>
-          <Text style={styles.nameText}>Product not found 🧴</Text>
+          <Text style={styles.nameText}>Product not found</Text>
         </View>
       </Screen>
     );

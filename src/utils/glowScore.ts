@@ -13,9 +13,6 @@ export interface GlowScoreInput {
  * - Routine completion (70% weight -> max 7.0 points)
  * - Hydration goal (20% weight -> max 2.0 points)
  * - Daily consistency streak (10% weight -> max 1.0 point)
- * 
- * Note: This score is a fun, playful daily ritual tracker score.
- * It is NOT a medical or health score.
  */
 export function calculateGlowScore(input: GlowScoreInput): GlowScoreBreakdown {
   const {
@@ -57,19 +54,20 @@ export function calculateGlowScore(input: GlowScoreInput): GlowScoreBreakdown {
 }
 
 /**
- * Helper to generate time-based greeting string
+ * Helper to generate time-based greeting string and vector icon
  */
 export function getTimeBasedGreeting(date: Date = new Date()): {
   greeting: string;
-  emoji: string;
+  iconName: string;
+  iconColor: string;
 } {
   const hours = date.getHours();
 
   if (hours < 12) {
-    return { greeting: 'Good morning', emoji: '✨' };
+    return { greeting: 'Good morning', iconName: 'sunny-outline', iconColor: '#E59935' };
   } else if (hours < 17) {
-    return { greeting: 'Good afternoon', emoji: '☀️' };
+    return { greeting: 'Good afternoon', iconName: 'sunny', iconColor: '#E59935' };
   } else {
-    return { greeting: 'Good evening', emoji: '🌙' };
+    return { greeting: 'Good evening', iconName: 'moon-outline', iconColor: '#7C5CBF' };
   }
 }

@@ -30,7 +30,7 @@ export default function TodayScreen() {
     decrementWater,
   } = useTodayRoutine();
 
-  const { greeting, emoji } = useMemo(() => getTimeBasedGreeting(), []);
+  const { greeting, iconName, iconColor } = useMemo(() => getTimeBasedGreeting(), []);
 
   const formattedDate = useMemo(() => {
     return new Date().toLocaleDateString('en-US', {
@@ -48,9 +48,10 @@ export default function TodayScreen() {
       <View style={styles.headerRow}>
         <View style={styles.headerTextCol}>
           <Text style={styles.dateCaption}>{formattedDate}</Text>
-          <Text style={styles.greetingTitle}>
-            {displayGreeting} {emoji}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 1 }}>
+            <Text style={styles.greetingTitle}>{displayGreeting}</Text>
+            <Ionicons name={iconName as any} size={22} color={iconColor} style={{ marginLeft: 6 }} />
+          </View>
         </View>
         <IconButton
           icon={<Ionicons name="person-outline" size={18} color={Colors.text} />}
@@ -95,7 +96,7 @@ export default function TodayScreen() {
 
       {/* Product Notice Card */}
       <ProductAlertCard
-        title="Shelf check 🧴"
+        title="Shelf check"
         message="Check opened product dates on your Shelf periodically."
         actionText="View Shelf"
         onAction={() => router.push('/(tabs)/shelf')}

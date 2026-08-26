@@ -1,5 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { GlowRing } from './GlowRing';
 import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
@@ -21,13 +22,16 @@ export const GlowScoreCard: React.FC<GlowScoreCardProps> = ({
 }) => {
   return (
     <View style={styles.heroContainer}>
-      <Text style={styles.heroTitle}>Today's Glow ✨</Text>
+      <View style={styles.titleRow}>
+        <Text style={styles.heroTitle}>Today's Glow</Text>
+        <Ionicons name="sparkles" size={16} color="#E59935" style={{ marginLeft: 4 }} />
+      </View>
 
       <View style={styles.ringWrapper}>
         <GlowRing scoreBreakdown={scoreBreakdown} size={210} />
       </View>
 
-      {/* Floating Pill Action Badges (Reference UI Style) */}
+      {/* Floating Pill Action Badges */}
       <View style={styles.pillRow}>
         <View style={[styles.pill, { backgroundColor: Colors.pink }]}>
           <Text style={styles.pillText}>
@@ -41,9 +45,10 @@ export const GlowScoreCard: React.FC<GlowScoreCardProps> = ({
           </Text>
         </View>
 
-        <View style={[styles.pill, { backgroundColor: Colors.butterYellow }]}>
+        <View style={[styles.pill, { backgroundColor: Colors.butterYellow, flexDirection: 'row', alignItems: 'center' }]}>
+          <Ionicons name="flame" size={13} color="#E56A35" style={{ marginRight: 4 }} />
           <Text style={styles.pillText}>
-            🔥 {streakDays}d Streak
+            {streakDays}d Streak
           </Text>
         </View>
       </View>
@@ -58,13 +63,17 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
     marginBottom: Spacing.xs,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.xs,
+  },
   heroTitle: {
     ...Typography.h3,
     fontSize: 16,
     lineHeight: 24,
-    paddingVertical: 4,
     color: Colors.textSecondary,
-    marginBottom: Spacing.xs,
     letterSpacing: 0.2,
   },
   ringWrapper: {

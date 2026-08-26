@@ -102,7 +102,7 @@ export const OnboardingScreen: React.FC = () => {
         {/* Step 1: Name */}
         {step === 1 && (
           <View style={styles.stepContainer}>
-            <Text style={styles.badgeLabel}>Welcome to GlowLog ✨</Text>
+            <Text style={styles.badgeLabel}>Welcome to GlowLog</Text>
             <Text style={styles.heroTitle}>What should we call you?</Text>
             <Text style={styles.heroSubtitle}>
               Let's personalize your daily skincare routine and morning greetings.
@@ -127,7 +127,7 @@ export const OnboardingScreen: React.FC = () => {
         {/* Step 2: Skin Type */}
         {step === 2 && (
           <View style={styles.stepContainer}>
-            <Text style={styles.badgeLabel}>Step 2 of 3 🧴</Text>
+            <Text style={styles.badgeLabel}>Step 2 of 3</Text>
             <Text style={styles.heroTitle}>What is your skin type?</Text>
             <Text style={styles.heroSubtitle}>
               Select the option that best describes how your skin feels most days.
@@ -177,7 +177,7 @@ export const OnboardingScreen: React.FC = () => {
         {/* Step 3: Water Goal */}
         {step === 3 && (
           <View style={styles.stepContainer}>
-            <Text style={styles.badgeLabel}>Step 3 of 3 💧</Text>
+            <Text style={styles.badgeLabel}>Step 3 of 3</Text>
             <Text style={styles.heroTitle}>Daily Hydration Goal</Text>
             <Text style={styles.heroSubtitle}>
               Hydrated skin starts from within! How many glasses of water is your daily target?
@@ -210,7 +210,7 @@ export const OnboardingScreen: React.FC = () => {
         {/* Bottom Action Bar */}
         <View style={styles.bottomBar}>
           <PillButton
-            title={step === 3 ? 'Start Glowing ✨' : 'Continue ➔'}
+            title={step === 3 ? 'Start Glowing' : 'Continue'}
             onPress={handleNextStep}
             variant="primary"
             size="lg"

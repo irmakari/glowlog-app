@@ -46,7 +46,8 @@ export const StreakCard: React.FC<StreakCardProps> = ({ streakDays }) => {
       {/* Header Row */}
       <View style={styles.headerRow}>
         <View style={styles.titleRow}>
-          <Text style={styles.titleText}>🔥 {streakDays} Day Streak</Text>
+          <Ionicons name="flame" size={16} color="#E86339" style={{ marginRight: 4 }} />
+          <Text style={styles.titleText}>{streakDays} Day Streak</Text>
         </View>
         <Text style={styles.caption}>This week</Text>
       </View>

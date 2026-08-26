@@ -17,7 +17,7 @@ export const RoutineManagementScreen: React.FC<RoutineManagementScreenProps> = (
   return (
     <Screen scrollable padding={16}>
       <View style={styles.headerRow}>
-        <Text style={styles.title}>Edit Routines 🌸</Text>
+        <Text style={styles.title}>Edit Routines</Text>
         <IconButton
           icon={<Ionicons name="close" size={20} color={Colors.text} />}
           onPress={() => router.back()}

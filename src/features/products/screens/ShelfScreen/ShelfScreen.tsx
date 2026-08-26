@@ -80,7 +80,10 @@ export const ShelfScreen: React.FC = () => {
       {/* Header */}
       <View style={styles.headerRow}>
         <View style={styles.headerTextCol}>
-          <Text style={styles.title}>My Shelf 🧴</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text style={styles.title}>My Shelf</Text>
+            <Ionicons name="sparkles" size={18} color="#E59935" style={{ marginLeft: 6 }} />
+          </View>
           <Text style={styles.subtitle}>
             Everything currently in your routine.
           </Text>

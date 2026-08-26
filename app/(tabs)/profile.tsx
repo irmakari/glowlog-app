@@ -172,7 +172,10 @@ export default function ProfileScreen() {
   return (
     <Screen scrollable padding={16}>
       <View style={styles.header}>
-        <Text style={[Typography.h1, { color: colors.text }]}>Profile & Goals ✨</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text style={[Typography.h1, { color: colors.text }]}>Profile & Goals</Text>
+          <Ionicons name="sparkles" size={20} color="#E59935" style={{ marginLeft: 6 }} />
+        </View>
         <Text style={[Typography.subtitle, { color: colors.textSecondary }]}>
           Your skincare preferences & app settings
         </Text>
@@ -182,9 +185,12 @@ export default function ProfileScreen() {
       <GlowCard variant="pink" padding={Spacing.lg} style={styles.card}>
         <View style={styles.rowBetween}>
           <View style={styles.flex1}>
-            <Text style={[Typography.h2, { color: colors.text }]}>
-              {settings.userName ? settings.userName : 'Skincare Enthusiast'} 🌸
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={[Typography.h2, { color: colors.text }]}>
+                {settings.userName ? settings.userName : 'Skincare Enthusiast'}
+              </Text>
+              <Ionicons name="heart" size={16} color="#E86339" style={{ marginLeft: 6 }} />
+            </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
               <TouchableOpacity onPress={handleSelectSkinType} style={styles.skinBadgeBtn}>
                 <Ionicons name="sparkles" size={12} color={Colors.white} style={{ marginRight: 4 }} />
@@ -207,7 +213,10 @@ export default function ProfileScreen() {
       <GlowCard variant="cream" padding={Spacing.lg} style={styles.card}>
         <View style={styles.rowBetween}>
           <View style={styles.flex1}>
-            <Text style={[Typography.h3, { color: colors.text }]}>Daily Hydration Goal 💧</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={[Typography.h3, { color: colors.text }]}>Daily Hydration Goal</Text>
+              <Ionicons name="water" size={16} color="#5294E2" style={{ marginLeft: 6 }} />
+            </View>
             <Text style={styles.cardSubtext}>
               Set how many glasses of water you aim to drink daily.
             </Text>
@@ -232,9 +241,10 @@ export default function ProfileScreen() {
 
       {/* Routine Notifications */}
       <GlowCard variant="softLilac" padding={Spacing.lg} style={styles.card}>
-        <Text style={[Typography.h3, { color: colors.text, marginBottom: 4 }]}>
-          Routine Reminders 🔔
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+          <Text style={[Typography.h3, { color: colors.text }]}>Routine Reminders</Text>
+          <Ionicons name="notifications" size={16} color="#7C5CBF" style={{ marginLeft: 6 }} />
+        </View>
         <Text style={styles.cardSubtext}>
           Receive gentle notifications so you never miss a routine step.
         </Text>
@@ -320,32 +330,45 @@ export default function ProfileScreen() {
 
       {/* Appearance / Theme Selector */}
       <GlowCard variant="softBlue" padding={Spacing.lg} style={styles.card}>
-        <Text style={[Typography.h3, { color: colors.text }]}>Appearance 🌙</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+          <Text style={[Typography.h3, { color: colors.text }]}>Appearance</Text>
+          <Ionicons name="color-palette" size={16} color="#5294E2" style={{ marginLeft: 6 }} />
+        </View>
         <Text style={styles.cardSubtext}>Choose your preferred app display theme.</Text>
         <View style={styles.themeChipsRow}>
           {[
-            { id: 'light', label: 'Light ☀️' },
-            { id: 'dark', label: 'Dark 🌙' },
-            { id: 'system', label: 'System ⚙️' },
-          ].map((modeOpt) => (
-            <TouchableOpacity
-              key={modeOpt.id}
-              style={[
-                styles.themeChip,
-                themeMode === modeOpt.id && styles.themeChipSelected,
-              ]}
-              onPress={() => setThemeMode(modeOpt.id as ThemeMode)}
-            >
-              <Text
+            { id: 'light', label: 'Light', icon: 'sunny-outline' },
+            { id: 'dark', label: 'Dark', icon: 'moon-outline' },
+            { id: 'system', label: 'System', icon: 'settings-outline' },
+          ].map((modeOpt) => {
+            const isSelected = themeMode === modeOpt.id;
+            return (
+              <TouchableOpacity
+                key={modeOpt.id}
                 style={[
-                  styles.themeChipText,
-                  themeMode === modeOpt.id && styles.themeChipTextSelected,
+                  styles.themeChip,
+                  isSelected && styles.themeChipSelected,
                 ]}
+                onPress={() => setThemeMode(modeOpt.id as ThemeMode)}
               >
-                {modeOpt.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Ionicons
+                    name={modeOpt.icon as any}
+                    size={14}
+                    color={isSelected ? Colors.white : Colors.text}
+                  />
+                  <Text
+                    style={[
+                      styles.themeChipText,
+                      isSelected && styles.themeChipTextSelected,
+                    ]}
+                  >
+                    {modeOpt.label}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </GlowCard>
 
