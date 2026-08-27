@@ -28,7 +28,7 @@ export const AddProductScreen: React.FC = () => {
   };
 
   return (
-    <Screen scrollable padding={16}>
+    <Screen scrollable padding={16} edges={['bottom', 'left', 'right']} contentContainerStyle={styles.scrollContent}>
       <View style={styles.headerRow}>
         <Text style={styles.title}>Add New Product</Text>
         <IconButton

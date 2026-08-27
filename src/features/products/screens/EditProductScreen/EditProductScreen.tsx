@@ -33,7 +33,7 @@ export const EditProductScreen: React.FC<EditProductScreenProps> = ({ id }) => {
 
   if (loading) {
     return (
-      <Screen scrollable padding={16}>
+      <Screen scrollable padding={16} edges={['bottom', 'left', 'right']} contentContainerStyle={styles.scrollContent}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="small" color={Colors.text} />
         </View>
@@ -42,7 +42,7 @@ export const EditProductScreen: React.FC<EditProductScreenProps> = ({ id }) => {
   }
 
   return (
-    <Screen scrollable padding={16}>
+    <Screen scrollable padding={16} edges={['bottom', 'left', 'right']} contentContainerStyle={styles.scrollContent}>
       <View style={styles.headerRow}>
         <Text style={styles.title}>Edit Product 🧴</Text>
         <IconButton
