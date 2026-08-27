@@ -14,12 +14,14 @@ interface RoutineCardProps {
   type: RoutineType;
   steps: TodayRoutineStepState[];
   onToggleStep: (id: string) => void;
+  onCompleteAll?: () => void;
 }
 
 export const RoutineCard: React.FC<RoutineCardProps> = ({
   type,
   steps,
   onToggleStep,
+  onCompleteAll,
 }) => {
   const router = useRouter();
   const isMorning = type === 'morning';
@@ -53,6 +55,17 @@ export const RoutineCard: React.FC<RoutineCardProps> = ({
         </View>
 
         <View style={styles.rightHeaderRow}>
+          {totalCount > 0 && completedCount < totalCount && onCompleteAll && (
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={onCompleteAll}
+              style={styles.completeAllBtn}
+            >
+              <Ionicons name="checkmark-done" size={12} color={Colors.text} style={{ marginRight: 3 }} />
+              <Text style={styles.completeAllText}>Mark all</Text>
+            </TouchableOpacity>
+          )}
+
           {totalCount > 0 && (
             <View style={styles.badge}>
               <Text style={styles.badgeText}>
@@ -157,6 +170,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+  },
+  completeAllBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.white,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: Spacing.radiusPill,
+  },
+  completeAllText: {
+    ...Typography.caption,
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.text,
   },
   badge: {
     backgroundColor: Colors.white,

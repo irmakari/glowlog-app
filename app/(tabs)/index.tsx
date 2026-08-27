@@ -37,6 +37,7 @@ export default function TodayScreen() {
     streakDays,
     glowScoreBreakdown,
     toggleStep,
+    completeAllSteps,
     incrementWater,
     decrementWater,
   } = useTodayRoutine();
@@ -89,6 +90,7 @@ export default function TodayScreen() {
         type="morning"
         steps={morningSteps}
         onToggleStep={(id) => toggleStep(id, 'morning')}
+        onCompleteAll={() => completeAllSteps('morning')}
       />
 
       {/* Evening Routine Card */}
@@ -96,6 +98,7 @@ export default function TodayScreen() {
         type="evening"
         steps={eveningSteps}
         onToggleStep={(id) => toggleStep(id, 'evening')}
+        onCompleteAll={() => completeAllSteps('evening')}
       />
 
       {/* Hydration Card */}
