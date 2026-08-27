@@ -1,7 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import { StyleSheet, Text, View, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Screen } from '../../src/components/ui/Screen';
 import { IconButton } from '../../src/components/ui/IconButton';
 import { GlowScoreCard } from '../../src/components/dashboard/GlowScoreCard';
@@ -17,6 +17,17 @@ import { Colors } from '../../src/constants/colors';
 
 export default function TodayScreen() {
   const router = useRouter();
+  const [isFocused, setIsFocused] = useState(true);
+
+  useFocusEffect(
+    useCallback(() => {
+      setIsFocused(true);
+      return () => {
+        setIsFocused(false);
+      };
+    }, [])
+  );
+
   const {
     morningSteps,
     eveningSteps,
@@ -67,6 +78,7 @@ export default function TodayScreen() {
         currentHydration={hydrationCurrent}
         hydrationGoal={hydrationGoal}
         streakDays={streakDays}
+        isFocused={isFocused}
       />
 
       {/* 7-Day Horizontal Streak Strip (Placed above Morning Routine) */}

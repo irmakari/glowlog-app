@@ -11,7 +11,7 @@ export const LightColors = {
   sageGreen: '#B8CB8C',
   softLilac: '#D6C3EF',
   softPeach: '#F2BF9B',
-  mutedGray: '#E9E5DD',
+  mutedGray: '#8EC5FC',
   white: '#FFFFFF',
   cardCream: '#EFE8DC',
 
@@ -43,7 +43,7 @@ export const DarkColors: typeof LightColors = {
   sageGreen: '#2D3B26',
   softLilac: '#3D304E',
   softPeach: '#4C3529',
-  mutedGray: '#242428',
+  mutedGray: '#243F5C',
   white: '#1C1C1E',
   cardCream: '#222226',
 

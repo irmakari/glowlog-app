@@ -74,7 +74,10 @@ export default function RootLayout() {
           <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />
           <Stack.Screen
             name="product/add"
-            options={{ presentation: 'modal', title: 'Add Product' }}
+            options={{
+              presentation: 'pageSheet',
+              title: 'Add Product',
+            }}
           />
           <Stack.Screen
             name="product/[id]"
@@ -82,7 +85,10 @@ export default function RootLayout() {
           />
           <Stack.Screen
             name="product/edit/[id]"
-            options={{ presentation: 'modal', title: 'Edit Product' }}
+            options={{
+              presentation: 'pageSheet',
+              title: 'Edit Product',
+            }}
           />
           <Stack.Screen
             name="routine/edit"

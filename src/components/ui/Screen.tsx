@@ -7,7 +7,7 @@ import {
   StatusBar,
   StyleProp,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, Edge } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/colors';
 import { Spacing } from '../../constants/spacing';
 
@@ -18,6 +18,8 @@ interface ScreenProps {
   contentContainerStyle?: StyleProp<ViewStyle>;
   backgroundColor?: string;
   padding?: number;
+  paddingTop?: number;
+  edges?: Edge[];
 }
 
 export const Screen: React.FC<ScreenProps> = ({
@@ -27,16 +29,18 @@ export const Screen: React.FC<ScreenProps> = ({
   contentContainerStyle,
   backgroundColor = Colors.background,
   padding = Spacing.lg,
+  paddingTop = Spacing.lg,
+  edges = ['top', 'left', 'right'],
 }) => {
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor }]} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor }]} edges={edges}>
       <StatusBar barStyle="dark-content" backgroundColor={backgroundColor} />
       {scrollable ? (
         <ScrollView
           style={[styles.container, style]}
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingHorizontal: padding },
+            { paddingHorizontal: padding, paddingTop },
             contentContainerStyle,
           ]}
           showsVerticalScrollIndicator={false}
@@ -45,7 +49,7 @@ export const Screen: React.FC<ScreenProps> = ({
           {children}
         </ScrollView>
       ) : (
-        <View style={[styles.container, { paddingHorizontal: padding }, style]}>
+        <View style={[styles.container, { paddingHorizontal: padding, paddingTop }, style]}>
           {children}
         </View>
       )}
