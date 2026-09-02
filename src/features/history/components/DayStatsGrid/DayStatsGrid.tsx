@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, Text, View, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { GlowCard } from '../../../../components/ui/GlowCard';
+import { StatCard } from '../../../../components/ui/StatCard';
 import { useDailySummary } from '../../hooks/useDailySummary';
 import { getLocalDateString } from '../../../routines/utils/routineDate.utils';
 import { calculateGlowScore } from '../../../../utils/glowScore';
@@ -79,61 +79,39 @@ export const DayStatsGrid: React.FC<DayStatsGridProps> = ({ dateKey, onOpenDetai
         </TouchableOpacity>
       </View>
 
-      {/* 2x2 Day Stats Grid (Tapping any card opens details) */}
+      {/* 2x2 Day Stats Grid */}
       <View style={styles.grid}>
-        {/* Card 1: Routine Completion */}
-        <TouchableOpacity activeOpacity={0.85} onPress={onOpenDetails} style={styles.touchableCard}>
-          <GlowCard variant="pink" padding={12} style={styles.statCard}>
-            <View style={styles.cardHeaderRow}>
-              <Text style={styles.cardLabel}>ROUTINE</Text>
-              <Ionicons name="sunny-outline" size={16} color={Colors.text} />
-            </View>
-            <Text style={styles.cardValue}>{stats.routinePercent}%</Text>
-            <Text style={styles.cardSubtext}>
-              {stats.completedCount} of {stats.totalCount} completed
-            </Text>
-          </GlowCard>
-        </TouchableOpacity>
+        <StatCard
+          label="Routine"
+          value={`${stats.routinePercent}%`}
+          subtitle={`${stats.completedCount} of ${stats.totalCount} completed`}
+          variant="pink"
+          icon="sunny-outline"
+        />
 
-        {/* Card 2: Hydration */}
-        <TouchableOpacity activeOpacity={0.85} onPress={onOpenDetails} style={styles.touchableCard}>
-          <GlowCard variant="softBlue" padding={12} style={styles.statCard}>
-            <View style={styles.cardHeaderRow}>
-              <Text style={styles.cardLabel}>HYDRATION</Text>
-              <Ionicons name="water-outline" size={16} color={Colors.text} />
-            </View>
-            <Text style={styles.cardValue}>{stats.hydration} gl</Text>
-            <Text style={styles.cardSubtext}>
-              {stats.hydration} of {stats.hydrationGoal} glasses
-            </Text>
-          </GlowCard>
-        </TouchableOpacity>
+        <StatCard
+          label="Hydration"
+          value={`${stats.hydration} gl`}
+          subtitle={`${stats.hydration} of ${stats.hydrationGoal} glasses`}
+          variant="softBlue"
+          icon="water-outline"
+        />
 
-        {/* Card 3: Glow Score */}
-        <TouchableOpacity activeOpacity={0.85} onPress={onOpenDetails} style={styles.touchableCard}>
-          <GlowCard variant="butterYellow" padding={12} style={styles.statCard}>
-            <View style={styles.cardHeaderRow}>
-              <Text style={styles.cardLabel}>GLOW SCORE</Text>
-              <Ionicons name="sparkles-outline" size={16} color={Colors.text} />
-            </View>
-            <Text style={styles.cardValue}>{stats.glowScore.toFixed(1)}</Text>
-            <Text style={styles.cardSubtext}>Daily Glow score</Text>
-          </GlowCard>
-        </TouchableOpacity>
+        <StatCard
+          label="Glow Score"
+          value={stats.glowScore.toFixed(1)}
+          subtitle="Daily Glow score"
+          variant="butterYellow"
+          icon="sparkles-outline"
+        />
 
-        {/* Card 4: Products Used */}
-        <TouchableOpacity activeOpacity={0.85} onPress={onOpenDetails} style={styles.touchableCard}>
-          <GlowCard variant="softLilac" padding={12} style={styles.statCard}>
-            <View style={styles.cardHeaderRow}>
-              <Text style={styles.cardLabel}>PRODUCTS</Text>
-              <Ionicons name="cube-outline" size={16} color={Colors.text} />
-            </View>
-            <Text style={styles.cardValue}>{stats.productsCount}</Text>
-            <Text style={styles.cardSubtext}>
-              {stats.productsCount === 1 ? '1 product logged' : `${stats.productsCount} products logged`}
-            </Text>
-          </GlowCard>
-        </TouchableOpacity>
+        <StatCard
+          label="Products"
+          value={stats.productsCount}
+          subtitle={stats.productsCount === 1 ? '1 product logged' : `${stats.productsCount} products logged`}
+          variant="softLilac"
+          icon="cube-outline"
+        />
       </View>
     </View>
   );
@@ -188,36 +166,6 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
-  },
-  touchableCard: {
-    width: '48%',
-  },
-  statCard: {
-    minHeight: 90,
-    justifyContent: 'space-between',
-  },
-  cardHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  cardLabel: {
-    ...Typography.caption,
-    fontSize: 10,
-    letterSpacing: 0.5,
-    fontWeight: '700',
-    color: Colors.textSecondary,
-  },
-  cardValue: {
-    ...Typography.h1,
-    fontSize: 22,
-    color: Colors.text,
-    marginVertical: 2,
-  },
-  cardSubtext: {
-    ...Typography.caption,
-    fontSize: 11,
-    color: Colors.textSecondary,
+    gap: Spacing.xs + 2,
   },
 });

@@ -11,6 +11,12 @@ export const styles = StyleSheet.create({
   contentCol: {
     paddingVertical: 2,
   },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 2,
+  },
   label: {
     ...Typography.caption,
     fontSize: 11,
@@ -18,7 +24,10 @@ export const styles = StyleSheet.create({
     color: Colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
-    marginBottom: 2,
+    flexShrink: 1,
+  },
+  icon: {
+    marginLeft: 4,
   },
   value: {
     ...Typography.h2,
