@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, TouchableOpacity, ViewStyle, StyleProp, Platform } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '../../constants/colors';
+import { useTheme } from '../../context/ThemeContext';
 
 interface IconButtonProps {
   icon: React.ReactNode;
@@ -15,9 +16,12 @@ export const IconButton: React.FC<IconButtonProps> = ({
   icon,
   onPress,
   size = 40,
-  backgroundColor = Colors.white,
+  backgroundColor,
   style,
 }) => {
+  const { colors } = useTheme();
+  const bg = backgroundColor || colors.white;
+
   const handlePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onPress();
@@ -33,7 +37,7 @@ export const IconButton: React.FC<IconButtonProps> = ({
           width: size,
           height: size,
           borderRadius: size / 2,
-          backgroundColor,
+          backgroundColor: bg,
         },
         style,
       ]}

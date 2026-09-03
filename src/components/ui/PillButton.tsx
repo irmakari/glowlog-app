@@ -10,9 +10,10 @@ import {
   StyleProp,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { Colors, ColorVariant, CARD_COLORS } from '../../constants/colors';
+import { Colors, ColorVariant, CARD_COLORS, DARK_CARD_COLORS } from '../../constants/colors';
 import { Spacing } from '../../constants/spacing';
 import { Typography } from '../../constants/typography';
+import { useTheme } from '../../context/ThemeContext';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost';
 export type ButtonSize = 'sm' | 'md' | 'lg';
@@ -46,6 +47,8 @@ export const PillButton: React.FC<PillButtonProps> = ({
   textStyle,
   hapticStyle = Haptics.ImpactFeedbackStyle.Medium,
 }) => {
+  const { isDark, colors } = useTheme();
+
   const handlePress = () => {
     if (disabled || loading) return;
     Haptics.impactAsync(hapticStyle);
@@ -53,15 +56,17 @@ export const PillButton: React.FC<PillButtonProps> = ({
   };
 
   const getContainerStyle = (): ViewStyle => {
-    let bg = Colors.text;
+    let bg = colors.text;
     let border = 'transparent';
     let borderWidth = 0;
 
+    const palette = isDark ? DARK_CARD_COLORS : CARD_COLORS;
+
     if (variant === 'secondary') {
-      bg = customColor || CARD_COLORS[pastelColor] || Colors.pink;
+      bg = customColor || palette[pastelColor] || (isDark ? colors.pink : Colors.pink);
     } else if (variant === 'outline') {
       bg = 'transparent';
-      border = Colors.text;
+      border = colors.text;
       borderWidth = 1.5;
     } else if (variant === 'ghost') {
       bg = 'transparent';
@@ -90,8 +95,8 @@ export const PillButton: React.FC<PillButtonProps> = ({
   };
 
   const getTextColor = (): string => {
-    if (variant === 'primary') return Colors.white;
-    return Colors.text;
+    if (variant === 'primary') return isDark ? colors.background : Colors.white;
+    return colors.text;
   };
 
   return (

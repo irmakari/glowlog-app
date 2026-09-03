@@ -7,6 +7,7 @@ import { getCalendarGridDays } from '../../utils/calendar.utils';
 import { HistoryCalendarProps } from './HistoryCalendar.types';
 import { styles } from './HistoryCalendar.styles';
 import { Colors } from '../../../../constants/colors';
+import { useTheme } from '../../../../context/ThemeContext';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -18,6 +19,8 @@ export const HistoryCalendar: React.FC<HistoryCalendarProps> = ({
   onNextMonth,
   onPressDay,
 }) => {
+  const { colors, isDark } = useTheme();
+
   const gridDays = useMemo(() => {
     return getCalendarGridDays(history.year, history.month);
   }, [history.year, history.month]);
@@ -30,27 +33,29 @@ export const HistoryCalendar: React.FC<HistoryCalendarProps> = ({
     return rows;
   }, [gridDays]);
 
+  const arrowBg = isDark ? 'rgba(255, 255, 255, 0.12)' : Colors.white;
+
   return (
     <GlowCard variant="cream" padding={14} style={styles.card}>
       {/* Month Header Nav */}
       <View style={styles.monthHeader}>
-        <Text style={styles.monthTitle}>{history.formattedMonth}</Text>
+        <Text style={[styles.monthTitle, { color: colors.text }]}>{history.formattedMonth}</Text>
         <View style={styles.navRow}>
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={onPrevMonth}
-            style={styles.navArrow}
+            style={[styles.navArrow, { backgroundColor: arrowBg }]}
           >
-            <Ionicons name="chevron-back" size={18} color={Colors.text} />
+            <Ionicons name="chevron-back" size={18} color={colors.text} />
           </TouchableOpacity>
 
           <TouchableOpacity
             activeOpacity={0.7}
             disabled={!canGoNext}
             onPress={onNextMonth}
-            style={[styles.navArrow, !canGoNext && styles.navArrowDisabled]}
+            style={[styles.navArrow, { backgroundColor: arrowBg }, !canGoNext && styles.navArrowDisabled]}
           >
-            <Ionicons name="chevron-forward" size={18} color={Colors.text} />
+            <Ionicons name="chevron-forward" size={18} color={colors.text} />
           </TouchableOpacity>
         </View>
       </View>
@@ -59,7 +64,7 @@ export const HistoryCalendar: React.FC<HistoryCalendarProps> = ({
       <View style={styles.weekdayRow}>
         {WEEKDAYS.map((day) => (
           <View key={day} style={styles.weekdayCell}>
-            <Text style={styles.weekdayText}>{day}</Text>
+            <Text style={[styles.weekdayText, { color: colors.textSecondary }]}>{day}</Text>
           </View>
         ))}
       </View>

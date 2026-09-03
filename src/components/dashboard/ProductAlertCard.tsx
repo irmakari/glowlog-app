@@ -6,6 +6,7 @@ import { PillButton } from '../ui/PillButton';
 import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing } from '../../constants/spacing';
+import { useTheme } from '../../context/ThemeContext';
 
 interface ProductAlertCardProps {
   title: string;
@@ -20,21 +21,24 @@ export const ProductAlertCard: React.FC<ProductAlertCardProps> = ({
   actionText,
   onAction,
 }) => {
+  const { colors, isDark } = useTheme();
+  const buttonBg = isDark ? 'rgba(255, 255, 255, 0.12)' : Colors.white;
+
   return (
     <GlowCard variant="softPeach" padding={12} style={styles.card}>
       <View style={styles.header}>
         <View style={styles.titleRow}>
-          <View style={styles.iconCircle}>
-            <Ionicons name="cube-outline" size={16} color={Colors.text} />
+          <View style={[styles.iconCircle, { backgroundColor: buttonBg }]}>
+            <Ionicons name="cube-outline" size={16} color={colors.text} />
           </View>
-          <Text style={Typography.h3}>{title}</Text>
+          <Text style={[Typography.h3, { color: colors.text }]}>{title}</Text>
         </View>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>Notice</Text>
+        <View style={[styles.badge, { backgroundColor: buttonBg }]}>
+          <Text style={[styles.badgeText, { color: colors.text }]}>Notice</Text>
         </View>
       </View>
 
-      <Text style={styles.messageText}>{message}</Text>
+      <Text style={[styles.messageText, { color: colors.textSecondary }]}>{message}</Text>
 
       <PillButton
         title={actionText}

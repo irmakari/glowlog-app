@@ -8,7 +8,7 @@ import {
   StyleProp,
 } from 'react-native';
 import { SafeAreaView, Edge } from 'react-native-safe-area-context';
-import { Colors } from '../../constants/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { Spacing } from '../../constants/spacing';
 
 interface ScreenProps {
@@ -27,14 +27,17 @@ export const Screen: React.FC<ScreenProps> = ({
   scrollable = false,
   style,
   contentContainerStyle,
-  backgroundColor = Colors.background,
+  backgroundColor,
   padding = Spacing.lg,
   paddingTop = Spacing.lg,
   edges = ['top', 'left', 'right'],
 }) => {
+  const { colors, isDark } = useTheme();
+  const bg = backgroundColor || colors.background;
+
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor }]} edges={edges}>
-      <StatusBar barStyle="dark-content" backgroundColor={backgroundColor} />
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: bg }]} edges={edges}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={bg} />
       {scrollable ? (
         <ScrollView
           style={[styles.container, style]}

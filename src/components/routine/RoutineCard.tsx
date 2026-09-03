@@ -9,6 +9,7 @@ import { Colors, ColorVariant } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing } from '../../constants/spacing';
 import { TodayRoutineStepState, RoutineType } from '../../features/routines/types/routine.types';
+import { useTheme } from '../../context/ThemeContext';
 
 interface RoutineCardProps {
   type: RoutineType;
@@ -24,6 +25,7 @@ export const RoutineCard: React.FC<RoutineCardProps> = ({
   onCompleteAll,
 }) => {
   const router = useRouter();
+  const { colors, isDark } = useTheme();
   const isMorning = type === 'morning';
   const completedCount = steps.filter((s) => s.completed).length;
   const totalCount = steps.length;
@@ -37,16 +39,18 @@ export const RoutineCard: React.FC<RoutineCardProps> = ({
     router.push(`/routine/edit?type=${type}`);
   };
 
+  const buttonBg = isDark ? 'rgba(255, 255, 255, 0.12)' : Colors.white;
+
   return (
     <GlowCard variant={cardVariant} padding={16} style={styles.card}>
       <View style={styles.header}>
         <View style={styles.titleRow}>
-          <View style={styles.iconCircle}>
-            <Ionicons name={iconName} size={16} color={Colors.text} />
+          <View style={[styles.iconCircle, { backgroundColor: buttonBg }]}>
+            <Ionicons name={iconName} size={16} color={colors.text} />
           </View>
           <View>
-            <Text style={Typography.h3}>{title}</Text>
-            <Text style={styles.progressSubtext}>
+            <Text style={[Typography.h3, { color: colors.text }]}>{title}</Text>
+            <Text style={[styles.progressSubtext, { color: colors.textSecondary }]}>
               {totalCount === 0
                 ? 'No steps added'
                 : `${completedCount} of ${totalCount} completed`}
@@ -59,16 +63,16 @@ export const RoutineCard: React.FC<RoutineCardProps> = ({
             <TouchableOpacity
               activeOpacity={0.7}
               onPress={onCompleteAll}
-              style={styles.completeAllBtn}
+              style={[styles.completeAllBtn, { backgroundColor: buttonBg }]}
             >
-              <Ionicons name="checkmark-done" size={12} color={Colors.text} style={{ marginRight: 3 }} />
-              <Text style={styles.completeAllText}>Mark all</Text>
+              <Ionicons name="checkmark-done" size={12} color={colors.text} style={{ marginRight: 3 }} />
+              <Text style={[styles.completeAllText, { color: colors.text }]}>Mark all</Text>
             </TouchableOpacity>
           )}
 
           {totalCount > 0 && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>
+            <View style={[styles.badge, { backgroundColor: buttonBg }]}>
+              <Text style={[styles.badgeText, { color: colors.text }]}>
                 {Math.round(progressRatio * 100)}%
               </Text>
             </View>
@@ -77,20 +81,25 @@ export const RoutineCard: React.FC<RoutineCardProps> = ({
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={handleEditRoutine}
-            style={styles.editButton}
+            style={[styles.editButton, { backgroundColor: buttonBg }]}
           >
-            <Ionicons name="pencil" size={14} color={Colors.text} />
+            <Ionicons name="pencil" size={14} color={colors.text} />
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Progress Bar */}
       {totalCount > 0 && (
-        <View style={styles.progressBarBackground}>
+        <View
+          style={[
+            styles.progressBarBackground,
+            { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.65)' },
+          ]}
+        >
           <View
             style={[
               styles.progressBarFill,
-              { width: `${progressRatio * 100}%` },
+              { width: `${progressRatio * 100}%`, backgroundColor: colors.text },
             ]}
           />
         </View>
@@ -99,7 +108,7 @@ export const RoutineCard: React.FC<RoutineCardProps> = ({
       {/* Step Rows or Empty State */}
       {totalCount === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
             {isMorning
               ? 'Your morning ritual is waiting ✨'
               : 'Create a calm little night routine.'}
@@ -112,7 +121,16 @@ export const RoutineCard: React.FC<RoutineCardProps> = ({
           />
         </View>
       ) : (
-        <View style={styles.listContainer}>
+        <View
+          style={[
+            styles.listContainer,
+            {
+              backgroundColor: isDark ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.55)',
+              borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
+              borderWidth: isDark ? 1 : 0,
+            },
+          ]}
+        >
           {steps.map((step, index) => {
             const productName = step.product
               ? `${step.product.brand ? step.product.brand + ' ' : ''}${step.product.name}`

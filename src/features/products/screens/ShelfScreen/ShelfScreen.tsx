@@ -14,9 +14,13 @@ import { styles } from './ShelfScreen.styles';
 import { Colors } from '../../../../constants/colors';
 import { Spacing } from '../../../../constants/spacing';
 import { Typography } from '../../../../constants/typography';
+import { useTheme } from '../../../../context/ThemeContext';
+import { useTranslation } from '../../../../hooks/useTranslation';
 
 export const ShelfScreen: React.FC = () => {
   const router = useRouter();
+  const { colors, isDark } = useTheme();
+  const { t, language } = useTranslation();
   const { products, loading, refreshProducts } = useProducts();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -43,7 +47,7 @@ export const ShelfScreen: React.FC = () => {
     });
 
     const items = [
-      { id: 'all', label: 'All Products', count: products.length },
+      { id: 'all', label: language === 'tr' ? 'Tüm Ürünler' : 'All Products', count: products.length },
     ];
 
     PRODUCT_CATEGORIES.forEach((catOpt) => {
@@ -58,7 +62,7 @@ export const ShelfScreen: React.FC = () => {
     });
 
     return items;
-  }, [products]);
+  }, [products, language]);
 
   // Filter products based on selected category & search query
   const filteredProducts = useMemo(() => {
@@ -81,36 +85,46 @@ export const ShelfScreen: React.FC = () => {
       <View style={styles.headerRow}>
         <View style={styles.headerTextCol}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={styles.title}>My Shelf</Text>
+            <Text style={[styles.title, { color: colors.text }]}>
+              {language === 'tr' ? 'Rafım' : 'My Shelf'}
+            </Text>
             <Ionicons name="sparkles" size={18} color="#E59935" style={{ marginLeft: 6 }} />
           </View>
-          <Text style={styles.subtitle}>
-            Everything currently in your routine.
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+            {language === 'tr' ? 'Bakım rutininizdeki tüm ürünler.' : 'Everything currently in your routine.'}
           </Text>
         </View>
         <IconButton
-          icon={<Ionicons name="add" size={22} color={Colors.text} />}
+          icon={<Ionicons name="add" size={22} color={colors.text} />}
           onPress={handleAddProduct}
-          backgroundColor={Colors.white}
+          backgroundColor={colors.white}
           size={38}
         />
       </View>
 
       {/* Search Bar */}
       {products.length > 0 && (
-        <View style={localStyles.searchContainer}>
-          <Ionicons name="search-outline" size={18} color={Colors.textSecondary} style={{ marginRight: 8 }} />
+        <View
+          style={[
+            localStyles.searchContainer,
+            {
+              backgroundColor: colors.white,
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          <Ionicons name="search-outline" size={18} color={colors.textSecondary} style={{ marginRight: 8 }} />
           <TextInput
-            style={localStyles.searchInput}
-            placeholder="Search products or brands..."
-            placeholderTextColor={Colors.textMuted}
+            style={[localStyles.searchInput, { color: colors.text }]}
+            placeholder={language === 'tr' ? 'Ürün veya marka ara...' : 'Search products or brands...'}
+            placeholderTextColor={colors.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
             clearButtonMode="while-editing"
           />
           {searchQuery ? (
             <IconButton
-              icon={<Ionicons name="close-circle" size={18} color={Colors.textSecondary} />}
+              icon={<Ionicons name="close-circle" size={18} color={colors.textSecondary} />}
               onPress={() => setSearchQuery('')}
               size={24}
               backgroundColor="transparent"

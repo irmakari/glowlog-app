@@ -8,6 +8,7 @@ import { calculateGlowScore } from '../../../../utils/glowScore';
 import { Colors } from '../../../../constants/colors';
 import { Typography } from '../../../../constants/typography';
 import { Spacing } from '../../../../constants/spacing';
+import { useTheme } from '../../../../context/ThemeContext';
 
 interface DayStatsGridProps {
   dateKey: string;
@@ -15,6 +16,7 @@ interface DayStatsGridProps {
 }
 
 export const DayStatsGrid: React.FC<DayStatsGridProps> = ({ dateKey, onOpenDetails }) => {
+  const { colors } = useTheme();
   const { summary, loading } = useDailySummary(dateKey);
 
   const todayKey = useMemo(() => getLocalDateString(), []);
@@ -50,7 +52,7 @@ export const DayStatsGrid: React.FC<DayStatsGridProps> = ({ dateKey, onOpenDetai
   if (loading && !summary) {
     return (
       <View style={styles.loadingBox}>
-        <ActivityIndicator size="small" color={Colors.text} />
+        <ActivityIndicator size="small" color={colors.text} />
       </View>
     );
   }
@@ -64,7 +66,7 @@ export const DayStatsGrid: React.FC<DayStatsGridProps> = ({ dateKey, onOpenDetai
       {/* Title Header */}
       <View style={styles.headerRow}>
         <View style={styles.rowCenter}>
-          <Text style={styles.sectionTitle}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
             {isToday ? 'This Day (Today)' : summary.formattedDate}
           </Text>
           {isToday && (
@@ -74,8 +76,8 @@ export const DayStatsGrid: React.FC<DayStatsGridProps> = ({ dateKey, onOpenDetai
           )}
         </View>
         <TouchableOpacity activeOpacity={0.7} onPress={onOpenDetails} style={styles.detailBtn}>
-          <Text style={styles.detailBtnText}>View Details</Text>
-          <Ionicons name="chevron-forward" size={14} color={Colors.text} />
+          <Text style={[styles.detailBtnText, { color: colors.textSecondary }]}>View Details</Text>
+          <Ionicons name="chevron-forward" size={14} color={colors.textSecondary} />
         </TouchableOpacity>
       </View>
 
