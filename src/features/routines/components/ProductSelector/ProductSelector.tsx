@@ -15,12 +15,12 @@ export const ProductSelector: React.FC<ProductSelectorProps> = ({
   const [products, setProducts] = useState<Product[]>(productsOverride || []);
 
   useEffect(() => {
-    if (productsOverride) {
-      setProducts(productsOverride);
-      return;
+    if (!productsOverride) {
+      productService.getActiveProducts().then(setProducts).catch(console.error);
     }
-    productService.getActiveProducts().then(setProducts).catch(console.error);
   }, [productsOverride]);
+
+  const displayedProducts = productsOverride ?? products;
 
   return (
     <View style={styles.container}>
@@ -41,12 +41,12 @@ export const ProductSelector: React.FC<ProductSelectorProps> = ({
         )}
       </TouchableOpacity>
 
-      {products.length === 0 ? (
+      {displayedProducts.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>No products on your Shelf yet.</Text>
         </View>
       ) : (
-        products.map((prod) => {
+        displayedProducts.map((prod) => {
           const isSelected = selectedProductId === prod.id;
           return (
             <TouchableOpacity

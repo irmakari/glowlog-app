@@ -30,8 +30,8 @@ export const DbInspector: React.FC<DbInspectorProps> = () => {
 
   const fetchTableRows = useCallback(async (tableName: TableName) => {
     try {
-      setLoading(true);
       const db = await getDb();
+      setLoading(true);
       const result = await db.getAllAsync(`SELECT * FROM ${tableName}`);
       setRows(result || []);
     } catch (err) {
@@ -43,6 +43,8 @@ export const DbInspector: React.FC<DbInspectorProps> = () => {
   }, []);
 
   useEffect(() => {
+    // The inspector mirrors the selected external database table.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchTableRows(activeTable);
   }, [activeTable, fetchTableRows]);
 

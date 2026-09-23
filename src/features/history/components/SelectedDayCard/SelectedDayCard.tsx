@@ -21,12 +21,8 @@ export const SelectedDayCard: React.FC<SelectedDayCardProps> = ({ dateKey }) => 
   const todayKey = useMemo(() => getLocalDateString(), []);
   const isToday = dateKey === todayKey;
 
-  const [isEditing, setIsEditing] = useState<boolean>(isToday);
-
-  // When dateKey changes, set default isEditing mode (true for today, false for past)
-  React.useEffect(() => {
-    setIsEditing(isToday);
-  }, [dateKey, isToday]);
+  const [editState, setEditState] = useState({ dateKey, isEditing: isToday });
+  const isEditing = editState.dateKey === dateKey ? editState.isEditing : isToday;
 
   if (loading && !summary) {
     return (
@@ -59,7 +55,7 @@ export const SelectedDayCard: React.FC<SelectedDayCardProps> = ({ dateKey }) => 
         {!isToday && (
           <PillButton
             title={isEditing ? 'Done' : 'Edit Day'}
-            onPress={() => setIsEditing((prev) => !prev)}
+            onPress={() => setEditState({ dateKey, isEditing: !isEditing })}
             variant={isEditing ? 'primary' : 'outline'}
             size="sm"
           />

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   StyleSheet,
   Text,
@@ -63,18 +63,20 @@ export default function ProfileScreen() {
   const [restoreModalVisible, setRestoreModalVisible] = useState(false);
   const [backupJsonText, setBackupJsonText] = useState('');
 
-  useEffect(() => {
-    loadSettings();
-  }, []);
-
-  const loadSettings = async () => {
+  const loadSettings = useCallback(async () => {
     try {
       const data = await settingsService.getSettings();
       setSettings(data);
     } catch (e) {
       console.error('Failed to load settings:', e);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    // Settings are persisted outside React and must be synchronized on mount.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadSettings();
+  }, [loadSettings]);
 
   const handleUpdateHydration = async (delta: number) => {
     const newGoal = Math.max(4, Math.min(20, settings.hydrationGoal + delta));
@@ -852,7 +854,7 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
   },
   modalBackdrop: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   modalKeyboardAvoid: {
     width: '100%',

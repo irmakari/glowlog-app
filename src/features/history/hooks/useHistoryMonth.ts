@@ -53,7 +53,7 @@ export function useHistoryMonth() {
     } else {
       setCurrentMonth((m) => m - 1);
     }
-  }, [currentMonth]);
+  }, [currentMonth, setCurrentMonth, setCurrentYear]);
 
   const goToNextMonth = useCallback(() => {
     if (!canGoNext()) return;
@@ -63,7 +63,7 @@ export function useHistoryMonth() {
     } else {
       setCurrentMonth((m) => m + 1);
     }
-  }, [currentMonth, canGoNext]);
+  }, [currentMonth, canGoNext, setCurrentMonth, setCurrentYear]);
 
   return {
     currentYear,
