@@ -1,32 +1,21 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Text } from 'react-native';
 import { GlowCard } from '../../../../components/ui/GlowCard';
 import { PillButton } from '../../../../components/ui/PillButton';
 import { EmptyShelfStateProps } from './EmptyShelfState.types';
 import { styles } from './EmptyShelfState.styles';
+import { useTheme } from '../../../../context/ThemeContext';
 
 export const EmptyShelfState: React.FC<EmptyShelfStateProps> = ({
   onAddProduct,
-  onSeedDemo,
   style,
 }) => {
-  const [seeding, setSeeding] = useState(false);
-
-  const handleSeed = async () => {
-    if (!onSeedDemo) return;
-    setSeeding(true);
-    try {
-      await onSeedDemo();
-    } finally {
-      setSeeding(false);
-    }
-  };
-
+  const { colors } = useTheme();
   return (
     <GlowCard variant="cream" padding={20} style={[styles.card, style]}>
       <Text style={styles.emoji}>🧴</Text>
-      <Text style={styles.title}>Your shelf is looking a little empty</Text>
-      <Text style={styles.description}>
+      <Text style={[styles.title, { color: colors.text }]}>Your shelf is looking a little empty</Text>
+      <Text style={[styles.description, { color: colors.textSecondary }]}>
         Add the skincare products you&apos;re currently using to track opened dates and daily usage.
       </Text>
       <PillButton
@@ -36,16 +25,6 @@ export const EmptyShelfState: React.FC<EmptyShelfStateProps> = ({
         size="md"
         style={styles.button}
       />
-      {__DEV__ && onSeedDemo && (
-        <PillButton
-          title="🌱 Load Demo Products (Dev)"
-          onPress={handleSeed}
-          variant="secondary"
-          size="sm"
-          loading={seeding}
-          style={{ marginTop: 10 }}
-        />
-      )}
     </GlowCard>
   );
 };

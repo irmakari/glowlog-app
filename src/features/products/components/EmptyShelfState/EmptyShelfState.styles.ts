@@ -1,5 +1,4 @@
 import { StyleSheet } from 'react-native';
-import { Colors } from '../../../../constants/colors';
 import { Typography } from '../../../../constants/typography';
 import { Spacing } from '../../../../constants/spacing';
 
@@ -22,7 +21,6 @@ export const styles = StyleSheet.create({
   description: {
     ...Typography.body,
     fontSize: 14,
-    color: Colors.textSecondary,
     textAlign: 'center',
     maxWidth: '88%',
     lineHeight: 20,

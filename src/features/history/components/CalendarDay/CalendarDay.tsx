@@ -1,6 +1,5 @@
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { CalendarDayProps } from './CalendarDay.types';
 import { styles } from './CalendarDay.styles';
@@ -23,13 +22,12 @@ export const CalendarDay: React.FC<CalendarDayProps> = ({
     onPressDay(dateKey);
   };
 
-  const getBackgroundColor = () => {
-    if (!isCurrentMonth) return isDark ? 'rgba(255, 255, 255, 0.04)' : Colors.cardCream;
-    if (status === 'complete') return isDark ? '#26422C' : Colors.sageGreen;
-    if (status === 'partial') return isDark ? '#4D3E1C' : Colors.butterYellow;
-    if (status === 'future') return isDark ? 'rgba(255, 255, 255, 0.08)' : Colors.white;
-    return isDark ? 'rgba(255, 255, 255, 0.08)' : Colors.white;
-  };
+  const backgroundColor = isSelected
+    ? (isDark ? Colors.sageGreen : Colors.darkCard)
+    : (isDark ? '#3B3540' : Colors.white);
+  const numberColor = isSelected
+    ? (isDark ? Colors.darkCard : Colors.white)
+    : ((!isCurrentMonth || isFuture) ? colors.textMuted : colors.text);
 
   const accessibilityLabel = `${dateKey}, routine ${status}`;
 
@@ -41,32 +39,26 @@ export const CalendarDay: React.FC<CalendarDayProps> = ({
       accessibilityLabel={accessibilityLabel}
       style={[
         styles.cell,
-        { backgroundColor: getBackgroundColor() },
+        { backgroundColor },
         !isCurrentMonth && styles.cellOtherMonth,
-        isToday && [styles.cellToday, { borderColor: colors.text }],
-        isSelected && { borderWidth: 2.5, borderColor: colors.text },
+        isToday && !isSelected && [styles.cellToday, { borderColor: colors.text }],
       ]}
     >
       <Text
         style={[
           styles.dayNumber,
-          { color: (!isCurrentMonth || isFuture) ? colors.textMuted : colors.text },
+          { color: numberColor },
         ]}
       >
         {dayNumber}
       </Text>
 
-      {/* Accessible status indicators */}
-      {isCurrentMonth && status === 'complete' && (
-        <Ionicons
-          name="checkmark"
-          size={12}
-          color={colors.text}
-          style={styles.completeIcon}
-        />
-      )}
-      {isCurrentMonth && status === 'partial' && (
-        <View style={[styles.statusDot, { backgroundColor: colors.text }]} />
+      {isCurrentMonth && (status === 'complete' || status === 'partial') && (
+        <View style={[styles.statusDot, {
+          backgroundColor: isSelected && isDark
+            ? Colors.darkCard
+            : (status === 'complete' ? Colors.sageGreen : Colors.butterYellow),
+        }]} />
       )}
     </TouchableOpacity>
   );

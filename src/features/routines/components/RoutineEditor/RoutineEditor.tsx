@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Modal } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, Modal, Animated, Easing, Keyboard, KeyboardEvent, Platform, Pressable, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { GlowCard } from '../../../../components/ui/GlowCard';
 import { PillButton } from '../../../../components/ui/PillButton';
-import { Screen } from '../../../../components/ui/Screen';
 import { RoutineStepEditorItem } from '../RoutineStepEditorItem';
 import { RoutineStepForm } from '../RoutineStepForm';
 import { useRoutineEditor } from '../../hooks/useRoutineEditor';
@@ -12,11 +11,22 @@ import { RoutineType, RoutineStepWithProduct } from '../../types/routine.types';
 import { RoutineEditorProps } from './RoutineEditor.types';
 import { styles } from './RoutineEditor.styles';
 import { Colors } from '../../../../constants/colors';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from '../../../../context/ThemeContext';
 
 export const RoutineEditor: React.FC<RoutineEditorProps> = ({
   initialType = 'morning',
 }) => {
   const [activeType, setActiveType] = useState<RoutineType>(initialType);
+  const { height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
+  const [keyboardOffset] = useState(() => new Animated.Value(0));
+  const sheetMaxHeight = keyboardOffset.interpolate({
+    inputRange: [0, height],
+    outputRange: [height * 0.85, 0],
+    extrapolate: 'clamp',
+  });
   const { steps, addStep, updateStep, deleteStep, moveStepUp, moveStepDown } =
     useRoutineEditor(activeType);
 
@@ -24,6 +34,38 @@ export const RoutineEditor: React.FC<RoutineEditorProps> = ({
   const [editingStep, setEditingStep] = useState<RoutineStepWithProduct | undefined>(
     undefined
   );
+
+  useEffect(() => {
+    if (!modalVisible) {
+      keyboardOffset.setValue(0);
+      return;
+    }
+
+    const moveSheet = (event: KeyboardEvent) => {
+      const keyboardHeight = event.endCoordinates.screenY >= height
+        ? 0
+        : event.endCoordinates.height;
+      Animated.timing(keyboardOffset, {
+        toValue: keyboardHeight,
+        duration: event.duration ?? 250,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: false,
+      }).start();
+    };
+
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillChangeFrame' : 'keyboardDidShow';
+    const showSubscription = Keyboard.addListener(showEvent, moveSheet);
+    const hideSubscription = Platform.OS === 'ios'
+      ? undefined
+      : Keyboard.addListener('keyboardDidHide', () => {
+          Animated.timing(keyboardOffset, { toValue: 0, duration: 200, useNativeDriver: false }).start();
+        });
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription?.remove();
+    };
+  }, [height, keyboardOffset, modalVisible]);
 
   const handleSwitchType = (type: RoutineType) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -152,19 +194,29 @@ export const RoutineEditor: React.FC<RoutineEditorProps> = ({
       <Modal
         visible={modalVisible}
         animationType="slide"
-        presentationStyle="pageSheet"
+        transparent
+        presentationStyle="overFullScreen"
         onRequestClose={() => setModalVisible(false)}
       >
-        <Screen scrollable padding={16}>
-          <Text style={styles.modalTitle}>
-            {editingStep ? 'Edit Routine Step' : 'Add Routine Step'}
-          </Text>
-          <RoutineStepForm
-            initialValues={editingStep}
-            onSubmit={handleFormSubmit}
-            onCancel={() => setModalVisible(false)}
-          />
-        </Screen>
+        <View style={styles.modalOverlay}>
+          <Pressable style={styles.modalBackdrop} onPress={() => setModalVisible(false)} />
+          <Animated.ScrollView
+            bounces={false}
+            keyboardDismissMode="interactive"
+            keyboardShouldPersistTaps="handled"
+            style={[styles.modalSheet, { backgroundColor: colors.background, bottom: keyboardOffset, maxHeight: sheetMaxHeight }]}
+            contentContainerStyle={[styles.modalContent, { paddingBottom: Math.max(insets.bottom, 16) + 16 }]}
+          >
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              {editingStep ? 'Edit Routine Step' : 'Add Routine Step'}
+            </Text>
+            <RoutineStepForm
+              initialValues={editingStep}
+              onSubmit={handleFormSubmit}
+              onCancel={() => setModalVisible(false)}
+            />
+          </Animated.ScrollView>
+        </View>
       </Modal>
     </View>
   );

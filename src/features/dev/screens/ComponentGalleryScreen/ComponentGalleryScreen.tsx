@@ -138,9 +138,9 @@ export const ComponentGalleryScreen: React.FC = () => {
         </View>
 
         <Text style={styles.subtitle}>StreakCard (Singular & Plural):</Text>
-        <StreakCard streakDays={1} />
-        <StreakCard streakDays={6} />
-        <StreakCard streakDays={21} />
+        <StreakCard streakDays={1} completedDates={[]} />
+        <StreakCard streakDays={6} completedDates={[]} />
+        <StreakCard streakDays={21} completedDates={[]} />
 
         <Text style={styles.subtitle}>ProductAlertCard:</Text>
         <ProductAlertCard

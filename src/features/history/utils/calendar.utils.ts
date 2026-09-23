@@ -8,6 +8,50 @@ export interface CalendarGridDay {
   isFuture: boolean;
 }
 
+function dateFromKey(dateKey: string): Date {
+  const [year, month, day] = dateKey.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
+export function shiftDateKey(dateKey: string, days: number): string {
+  const date = dateFromKey(dateKey);
+  date.setDate(date.getDate() + days);
+  return getLocalDateString(date);
+}
+
+export function getWeekStartKey(dateKey: string): string {
+  const date = dateFromKey(dateKey);
+  const daysSinceMonday = (date.getDay() + 6) % 7;
+  date.setDate(date.getDate() - daysSinceMonday);
+  return getLocalDateString(date);
+}
+
+export function getWeekDays(dateKey: string): CalendarGridDay[] {
+  const mondayKey = getWeekStartKey(dateKey);
+  const todayKey = getLocalDateString();
+  return Array.from({ length: 7 }, (_, index) => {
+    const key = shiftDateKey(mondayKey, index);
+    return {
+      dateKey: key,
+      dayNumber: dateFromKey(key).getDate(),
+      isCurrentMonth: true,
+      isToday: key === todayKey,
+      isFuture: key > todayKey,
+    };
+  });
+}
+
+export function formatWeekRange(dateKey: string): string {
+  const monday = dateFromKey(getWeekStartKey(dateKey));
+  const sunday = dateFromKey(shiftDateKey(getWeekStartKey(dateKey), 6));
+  const start = monday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const end = sunday.toLocaleDateString('en-US', {
+    month: monday.getMonth() === sunday.getMonth() ? undefined : 'short',
+    day: 'numeric',
+  });
+  return `${start} – ${end}`;
+}
+
 /**
  * Returns formatted month and year label (e.g. "August 2026")
  */
@@ -53,7 +97,7 @@ export function getCalendarGridDays(year: number, month: number): CalendarGridDa
   const lastDayOfMonth = new Date(year, month, 0);
 
   const daysInMonth = lastDayOfMonth.getDate();
-  const startingDayOfWeek = firstDayOfMonth.getDay(); // 0 = Sun, 1 = Mon...
+  const startingDayOfWeek = (firstDayOfMonth.getDay() + 6) % 7; // 0 = Mon
 
   const grid: CalendarGridDay[] = [];
 

@@ -3,17 +3,20 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { GlowCard } from '../../../../components/ui/GlowCard';
 import { CalendarDay } from '../CalendarDay';
-import { getCalendarGridDays } from '../../utils/calendar.utils';
+import { formatWeekRange, getCalendarGridDays, getWeekDays } from '../../utils/calendar.utils';
 import { HistoryCalendarProps } from './HistoryCalendar.types';
 import { styles } from './HistoryCalendar.styles';
 import { Colors } from '../../../../constants/colors';
 import { useTheme } from '../../../../context/ThemeContext';
 
-const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 export const HistoryCalendar: React.FC<HistoryCalendarProps> = ({
   history,
   selectedDateKey,
+  mode = 'monthly',
+  onChangeMode,
+  additionalDays = {},
   canGoNext,
   onPrevMonth,
   onNextMonth,
@@ -32,6 +35,9 @@ export const HistoryCalendar: React.FC<HistoryCalendarProps> = ({
     }
     return rows;
   }, [gridDays]);
+  const visibleRows = mode === 'weekly'
+    ? [getWeekDays(selectedDateKey ?? `${history.year}-${String(history.month).padStart(2, '0')}-01`)]
+    : gridRows;
 
   const arrowBg = isDark ? 'rgba(255, 255, 255, 0.12)' : Colors.white;
 
@@ -39,7 +45,9 @@ export const HistoryCalendar: React.FC<HistoryCalendarProps> = ({
     <GlowCard variant="cream" padding={14} style={styles.card}>
       {/* Month Header Nav */}
       <View style={styles.monthHeader}>
-        <Text style={[styles.monthTitle, { color: colors.text }]}>{history.formattedMonth}</Text>
+        <Text style={[styles.monthTitle, { color: colors.text }]}>
+          {mode === 'weekly' && selectedDateKey ? formatWeekRange(selectedDateKey) : history.formattedMonth}
+        </Text>
         <View style={styles.navRow}>
           <TouchableOpacity
             activeOpacity={0.7}
@@ -60,6 +68,27 @@ export const HistoryCalendar: React.FC<HistoryCalendarProps> = ({
         </View>
       </View>
 
+      {onChangeMode && (
+        <View style={[styles.modeRow, { backgroundColor: isDark ? colors.white : Colors.white }]}>
+          {(['monthly', 'weekly'] as const).map((option) => {
+            const selected = mode === option;
+            return (
+              <TouchableOpacity
+                key={option}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                onPress={() => onChangeMode(option)}
+                style={[styles.modeButton, selected && { backgroundColor: isDark ? Colors.sageGreen : Colors.darkCard }]}
+              >
+                <Text style={[styles.modeText, { color: selected ? (isDark ? Colors.darkCard : Colors.white) : colors.textSecondary }]}>
+                  {option === 'monthly' ? 'Monthly' : 'Weekly'}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      )}
+
       {/* Weekday Labels */}
       <View style={styles.weekdayRow}>
         {WEEKDAYS.map((day) => (
@@ -71,13 +100,13 @@ export const HistoryCalendar: React.FC<HistoryCalendarProps> = ({
 
       {/* 7-Column Day Grid */}
       <View style={styles.gridContainer}>
-        {gridRows.map((row, rowIndex) => (
+        {visibleRows.map((row, rowIndex) => (
           <View key={rowIndex} style={styles.gridRow}>
             {row.map((gridDay) => (
               <CalendarDay
                 key={gridDay.dateKey}
                 gridDay={gridDay}
-                summary={history.days[gridDay.dateKey]}
+                summary={history.days[gridDay.dateKey] ?? additionalDays[gridDay.dateKey]}
                 isSelected={gridDay.dateKey === selectedDateKey}
                 onPressDay={onPressDay}
               />
@@ -90,15 +119,15 @@ export const HistoryCalendar: React.FC<HistoryCalendarProps> = ({
       <View style={styles.legendRow}>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: Colors.sageGreen }]} />
-          <Text style={styles.legendText}>Complete</Text>
+          <Text style={[styles.legendText, { color: colors.textSecondary }]}>Complete</Text>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: Colors.butterYellow }]} />
-          <Text style={styles.legendText}>Partial</Text>
+          <Text style={[styles.legendText, { color: colors.textSecondary }]}>Partial</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: Colors.white, borderWidth: 1, borderColor: Colors.border }]} />
-          <Text style={styles.legendText}>Empty</Text>
+          <View style={[styles.legendDot, { backgroundColor: isDark ? '#3B3540' : Colors.white, borderWidth: 1, borderColor: colors.border }]} />
+          <Text style={[styles.legendText, { color: colors.textSecondary }]}>Empty</Text>
         </View>
       </View>
     </GlowCard>

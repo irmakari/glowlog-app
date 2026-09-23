@@ -17,6 +17,7 @@ export function useTodayRoutine() {
   const [userName, setUserName] = useState<string>('');
   const [skinType, setSkinType] = useState<string>('Combination');
   const [streakDays, setStreakDays] = useState<number>(0);
+  const [completedDates, setCompletedDates] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -64,6 +65,7 @@ export function useTodayRoutine() {
       // 2. Calculate streak from real database logs
       const streak = calculateStreakFromLogs(completedDates, todayDateStr);
       setStreakDays(streak);
+      setCompletedDates(completedDates);
     } catch (err: any) {
       console.error('Error fetching today routine data:', err);
       setError(err?.message || 'Failed to load today routine');
@@ -71,6 +73,12 @@ export function useTodayRoutine() {
       setLoading(false);
     }
   }, [router, todayDateStr]);
+
+  const refreshStreak = useCallback(async () => {
+    const dates = await routineService.getAllCompletedDates();
+    setCompletedDates(dates);
+    setStreakDays(calculateStreakFromLogs(dates, todayDateStr));
+  }, [todayDateStr]);
 
   useFocusEffect(
     useCallback(() => {
@@ -119,6 +127,7 @@ export function useTodayRoutine() {
           todayDateStr,
           newCompleted
         );
+        await refreshStreak();
       } catch (err) {
         console.error('Failed to toggle routine step:', err);
         // Rollback state on error
@@ -128,7 +137,7 @@ export function useTodayRoutine() {
         else setEveningSteps(rollbackFn);
       }
     },
-    [morningSteps, eveningSteps, todayDateStr]
+    [morningSteps, eveningSteps, todayDateStr, refreshStreak]
   );
 
   const completeAllSteps = useCallback(
@@ -157,12 +166,13 @@ export function useTodayRoutine() {
             )
           )
         );
+        await refreshStreak();
       } catch (err) {
         console.error('Failed to complete all steps:', err);
         fetchTodayData(); // Sync on error
       }
     },
-    [morningSteps, eveningSteps, todayDateStr, fetchTodayData]
+    [morningSteps, eveningSteps, todayDateStr, fetchTodayData, refreshStreak]
   );
 
   const incrementWater = useCallback(async () => {
@@ -191,6 +201,7 @@ export function useTodayRoutine() {
     userName,
     skinType,
     streakDays,
+    completedDates,
     glowScoreBreakdown,
     loading,
     error,

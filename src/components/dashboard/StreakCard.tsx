@@ -9,13 +9,15 @@ import { useTheme } from '../../context/ThemeContext';
 
 interface StreakCardProps {
   streakDays: number;
+  completedDates: string[];
 }
 
 const WEEK_DAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
-export const StreakCard: React.FC<StreakCardProps> = ({ streakDays }) => {
+export const StreakCard: React.FC<StreakCardProps> = ({ streakDays, completedDates }) => {
   const { colors, isDark } = useTheme();
   const todayKey = useMemo(() => getLocalDateString(), []);
+  const completedDateSet = useMemo(() => new Set(completedDates), [completedDates]);
   
   // Calculate current week's 7 days (Mon-Sun)
   const weekDaysInfo = useMemo(() => {
@@ -65,8 +67,7 @@ export const StreakCard: React.FC<StreakCardProps> = ({ streakDays }) => {
         ]}
       >
         {weekDaysInfo.map((day, idx) => {
-          // If user has streak > 0 and day is past, highlight flame icon
-          const hasFlame = day.isPast && (streakDays > 0 || day.isToday);
+          const hasFlame = day.isPast && completedDateSet.has(day.dateKey);
 
           return (
             <View key={idx} style={styles.dayCol}>

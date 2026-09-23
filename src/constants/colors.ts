@@ -31,29 +31,29 @@ export const LightColors = {
 };
 
 export const DarkColors: typeof LightColors = {
-  background: '#121214',
-  text: '#F5F5F7',
-  textSecondary: '#A1A1A6',
-  textMuted: '#6E6E73',
+  background: '#141218',
+  text: '#F7F4F8',
+  textSecondary: '#C3BBC8',
+  textMuted: '#9A92A0',
 
-  // Dark Pastel Variants (Subtle charcoal tinted tones)
-  pink: '#281B24',
-  softBlue: '#192330',
-  butterYellow: '#26221A',
-  sageGreen: '#1A251C',
-  softLilac: '#231B2C',
-  softPeach: '#281C18',
-  mutedGray: '#1C2228',
-  white: '#1E1E22',
-  cardCream: '#1C1C1E',
+  // Rich, tinted surfaces keep the pastel identity visible in dark mode.
+  pink: '#3C2938',
+  softBlue: '#26374A',
+  butterYellow: '#3B3527',
+  sageGreen: '#2B3C31',
+  softLilac: '#372B43',
+  softPeach: '#42302C',
+  mutedGray: '#2A3848',
+  white: '#29262E',
+  cardCream: '#29252D',
 
   // UI state colors
-  border: '#2E2E34',
-  borderDark: '#3E3E46',
-  darkCard: '#1C1C1E',
+  border: '#49414D',
+  borderDark: '#5A505F',
+  darkCard: '#29252D',
   tint: '#F5F5F7',
   icon: '#F5F5F7',
-  tabIconDefault: '#6E6E73',
+  tabIconDefault: '#A59BAA',
   tabIconSelected: '#F5F5F7',
 
   // Status colors
@@ -88,13 +88,25 @@ export const CARD_COLORS: Record<ColorVariant, string> = {
 };
 
 export const DARK_CARD_COLORS: Record<ColorVariant, string> = {
-  cream: '#1C1C1E',
-  pink: '#281B24',
-  softBlue: '#192330',
-  butterYellow: '#26221A',
-  sageGreen: '#1A251C',
-  softLilac: '#231B2C',
-  softPeach: '#281C18',
-  white: '#1E1E22',
-  mutedGray: '#1C2228',
+  cream: DarkColors.cardCream,
+  pink: DarkColors.pink,
+  softBlue: DarkColors.softBlue,
+  butterYellow: DarkColors.butterYellow,
+  sageGreen: DarkColors.sageGreen,
+  softLilac: DarkColors.softLilac,
+  softPeach: DarkColors.softPeach,
+  white: DarkColors.white,
+  mutedGray: DarkColors.mutedGray,
+};
+
+export const DARK_CARD_BORDERS: Record<ColorVariant, string> = {
+  cream: '#514954',
+  pink: '#614458',
+  softBlue: '#45617B',
+  butterYellow: '#685D3E',
+  sageGreen: '#4A6851',
+  softLilac: '#625076',
+  softPeach: '#74524B',
+  white: '#514954',
+  mutedGray: '#496276',
 };

@@ -14,6 +14,7 @@ import Animated, {
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { GlowScoreBreakdown } from '../../types';
+import { useTheme } from '../../context/ThemeContext';
 
 interface GlowRingProps {
   scoreBreakdown: GlowScoreBreakdown;
@@ -26,6 +27,7 @@ export const GlowRing: React.FC<GlowRingProps> = ({
   size = 210,
   isFocused = true,
 }) => {
+  const { colors, isDark } = useTheme();
   const scaleVal = useSharedValue(0.92);
   const opacityVal = useSharedValue(0);
   const breathVal = useSharedValue(1);
@@ -119,7 +121,7 @@ export const GlowRing: React.FC<GlowRingProps> = ({
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           fill="none"
-          opacity={routineActive ? 1 : 0.4}
+          opacity={routineActive ? 1 : (isDark ? 0.68 : 0.4)}
         />
 
         {/* Arc 2: Soft Lilac (Evening Routine) - Bottom Right: 100° to 170° */}
@@ -129,7 +131,7 @@ export const GlowRing: React.FC<GlowRingProps> = ({
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           fill="none"
-          opacity={routineActive ? 1 : 0.4}
+          opacity={routineActive ? 1 : (isDark ? 0.68 : 0.4)}
         />
 
         {/* Arc 3: Soft Blue (Hydration) - Bottom Left: 190° to 260° */}
@@ -139,7 +141,7 @@ export const GlowRing: React.FC<GlowRingProps> = ({
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           fill="none"
-          opacity={hydrationActive ? 1 : 0.4}
+          opacity={hydrationActive ? 1 : (isDark ? 0.68 : 0.4)}
         />
 
         {/* Arc 4: Sage Green (Streak) - Top Left: 280° to 350° */}
@@ -149,7 +151,7 @@ export const GlowRing: React.FC<GlowRingProps> = ({
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           fill="none"
-          opacity={streakActive ? 1 : 0.4}
+          opacity={streakActive ? 1 : (isDark ? 0.68 : 0.4)}
         />
       </Svg>
 
@@ -182,13 +184,16 @@ export const GlowRing: React.FC<GlowRingProps> = ({
             width: innerSize,
             height: innerSize,
             borderRadius: innerSize / 2,
+            backgroundColor: colors.white,
+            borderWidth: isDark ? 1 : 0,
+            borderColor: colors.border,
           },
         ]}
       >
-        <Text style={[styles.scoreText, { fontSize: scoreFontSize, lineHeight: scoreFontSize + 4 }]}>
+        <Text style={[styles.scoreText, { fontSize: scoreFontSize, lineHeight: scoreFontSize + 4, color: colors.text }]}>
           {scoreBreakdown.score.toFixed(1)}
         </Text>
-        <Text style={styles.scoreLabel}>today&apos;s glow</Text>
+        <Text style={[styles.scoreLabel, { color: colors.textSecondary }]}>today&apos;s glow</Text>
 
         {perfectGlow && (
           <View style={styles.sparkleBadge}>

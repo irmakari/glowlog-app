@@ -17,6 +17,23 @@ export const styles = StyleSheet.create({
     ...Typography.h2,
     fontSize: 18,
   },
+  modeRow: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    padding: 3,
+    borderRadius: Spacing.radiusPill,
+    marginBottom: Spacing.md,
+  },
+  modeButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 7,
+    borderRadius: Spacing.radiusPill,
+  },
+  modeText: {
+    ...Typography.caption,
+    fontSize: 12,
+    fontWeight: '700',
+  },
   navArrow: {
     width: 32,
     height: 32,
@@ -45,7 +62,6 @@ export const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: Colors.textSecondary,
-    textTransform: 'uppercase',
   },
   gridContainer: {
     flexDirection: 'row',

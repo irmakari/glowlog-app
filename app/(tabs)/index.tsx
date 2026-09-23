@@ -3,7 +3,6 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Screen } from '../../src/components/ui/Screen';
-import { IconButton } from '../../src/components/ui/IconButton';
 import { GlowScoreCard } from '../../src/components/dashboard/GlowScoreCard';
 import { StreakCard } from '../../src/components/dashboard/StreakCard';
 import { RoutineCard } from '../../src/components/routine/RoutineCard';
@@ -38,6 +37,7 @@ export default function TodayScreen() {
     hydrationGoal,
     userName,
     streakDays,
+    completedDates,
     glowScoreBreakdown,
     toggleStep,
     completeAllSteps,
@@ -79,12 +79,6 @@ export default function TodayScreen() {
             <Ionicons name={iconName as any} size={22} color={iconColor} style={{ marginLeft: 6 }} />
           </View>
         </View>
-        <IconButton
-          icon={<Ionicons name="person-outline" size={18} color={colors.text} />}
-          onPress={() => router.push('/(tabs)/profile')}
-          backgroundColor={colors.white}
-          size={36}
-        />
       </View>
 
       {/* Hero Glow Score Card */}
@@ -97,7 +91,7 @@ export default function TodayScreen() {
       />
 
       {/* 7-Day Horizontal Streak Strip (Placed above Morning Routine) */}
-      <StreakCard streakDays={streakDays} />
+      <StreakCard streakDays={streakDays} completedDates={completedDates} />
 
       {/* Morning Routine Card */}
       <RoutineCard

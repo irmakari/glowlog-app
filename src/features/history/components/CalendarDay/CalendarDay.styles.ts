@@ -1,14 +1,13 @@
 import { StyleSheet } from 'react-native';
 import { Colors } from '../../../../constants/colors';
 import { Typography } from '../../../../constants/typography';
-import { Spacing } from '../../../../constants/spacing';
 
 export const styles = StyleSheet.create({
   cell: {
     flex: 1,
     aspectRatio: 1,
     margin: 3,
-    borderRadius: Spacing.radiusSm,
+    borderRadius: 999,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.white,
@@ -31,13 +30,9 @@ export const styles = StyleSheet.create({
   },
   statusDot: {
     position: 'absolute',
-    bottom: 4,
-    width: 6,
-    height: 6,
+    bottom: 5,
+    width: 5,
+    height: 5,
     borderRadius: 3,
-  },
-  completeIcon: {
-    position: 'absolute',
-    bottom: 2,
   },
 });

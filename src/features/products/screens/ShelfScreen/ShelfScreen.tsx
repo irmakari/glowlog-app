@@ -8,7 +8,6 @@ import { ProductCard } from '../../components/ProductCard';
 import { EmptyShelfState } from '../../components/EmptyShelfState';
 import { CategoryFilterChips } from '../../components/CategoryFilterChips';
 import { useProducts } from '../../hooks/useProducts';
-import { productService } from '../../services/productService';
 import { PRODUCT_CATEGORIES } from '../../../../constants/productCategories';
 import { styles } from './ShelfScreen.styles';
 import { Colors } from '../../../../constants/colors';
@@ -21,7 +20,7 @@ export const ShelfScreen: React.FC = () => {
   const router = useRouter();
   const { colors } = useTheme();
   const { language } = useTranslation();
-  const { products, loading, refreshProducts } = useProducts();
+  const { products, loading } = useProducts();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
@@ -31,11 +30,6 @@ export const ShelfScreen: React.FC = () => {
 
   const handleProductPress = (id: string) => {
     router.push(`/product/${id}`);
-  };
-
-  const handleSeedDemo = async () => {
-    await productService.seedDemoProducts();
-    await refreshProducts();
   };
 
   // Build category filter list dynamically based on active products
@@ -153,7 +147,6 @@ export const ShelfScreen: React.FC = () => {
         /* Empty State */
         <EmptyShelfState
           onAddProduct={handleAddProduct}
-          onSeedDemo={handleSeedDemo}
         />
       ) : (
         /* Clean Filtered Product Cards List */

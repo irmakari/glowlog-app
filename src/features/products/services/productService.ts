@@ -157,46 +157,4 @@ export const productService = {
     await db.runAsync(`DELETE FROM products WHERE id = ?`, [id]);
   },
 
-  /**
-   * Seed sample demo products into SQLite for development testing
-   */
-  async seedDemoProducts(): Promise<void> {
-    const demoItems: CreateProductInput[] = [
-      {
-        name: 'Foaming Facial Cleanser',
-        brand: 'CeraVe',
-        category: 'cleanser',
-        openedAt: '2026-08-01',
-        paoMonths: 12,
-        notes: 'Daily morning cleanser.',
-      },
-      {
-        name: 'Niacinamide 10% + Zinc 1%',
-        brand: 'The Ordinary',
-        category: 'serum',
-        openedAt: '2026-07-20',
-        paoMonths: 6,
-        notes: 'Oil control serum.',
-      },
-      {
-        name: 'Relief Sun SPF50+ PA++++',
-        brand: 'Beauty of Joseon',
-        category: 'sunscreen',
-        openedAt: '2026-08-10',
-        paoMonths: 12,
-      },
-      {
-        name: 'Cicaplast Baume B5+',
-        brand: 'La Roche-Posay',
-        category: 'moisturizer',
-        openedAt: '2026-06-01',
-        paoMonths: 6,
-        notes: 'Calming skin barrier balm.',
-      },
-    ];
-
-    for (const item of demoItems) {
-      await this.createProduct(item);
-    }
-  },
 };

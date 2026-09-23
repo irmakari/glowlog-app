@@ -45,8 +45,8 @@ export const RoutineCard: React.FC<RoutineCardProps> = ({
     <GlowCard variant={cardVariant} padding={16} style={styles.card}>
       <View style={styles.header}>
         <View style={styles.titleRow}>
-          <View style={[styles.iconCircle, { backgroundColor: buttonBg }]}>
-            <Ionicons name={iconName} size={16} color={colors.text} />
+          <View style={styles.iconCircle}>
+            <Ionicons name={iconName} size={20} color={colors.text} />
           </View>
           <View>
             <Text style={[Typography.h3, { color: colors.text }]}>{title}</Text>
@@ -65,17 +65,9 @@ export const RoutineCard: React.FC<RoutineCardProps> = ({
               onPress={onCompleteAll}
               style={[styles.completeAllBtn, { backgroundColor: buttonBg }]}
             >
-              <Ionicons name="checkmark-done" size={12} color={colors.text} style={{ marginRight: 3 }} />
+              <Ionicons name="checkmark-done" size={14} color={colors.text} style={{ marginRight: 5 }} />
               <Text style={[styles.completeAllText, { color: colors.text }]}>Mark all</Text>
             </TouchableOpacity>
-          )}
-
-          {totalCount > 0 && (
-            <View style={[styles.badge, { backgroundColor: buttonBg }]}>
-              <Text style={[styles.badgeText, { color: colors.text }]}>
-                {Math.round(progressRatio * 100)}%
-              </Text>
-            </View>
           )}
 
           <TouchableOpacity
@@ -173,7 +165,6 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: Colors.white,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: Spacing.sm + 2,
@@ -187,37 +178,26 @@ const styles = StyleSheet.create({
   rightHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
   },
   completeAllBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.white,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    height: 34,
+    paddingHorizontal: 11,
     borderRadius: Spacing.radiusPill,
   },
   completeAllText: {
     ...Typography.caption,
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
     color: Colors.text,
   },
-  badge: {
-    backgroundColor: Colors.white,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: Spacing.radiusPill,
-  },
-  badgeText: {
-    ...Typography.badge,
-    fontSize: 11,
-    color: Colors.text,
-  },
   editButton: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     backgroundColor: Colors.white,
     alignItems: 'center',
     justifyContent: 'center',

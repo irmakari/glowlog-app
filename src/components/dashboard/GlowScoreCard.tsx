@@ -6,6 +6,7 @@ import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing } from '../../constants/spacing';
 import { GlowScoreBreakdown } from '../../types';
+import { useTheme } from '../../context/ThemeContext';
 
 interface GlowScoreCardProps {
   scoreBreakdown: GlowScoreBreakdown;
@@ -22,10 +23,11 @@ export const GlowScoreCard: React.FC<GlowScoreCardProps> = ({
   streakDays,
   isFocused = true,
 }) => {
+  const { colors } = useTheme();
   return (
     <View style={styles.heroContainer}>
       <View style={styles.titleRow}>
-        <Text style={styles.heroTitle}>Today&apos;s Glow</Text>
+        <Text style={[styles.heroTitle, { color: colors.textSecondary }]}>Today&apos;s Glow</Text>
         <Ionicons name="sparkles" size={16} color="#E59935" style={{ marginLeft: 4 }} />
       </View>
 

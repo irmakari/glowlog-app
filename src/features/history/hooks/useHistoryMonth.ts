@@ -65,6 +65,12 @@ export function useHistoryMonth() {
     }
   }, [currentMonth, canGoNext, setCurrentMonth, setCurrentYear]);
 
+  const showDate = useCallback((dateKey: string) => {
+    const [year, month] = dateKey.split('-').map(Number);
+    setCurrentYear(year);
+    setCurrentMonth(month);
+  }, [setCurrentYear, setCurrentMonth]);
+
   return {
     currentYear,
     currentMonth,
@@ -75,6 +81,7 @@ export function useHistoryMonth() {
     canGoNext: canGoNext(),
     goToPrevMonth,
     goToNextMonth,
+    showDate,
     refreshHistory: fetchMonthData,
   };
 }
