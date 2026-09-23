@@ -11,7 +11,6 @@ import { getCategoryOption } from '../../../../constants/productCategories';
 import { useProduct } from '../../hooks/useProduct';
 import { productService } from '../../services/productService';
 import {
-  formatOpenedDuration,
   formatProductDate,
   getPAOStatus,
   getDaysSinceOpened,

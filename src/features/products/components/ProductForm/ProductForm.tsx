@@ -88,7 +88,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   };
 
   const handleRemoveImage = () => {
-    setImageUri(undefined);
+    setImageUri('');
   };
 
   const handleDateChange = (event: any, selectedDate?: Date) => {

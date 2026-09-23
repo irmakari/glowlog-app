@@ -2,7 +2,6 @@ import { useState, useCallback } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { historyService } from '../services/historyService';
 import { MonthlyHistory, MonthlyStats } from '../types/history.types';
-import { getLocalDateString } from '../../routines/utils/routineDate.utils';
 
 export function useHistoryMonth() {
   const today = new Date();

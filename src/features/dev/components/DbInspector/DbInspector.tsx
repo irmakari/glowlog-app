@@ -84,7 +84,7 @@ export const DbInspector: React.FC<DbInspectorProps> = () => {
       {loading ? (
         <ActivityIndicator size="small" color={Colors.text} style={{ marginVertical: 10 }} />
       ) : rows.length === 0 ? (
-        <Text style={styles.emptyText}>No rows in table '{activeTable}'.</Text>
+        <Text style={styles.emptyText}>No rows in table &apos;{activeTable}&apos;.</Text>
       ) : (
         <ScrollView style={styles.jsonContainer} nestedScrollEnabled>
           <Text style={styles.jsonText}>{JSON.stringify(rows, null, 2)}</Text>

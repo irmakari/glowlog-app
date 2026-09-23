@@ -5,7 +5,6 @@ import React from 'react';
 import { Platform, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../../src/constants/colors';
-import { Spacing } from '../../src/constants/spacing';
 import { useTranslation } from '../../src/hooks/useTranslation';
 import { useTheme } from '../../src/context/ThemeContext';
 

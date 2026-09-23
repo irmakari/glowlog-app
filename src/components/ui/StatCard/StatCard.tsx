@@ -4,7 +4,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { GlowCard } from '../GlowCard';
 import { StatCardProps } from './StatCard.types';
 import { styles } from './StatCard.styles';
-import { Colors } from '../../../constants/colors';
 import { useTheme } from '../../../context/ThemeContext';
 
 export const StatCard: React.FC<StatCardProps> = ({

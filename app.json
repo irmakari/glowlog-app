@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "GlowLog-app",
-    "slug": "GlowLog-app",
+    "name": "GlowLog",
+    "slug": "glowlog",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -9,7 +9,8 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "bundleIdentifier": "com.irmakari.glowlog",
+      "supportsTablet": false
     },
     "android": {
       "adaptiveIcon": {
@@ -40,6 +41,14 @@
         }
       ],
       "expo-sqlite",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "GlowLog needs access to your selected photos to add a photo to a skincare product.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ],
       "@react-native-community/datetimepicker",
       "expo-font"
     ],

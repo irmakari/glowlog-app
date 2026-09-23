@@ -1,1 +1,1 @@
-export interface ShelfScreenProps {}
+export type ShelfScreenProps = Record<string, never>;

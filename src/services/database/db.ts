@@ -79,17 +79,17 @@ export const initDatabase = async (): Promise<void> => {
   // Safe columns migration for existing databases
   try {
     await db.execAsync(`ALTER TABLE product_usage_logs ADD COLUMN source TEXT DEFAULT 'routine';`);
-  } catch (e) {
+  } catch {
     // Column already exists
   }
   try {
     await db.execAsync(`ALTER TABLE product_usage_logs ADD COLUMN source_id TEXT;`);
-  } catch (e) {
+  } catch {
     // Column already exists
   }
   try {
     await db.execAsync(`ALTER TABLE routine_steps ADD COLUMN updated_at TEXT;`);
-  } catch (e) {
+  } catch {
     // Column already exists
   }
 

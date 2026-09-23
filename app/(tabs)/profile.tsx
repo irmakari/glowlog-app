@@ -54,8 +54,6 @@ export default function ProfileScreen() {
     themeMode: 'system',
   });
 
-  const [loading, setLoading] = useState(true);
-
   // Edit Profile Modal State
   const [editProfileModalVisible, setEditProfileModalVisible] = useState(false);
   const [editName, setEditName] = useState('');
@@ -71,13 +69,10 @@ export default function ProfileScreen() {
 
   const loadSettings = async () => {
     try {
-      setLoading(true);
       const data = await settingsService.getSettings();
       setSettings(data);
     } catch (e) {
       console.error('Failed to load settings:', e);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -186,7 +181,8 @@ export default function ProfileScreen() {
   };
 
   return (
-    <Screen scrollable padding={16}>
+    <>
+      <Screen scrollable padding={16}>
       <View style={styles.header}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <Text style={[Typography.h1, { color: colors.text }]}>{t('profile.title')}</Text>
@@ -511,7 +507,7 @@ export default function ProfileScreen() {
         </GlowCard>
       )}
 
-    </Screen>
+      </Screen>
 
     {/* Edit Profile Modal */}
     <Modal
@@ -932,4 +928,3 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
 });
-

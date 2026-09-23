@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useCallback } from 'react';
-import { StyleSheet, Text, View, Alert } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Screen } from '../../src/components/ui/Screen';
@@ -10,7 +10,6 @@ import { RoutineCard } from '../../src/components/routine/RoutineCard';
 import { WaterTracker } from '../../src/components/hydration/WaterTracker';
 import { ProductAlertCard } from '../../src/components/dashboard/ProductAlertCard';
 import { useTodayRoutine } from '../../src/features/routines/hooks/useTodayRoutine';
-import { getTimeBasedGreeting } from '../../src/utils/glowScore';
 import { Typography } from '../../src/constants/typography';
 import { Spacing } from '../../src/constants/spacing';
 import { Colors } from '../../src/constants/colors';
@@ -19,7 +18,7 @@ import { useTheme } from '../../src/context/ThemeContext';
 
 export default function TodayScreen() {
   const router = useRouter();
-  const { language, t } = useTranslation();
+  const { language } = useTranslation();
   const { colors } = useTheme();
   const [isFocused, setIsFocused] = useState(true);
 

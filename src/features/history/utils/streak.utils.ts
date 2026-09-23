@@ -43,7 +43,6 @@ export function calculateStreaks(completedDates: string[]): {
   }
 
   // 2. Calculate Current Streak (going backward from today or yesterday)
-  const todayStr = getLocalDateString();
   const dateSet = new Set(uniqueSorted);
 
   let checkDate = new Date();

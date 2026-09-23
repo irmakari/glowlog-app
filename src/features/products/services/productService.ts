@@ -1,5 +1,6 @@
 import { getDb } from '../../../services/database/db';
 import { Product, CreateProductInput, UpdateProductInput } from '../types/product.types';
+import { persistProductImage } from './productImageService';
 
 interface ProductRow {
   id: string;
@@ -92,7 +93,7 @@ export const productService = {
         input.category,
         input.openedAt || null,
         input.paoMonths ?? null,
-        input.imageUri || null,
+        persistProductImage(input.imageUri),
         input.notes || null,
         now,
         now,
@@ -118,7 +119,9 @@ export const productService = {
     const category = input.category !== undefined ? input.category : existing.category;
     const openedAt = input.openedAt !== undefined ? input.openedAt : existing.openedAt || null;
     const paoMonths = input.paoMonths !== undefined ? input.paoMonths : existing.paoMonths ?? null;
-    const imageUri = input.imageUri !== undefined ? input.imageUri : existing.imageUri || null;
+    const imageUri = input.imageUri !== undefined
+      ? persistProductImage(input.imageUri)
+      : existing.imageUri || null;
     const notes = input.notes !== undefined ? input.notes : existing.notes || null;
     const archived = input.archived !== undefined ? (input.archived ? 1 : 0) : existing.archived ? 1 : 0;
 

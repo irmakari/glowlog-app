@@ -52,7 +52,7 @@ export const notificationService = {
     // Cancel existing notification for this type first
     try {
       await Notifications.cancelScheduledNotificationAsync(notificationId);
-    } catch (e) {
+    } catch {
       // Ignore if not previously scheduled
     }
 

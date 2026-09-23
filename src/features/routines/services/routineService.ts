@@ -1,7 +1,6 @@
 import { getDb } from '../../../services/database/db';
 import {
   RoutineType,
-  RoutineStep,
   RoutineStepWithProduct,
   RoutineLog,
   CreateRoutineStepInput,

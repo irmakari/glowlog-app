@@ -37,7 +37,7 @@ export const GlowRing: React.FC<GlowRingProps> = ({
       scaleVal.value = withSpring(1, { damping: 13, stiffness: 90 });
       opacityVal.value = withTiming(1, { duration: 350 });
     }
-  }, [isFocused, scoreBreakdown.score]);
+  }, [isFocused, opacityVal, scaleVal, scoreBreakdown.score]);
 
   useEffect(() => {
     breathVal.value = withRepeat(
@@ -48,7 +48,7 @@ export const GlowRing: React.FC<GlowRingProps> = ({
       -1,
       false
     );
-  }, []);
+  }, [breathVal]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scaleVal.value * breathVal.value }],
@@ -188,7 +188,7 @@ export const GlowRing: React.FC<GlowRingProps> = ({
         <Text style={[styles.scoreText, { fontSize: scoreFontSize, lineHeight: scoreFontSize + 4 }]}>
           {scoreBreakdown.score.toFixed(1)}
         </Text>
-        <Text style={styles.scoreLabel}>today's glow</Text>
+        <Text style={styles.scoreLabel}>today&apos;s glow</Text>
 
         {perfectGlow && (
           <View style={styles.sparkleBadge}>

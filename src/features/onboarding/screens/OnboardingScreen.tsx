@@ -105,7 +105,7 @@ export const OnboardingScreen: React.FC = () => {
             <Text style={styles.badgeLabel}>Welcome to GlowLog</Text>
             <Text style={styles.heroTitle}>What should we call you?</Text>
             <Text style={styles.heroSubtitle}>
-              Let's personalize your daily skincare routine and morning greetings.
+              Let&apos;s personalize your daily skincare routine and morning greetings.
             </Text>
 
             <GlowCard variant="cream" padding={20} style={styles.inputCard}>

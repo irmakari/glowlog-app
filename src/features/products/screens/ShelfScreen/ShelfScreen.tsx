@@ -19,8 +19,8 @@ import { useTranslation } from '../../../../hooks/useTranslation';
 
 export const ShelfScreen: React.FC = () => {
   const router = useRouter();
-  const { colors, isDark } = useTheme();
-  const { t, language } = useTranslation();
+  const { colors } = useTheme();
+  const { language } = useTranslation();
   const { products, loading, refreshProducts } = useProducts();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -192,4 +192,3 @@ const localStyles = StyleSheet.create({
     padding: 0,
   },
 });
-

@@ -70,7 +70,7 @@ export function useTodayRoutine() {
     } finally {
       setLoading(false);
     }
-  }, [todayDateStr]);
+  }, [router, todayDateStr]);
 
   useFocusEffect(
     useCallback(() => {

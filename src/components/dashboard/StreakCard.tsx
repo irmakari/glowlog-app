@@ -4,7 +4,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { GlowCard } from '../ui/GlowCard';
 import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
-import { Spacing } from '../../constants/spacing';
 import { getLocalDateString } from '../../features/routines/utils/routineDate.utils';
 import { useTheme } from '../../context/ThemeContext';
 

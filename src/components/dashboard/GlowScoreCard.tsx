@@ -25,7 +25,7 @@ export const GlowScoreCard: React.FC<GlowScoreCardProps> = ({
   return (
     <View style={styles.heroContainer}>
       <View style={styles.titleRow}>
-        <Text style={styles.heroTitle}>Today's Glow</Text>
+        <Text style={styles.heroTitle}>Today&apos;s Glow</Text>
         <Ionicons name="sparkles" size={16} color="#E59935" style={{ marginLeft: 4 }} />
       </View>
 
