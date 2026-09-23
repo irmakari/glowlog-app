@@ -4,28 +4,21 @@ import { Typography } from '../../../../constants/typography';
 import { Spacing } from '../../../../constants/spacing';
 
 export const styles = StyleSheet.create({
-  grabberContainer: {
-    alignItems: 'center',
-    paddingVertical: 4,
-    marginBottom: 4,
-  },
-  grabberBar: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: 'rgba(21, 21, 21, 0.18)',
-  },
   headerNav: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 2,
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,
   },
   title: {
     ...Typography.h1,
     fontSize: 20,
     lineHeight: 24,
+  },
+  headerSubtitle: {
+    ...Typography.caption,
+    fontSize: 12,
+    color: Colors.textSecondary,
+    marginTop: 2,
   },
   card: {
     marginVertical: 6,

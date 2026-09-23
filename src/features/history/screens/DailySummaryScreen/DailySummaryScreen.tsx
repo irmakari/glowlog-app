@@ -38,9 +38,10 @@ export const DailySummaryScreen: React.FC<DailySummaryScreenProps> = ({ date }) 
       <Screen scrollable padding={16}>
         <View style={styles.headerNav}>
           <IconButton
-            icon={<Ionicons name="close" size={20} color={Colors.text} />}
+            icon={<Ionicons name="arrow-back" size={20} color={Colors.text} />}
             onPress={() => router.back()}
             backgroundColor={Colors.white}
+            size={38}
           />
         </View>
         <Text style={styles.title}>Summary not found</Text>
@@ -52,40 +53,38 @@ export const DailySummaryScreen: React.FC<DailySummaryScreenProps> = ({ date }) 
   const eveningCompleted = summary.eveningSteps.filter((s) => s.completed).length;
 
   return (
-    <Screen scrollable padding={14}>
-      {/* Top Drag Handle / Grabber Bar */}
-      <View style={styles.grabberContainer}>
-        <View style={styles.grabberBar} />
-      </View>
-
+    <Screen scrollable padding={16}>
       {/* Header */}
       <View style={styles.headerNav}>
+        <IconButton
+          icon={<Ionicons name="arrow-back" size={20} color={Colors.text} />}
+          onPress={() => router.back()}
+          backgroundColor={Colors.white}
+          size={38}
+          style={{ marginRight: 12 }}
+        />
         <View style={localStyles.headerTextWrapper}>
-          <Text style={styles.title}>{summary.formattedDate}</Text>
-          {isToday && (
-            <View style={localStyles.todayBadge}>
-              <Text style={localStyles.todayBadgeText}>Today</Text>
-            </View>
-          )}
+          <View style={localStyles.rowCenter}>
+            <Text style={styles.title}>{summary.formattedDate}</Text>
+            {isToday && (
+              <View style={localStyles.todayBadge}>
+                <Text style={localStyles.todayBadgeText}>Today</Text>
+              </View>
+            )}
+          </View>
+          <Text style={styles.headerSubtitle}>Daily skincare & hydration log</Text>
         </View>
 
-        <View style={localStyles.headerActions}>
-          {!isToday && (
+        {!isToday && (
+          <View style={localStyles.headerActions}>
             <PillButton
               title={isEditing ? 'Done' : 'Edit Day'}
               onPress={() => setIsEditing((prev) => !prev)}
               variant={isEditing ? 'primary' : 'outline'}
               size="sm"
-              style={{ marginRight: 6 }}
             />
-          )}
-          <IconButton
-            icon={<Ionicons name="close" size={18} color={Colors.text} />}
-            onPress={() => router.back()}
-            backgroundColor={Colors.white}
-            size={32}
-          />
-        </View>
+          </View>
+        )}
       </View>
 
       {/* Past Day Edit Notice */}
@@ -246,16 +245,14 @@ export const DailySummaryScreen: React.FC<DailySummaryScreenProps> = ({ date }) 
 
 const localStyles = {
   headerTextWrapper: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
     flex: 1,
-    gap: 8,
   },
   todayBadge: {
     backgroundColor: Colors.sageGreen,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 10,
+    marginLeft: 8,
   },
   todayBadgeText: {
     fontSize: 10,
@@ -263,8 +260,7 @@ const localStyles = {
     color: Colors.text,
   },
   headerActions: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
+    marginLeft: 8,
   },
   noticeCard: {
     marginBottom: 8,

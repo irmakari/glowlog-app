@@ -11,6 +11,7 @@ import { GlowCard } from '../ui/GlowCard';
 import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing } from '../../constants/spacing';
+import { useTheme } from '../../context/ThemeContext';
 
 interface WaterTrackerProps {
   current: number;
@@ -25,6 +26,7 @@ export const WaterTracker: React.FC<WaterTrackerProps> = ({
   onIncrement,
   onDecrement,
 }) => {
+  const { colors, isDark } = useTheme();
   const scaleVal = useSharedValue(1);
 
   const handleAdd = () => {
@@ -53,22 +55,24 @@ export const WaterTracker: React.FC<WaterTrackerProps> = ({
 
   const indicators = Array.from({ length: goal }, (_, i) => i < current);
 
+  const buttonBg = isDark ? 'rgba(255, 255, 255, 0.12)' : Colors.white;
+
   return (
     <GlowCard variant="softBlue" padding={16} style={styles.card}>
       {/* Top Header matching RoutineCard style system */}
       <View style={styles.header}>
         <View style={styles.titleRow}>
-          <View style={styles.iconCircle}>
-            <Ionicons name="water" size={16} color={Colors.text} />
+          <View style={[styles.iconCircle, { backgroundColor: buttonBg }]}>
+            <Ionicons name="water" size={16} color={colors.text} />
           </View>
           <View style={styles.titleTextCol}>
-            <Text style={Typography.h3}>Hydration</Text>
-            <Text style={styles.caption}>Water today</Text>
+            <Text style={[Typography.h3, { color: colors.text }]}>Hydration</Text>
+            <Text style={[styles.caption, { color: colors.textSecondary }]}>Water today</Text>
           </View>
         </View>
 
-        <Text style={styles.headline}>{current} of {goal} glasses</Text>
-        <Text style={styles.subtext}>
+        <Text style={[styles.headline, { color: colors.text }]}>{current} of {goal} glasses</Text>
+        <Text style={[styles.subtext, { color: colors.textSecondary }]}>
           {isGoalReached
             ? `Goal reached! You've drunk ${current}/${goal} glasses of water today. You are glowing 💧✨`
             : `You drank ${current}/${goal} glasses of water. Keep going, only ${remaining} ${remaining === 1 ? 'glass' : 'glasses'} left for today.`}
@@ -87,37 +91,46 @@ export const WaterTracker: React.FC<WaterTrackerProps> = ({
             }}
             style={[
               styles.dropletCell,
-              filled ? styles.cellFilled : styles.cellEmptyPlus,
+              filled ? styles.cellFilled : [styles.cellEmptyPlus, { backgroundColor: buttonBg }],
             ]}
           >
             {filled ? (
               <Ionicons name="water" size={18} color={Colors.white} />
             ) : (
-              <Ionicons name="add" size={18} color={Colors.text} />
+              <Ionicons name="add" size={18} color={colors.text} />
             )}
           </TouchableOpacity>
         ))}
       </Animated.View>
 
-      {/* Target Goal Info Card (Pinterest Style) */}
-      <View style={styles.targetGoalCard}>
+      {/* Target Goal Info Card */}
+      <View
+        style={[
+          styles.targetGoalCard,
+          {
+            backgroundColor: isDark ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.55)',
+            borderWidth: isDark ? 1 : 0,
+            borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
+          },
+        ]}
+      >
         <View style={styles.targetTextCol}>
-          <Text style={styles.targetTitle}>Daily goal: {goal} glasses</Text>
+          <Text style={[styles.targetTitle, { color: colors.text }]}>Daily goal: {goal} glasses</Text>
           <View style={styles.targetStatsRow}>
             <View>
-              <Text style={styles.statValue}>1.8 l/d</Text>
-              <Text style={styles.statLabel}>AVERAGE</Text>
+              <Text style={[styles.statValue, { color: colors.text }]}>1.8 l/d</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>AVERAGE</Text>
             </View>
             <View>
-              <Text style={styles.statValue}>2.0 l/d</Text>
-              <Text style={styles.statLabel}>TARGET</Text>
+              <Text style={[styles.statValue, { color: colors.text }]}>2.0 l/d</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>TARGET</Text>
             </View>
           </View>
         </View>
 
         {/* Decorative Water Droplet */}
         <View style={styles.decorIconBox}>
-          <Ionicons name="water" size={32} color="rgba(33, 91, 166, 0.25)" />
+          <Ionicons name="water" size={32} color={isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(33, 91, 166, 0.25)'} />
         </View>
       </View>
     </GlowCard>

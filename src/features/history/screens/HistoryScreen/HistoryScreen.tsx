@@ -10,9 +10,13 @@ import { useHistoryMonth } from '../../hooks/useHistoryMonth';
 import { getLocalDateString } from '../../../routines/utils/routineDate.utils';
 import { styles } from './HistoryScreen.styles';
 import { Colors } from '../../../../constants/colors';
+import { useTheme } from '../../../../context/ThemeContext';
+import { useTranslation } from '../../../../hooks/useTranslation';
 
 export const HistoryScreen: React.FC = () => {
   const router = useRouter();
+  const { colors } = useTheme();
+  const { language } = useTranslation();
   const todayKey = useMemo(() => getLocalDateString(), []);
   const [selectedDateKey, setSelectedDateKey] = useState<string>(todayKey);
 
@@ -38,10 +42,14 @@ export const HistoryScreen: React.FC = () => {
       {/* Header */}
       <View style={styles.header}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Text style={styles.title}>History</Text>
-          <Ionicons name="sparkles-outline" size={20} color={Colors.text} style={{ marginLeft: 6 }} />
+          <Text style={[styles.title, { color: colors.text }]}>
+            {language === 'tr' ? 'Geçmiş' : 'History'}
+          </Text>
+          <Ionicons name="sparkles-outline" size={20} color="#E59935" style={{ marginLeft: 6 }} />
         </View>
-        <Text style={styles.subtitle}>Your month in glow</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+          {language === 'tr' ? 'Aylık bakım yolculuğunuz' : 'Your month in glow'}
+        </Text>
       </View>
 
       {/* Loading state */}

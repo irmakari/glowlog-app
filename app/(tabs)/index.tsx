@@ -1,7 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import { StyleSheet, Text, View, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Screen } from '../../src/components/ui/Screen';
 import { IconButton } from '../../src/components/ui/IconButton';
 import { GlowScoreCard } from '../../src/components/dashboard/GlowScoreCard';
@@ -14,9 +14,24 @@ import { getTimeBasedGreeting } from '../../src/utils/glowScore';
 import { Typography } from '../../src/constants/typography';
 import { Spacing } from '../../src/constants/spacing';
 import { Colors } from '../../src/constants/colors';
+import { useTranslation } from '../../src/hooks/useTranslation';
+import { useTheme } from '../../src/context/ThemeContext';
 
 export default function TodayScreen() {
   const router = useRouter();
+  const { language, t } = useTranslation();
+  const { colors } = useTheme();
+  const [isFocused, setIsFocused] = useState(true);
+
+  useFocusEffect(
+    useCallback(() => {
+      setIsFocused(true);
+      return () => {
+        setIsFocused(false);
+      };
+    }, [])
+  );
+
   const {
     morningSteps,
     eveningSteps,
@@ -26,19 +41,31 @@ export default function TodayScreen() {
     streakDays,
     glowScoreBreakdown,
     toggleStep,
+    completeAllSteps,
     incrementWater,
     decrementWater,
   } = useTodayRoutine();
 
-  const { greeting, iconName, iconColor } = useMemo(() => getTimeBasedGreeting(), []);
+  const { greetingEn, greetingTr, iconName, iconColor } = useMemo(() => {
+    const hours = new Date().getHours();
+    if (hours < 12) {
+      return { greetingEn: 'Good morning', greetingTr: 'Günaydın', iconName: 'sunny-outline', iconColor: '#E59935' };
+    } else if (hours < 17) {
+      return { greetingEn: 'Good afternoon', greetingTr: 'Tünaydın', iconName: 'sunny', iconColor: '#E59935' };
+    } else {
+      return { greetingEn: 'Good evening', greetingTr: 'İyi akşamlar', iconName: 'moon-outline', iconColor: '#7C5CBF' };
+    }
+  }, []);
+
+  const greeting = language === 'tr' ? greetingTr : greetingEn;
 
   const formattedDate = useMemo(() => {
-    return new Date().toLocaleDateString('en-US', {
+    return new Date().toLocaleDateString(language === 'tr' ? 'tr-TR' : 'en-US', {
       weekday: 'long',
       month: 'long',
       day: 'numeric',
     });
-  }, []);
+  }, [language]);
 
   const displayGreeting = userName ? `${greeting}, ${userName}` : greeting;
 
@@ -47,16 +74,16 @@ export default function TodayScreen() {
       {/* Top Header */}
       <View style={styles.headerRow}>
         <View style={styles.headerTextCol}>
-          <Text style={styles.dateCaption}>{formattedDate}</Text>
+          <Text style={[styles.dateCaption, { color: colors.textSecondary }]}>{formattedDate}</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 1 }}>
-            <Text style={styles.greetingTitle}>{displayGreeting}</Text>
+            <Text style={[styles.greetingTitle, { color: colors.text }]}>{displayGreeting}</Text>
             <Ionicons name={iconName as any} size={22} color={iconColor} style={{ marginLeft: 6 }} />
           </View>
         </View>
         <IconButton
-          icon={<Ionicons name="person-outline" size={18} color={Colors.text} />}
+          icon={<Ionicons name="person-outline" size={18} color={colors.text} />}
           onPress={() => router.push('/(tabs)/profile')}
-          backgroundColor={Colors.white}
+          backgroundColor={colors.white}
           size={36}
         />
       </View>
@@ -67,6 +94,7 @@ export default function TodayScreen() {
         currentHydration={hydrationCurrent}
         hydrationGoal={hydrationGoal}
         streakDays={streakDays}
+        isFocused={isFocused}
       />
 
       {/* 7-Day Horizontal Streak Strip (Placed above Morning Routine) */}
@@ -77,6 +105,7 @@ export default function TodayScreen() {
         type="morning"
         steps={morningSteps}
         onToggleStep={(id) => toggleStep(id, 'morning')}
+        onCompleteAll={() => completeAllSteps('morning')}
       />
 
       {/* Evening Routine Card */}
@@ -84,6 +113,7 @@ export default function TodayScreen() {
         type="evening"
         steps={eveningSteps}
         onToggleStep={(id) => toggleStep(id, 'evening')}
+        onCompleteAll={() => completeAllSteps('evening')}
       />
 
       {/* Hydration Card */}

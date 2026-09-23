@@ -8,8 +8,9 @@ import {
   Platform,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { Colors, ColorVariant, CARD_COLORS } from '../../constants/colors';
+import { Colors, ColorVariant, CARD_COLORS, DARK_CARD_COLORS } from '../../constants/colors';
 import { Spacing } from '../../constants/spacing';
+import { useTheme } from '../../context/ThemeContext';
 
 interface GlowCardProps {
   children: React.ReactNode;
@@ -32,7 +33,9 @@ export const GlowCard: React.FC<GlowCardProps> = ({
   borderRadius = Spacing.radiusLg,
   bordered = false,
 }) => {
-  const bg = customColor || CARD_COLORS[variant] || Colors.cardCream;
+  const { isDark, colors } = useTheme();
+  const palette = isDark ? DARK_CARD_COLORS : CARD_COLORS;
+  const bg = customColor || palette[variant] || (isDark ? colors.cardCream : Colors.cardCream);
 
   const handlePress = () => {
     if (onPress) {
@@ -45,8 +48,8 @@ export const GlowCard: React.FC<GlowCardProps> = ({
     backgroundColor: bg,
     padding,
     borderRadius,
-    borderWidth: bordered ? 1.5 : 0,
-    borderColor: bordered ? Colors.borderDark : 'transparent',
+    borderWidth: bordered ? 1.5 : (isDark ? 1 : 0),
+    borderColor: bordered ? (isDark ? colors.borderDark : Colors.borderDark) : (isDark ? colors.border : 'transparent'),
   };
 
   if (onPress) {

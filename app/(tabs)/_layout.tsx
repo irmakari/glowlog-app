@@ -3,20 +3,36 @@ import * as Haptics from 'expo-haptics';
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { Platform, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../../src/constants/colors';
 import { Spacing } from '../../src/constants/spacing';
 import { useTranslation } from '../../src/hooks/useTranslation';
+import { useTheme } from '../../src/context/ThemeContext';
 
 export default function TabLayout() {
   const { t } = useTranslation();
+  const { isDark, colors } = useTheme();
+  const insets = useSafeAreaInsets();
+
+  const bottomInset = Platform.OS === 'ios'
+    ? Math.max(insets.bottom + 4, 16)
+    : Math.max(insets.bottom + 6, 12);
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: Colors.white,
-        tabBarInactiveTintColor: '#8E8E93',
-        tabBarStyle: styles.tabBar,
+        tabBarActiveTintColor: isDark ? colors.text : Colors.white,
+        tabBarInactiveTintColor: isDark ? colors.textMuted : '#8E8E93',
+        tabBarStyle: [
+          styles.tabBar,
+          {
+            bottom: bottomInset,
+            backgroundColor: isDark ? colors.cardCream : Colors.darkCard,
+            borderColor: isDark ? colors.border : 'transparent',
+            borderWidth: isDark ? 1 : 0,
+          },
+        ],
         tabBarItemStyle: styles.tabItem,
         tabBarLabelStyle: styles.tabLabel,
       }}
@@ -85,27 +101,29 @@ export default function TabLayout() {
 const styles = StyleSheet.create({
   tabBar: {
     position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 16 : 10,
-    left: 28,
-    right: 28,
+    left: 20,
+    right: 20,
     backgroundColor: Colors.darkCard,
-    borderRadius: Spacing.radiusPill,
-    height: 52,
-    paddingBottom: Platform.OS === 'ios' ? 4 : 2,
-    paddingTop: 4,
+    borderRadius: 32,
+    height: 60,
+    paddingBottom: 0,
+    paddingTop: 0,
     borderTopWidth: 0,
     elevation: 8,
     shadowColor: Colors.text,
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.12,
-    shadowRadius: 14,
+    shadowOpacity: 0.14,
+    shadowRadius: 16,
   },
   tabItem: {
-    paddingVertical: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 4,
   },
   tabLabel: {
     fontSize: 10,
     fontWeight: '600',
-    marginTop: 1,
+    marginTop: 2,
+    marginBottom: 0,
   },
 });

@@ -7,8 +7,8 @@ import {
   StatusBar,
   StyleProp,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors } from '../../constants/colors';
+import { SafeAreaView, Edge } from 'react-native-safe-area-context';
+import { useTheme } from '../../context/ThemeContext';
 import { Spacing } from '../../constants/spacing';
 
 interface ScreenProps {
@@ -18,6 +18,8 @@ interface ScreenProps {
   contentContainerStyle?: StyleProp<ViewStyle>;
   backgroundColor?: string;
   padding?: number;
+  paddingTop?: number;
+  edges?: Edge[];
 }
 
 export const Screen: React.FC<ScreenProps> = ({
@@ -25,18 +27,23 @@ export const Screen: React.FC<ScreenProps> = ({
   scrollable = false,
   style,
   contentContainerStyle,
-  backgroundColor = Colors.background,
+  backgroundColor,
   padding = Spacing.lg,
+  paddingTop = Spacing.lg,
+  edges = ['top', 'left', 'right'],
 }) => {
+  const { colors, isDark } = useTheme();
+  const bg = backgroundColor || colors.background;
+
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor }]} edges={['top', 'left', 'right']}>
-      <StatusBar barStyle="dark-content" backgroundColor={backgroundColor} />
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: bg }]} edges={edges}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={bg} />
       {scrollable ? (
         <ScrollView
           style={[styles.container, style]}
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingHorizontal: padding },
+            { paddingHorizontal: padding, paddingTop },
             contentContainerStyle,
           ]}
           showsVerticalScrollIndicator={false}
@@ -45,7 +52,7 @@ export const Screen: React.FC<ScreenProps> = ({
           {children}
         </ScrollView>
       ) : (
-        <View style={[styles.container, { paddingHorizontal: padding }, style]}>
+        <View style={[styles.container, { paddingHorizontal: padding, paddingTop }, style]}>
           {children}
         </View>
       )}

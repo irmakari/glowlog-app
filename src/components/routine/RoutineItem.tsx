@@ -10,6 +10,7 @@ import Animated, {
 import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing } from '../../constants/spacing';
+import { useTheme } from '../../context/ThemeContext';
 
 export interface RoutineItemProps {
   id: string;
@@ -30,6 +31,7 @@ export const RoutineItem: React.FC<RoutineItemProps> = ({
   onToggle,
   isLast = false,
 }) => {
+  const { colors, isDark } = useTheme();
   const scaleVal = useSharedValue(1);
 
   const handlePress = () => {
@@ -48,17 +50,26 @@ export const RoutineItem: React.FC<RoutineItemProps> = ({
     <TouchableOpacity
       activeOpacity={0.7}
       onPress={handlePress}
-      style={[styles.container, !isLast && styles.borderBottom]}
+      style={[
+        styles.container,
+        !isLast && [styles.borderBottom, { borderBottomColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(21, 21, 21, 0.06)' }],
+      ]}
     >
       <Animated.View style={[styles.checkboxWrapper, checkboxAnimatedStyle]}>
         <View
           style={[
             styles.checkbox,
-            completed ? styles.checkboxChecked : styles.checkboxUnchecked,
+            completed
+              ? { backgroundColor: colors.text }
+              : {
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : Colors.white,
+                  borderColor: isDark ? 'rgba(255, 255, 255, 0.3)' : Colors.textSecondary,
+                  borderWidth: 1.5,
+                },
           ]}
         >
           {completed && (
-            <Ionicons name="checkmark" size={14} color={Colors.white} />
+            <Ionicons name="checkmark" size={14} color={isDark ? colors.background : Colors.white} />
           )}
         </View>
       </Animated.View>
@@ -67,7 +78,8 @@ export const RoutineItem: React.FC<RoutineItemProps> = ({
         <Text
           style={[
             styles.title,
-            completed && styles.titleCompleted,
+            { color: colors.text },
+            completed && [styles.titleCompleted, { color: colors.textSecondary }],
           ]}
         >
           {title}
@@ -76,6 +88,7 @@ export const RoutineItem: React.FC<RoutineItemProps> = ({
           <Text
             style={[
               styles.productSubtitle,
+              { color: colors.textSecondary },
               completed && styles.productSubtitleCompleted,
             ]}
           >

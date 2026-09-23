@@ -12,6 +12,7 @@ interface GlowScoreCardProps {
   currentHydration: number;
   hydrationGoal: number;
   streakDays: number;
+  isFocused?: boolean;
 }
 
 export const GlowScoreCard: React.FC<GlowScoreCardProps> = ({
@@ -19,6 +20,7 @@ export const GlowScoreCard: React.FC<GlowScoreCardProps> = ({
   currentHydration,
   hydrationGoal,
   streakDays,
+  isFocused = true,
 }) => {
   return (
     <View style={styles.heroContainer}>
@@ -28,7 +30,7 @@ export const GlowScoreCard: React.FC<GlowScoreCardProps> = ({
       </View>
 
       <View style={styles.ringWrapper}>
-        <GlowRing scoreBreakdown={scoreBreakdown} size={210} />
+        <GlowRing scoreBreakdown={scoreBreakdown} size={210} isFocused={isFocused} />
       </View>
 
       {/* Floating Pill Action Badges */}

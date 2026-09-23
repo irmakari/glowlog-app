@@ -5,6 +5,7 @@ import * as Haptics from 'expo-haptics';
 import { CalendarDayProps } from './CalendarDay.types';
 import { styles } from './CalendarDay.styles';
 import { Colors } from '../../../../constants/colors';
+import { useTheme } from '../../../../context/ThemeContext';
 
 export const CalendarDay: React.FC<CalendarDayProps> = ({
   gridDay,
@@ -12,6 +13,7 @@ export const CalendarDay: React.FC<CalendarDayProps> = ({
   isSelected,
   onPressDay,
 }) => {
+  const { colors, isDark } = useTheme();
   const { dateKey, dayNumber, isCurrentMonth, isToday, isFuture } = gridDay;
   const status = summary?.status ?? (isFuture ? 'future' : 'empty');
 
@@ -22,11 +24,11 @@ export const CalendarDay: React.FC<CalendarDayProps> = ({
   };
 
   const getBackgroundColor = () => {
-    if (!isCurrentMonth) return Colors.cardCream;
-    if (status === 'complete') return Colors.sageGreen;
-    if (status === 'partial') return Colors.butterYellow;
-    if (status === 'future') return Colors.white;
-    return Colors.white;
+    if (!isCurrentMonth) return isDark ? 'rgba(255, 255, 255, 0.04)' : Colors.cardCream;
+    if (status === 'complete') return isDark ? '#26422C' : Colors.sageGreen;
+    if (status === 'partial') return isDark ? '#4D3E1C' : Colors.butterYellow;
+    if (status === 'future') return isDark ? 'rgba(255, 255, 255, 0.08)' : Colors.white;
+    return isDark ? 'rgba(255, 255, 255, 0.08)' : Colors.white;
   };
 
   const accessibilityLabel = `${dateKey}, routine ${status}`;
@@ -41,14 +43,14 @@ export const CalendarDay: React.FC<CalendarDayProps> = ({
         styles.cell,
         { backgroundColor: getBackgroundColor() },
         !isCurrentMonth && styles.cellOtherMonth,
-        isToday && styles.cellToday,
-        isSelected && { borderWidth: 2.5, borderColor: Colors.text },
+        isToday && [styles.cellToday, { borderColor: colors.text }],
+        isSelected && { borderWidth: 2.5, borderColor: colors.text },
       ]}
     >
       <Text
         style={[
           styles.dayNumber,
-          (!isCurrentMonth || isFuture) && styles.dayNumberMuted,
+          { color: (!isCurrentMonth || isFuture) ? colors.textMuted : colors.text },
         ]}
       >
         {dayNumber}
@@ -59,13 +61,12 @@ export const CalendarDay: React.FC<CalendarDayProps> = ({
         <Ionicons
           name="checkmark"
           size={12}
-          color={Colors.text}
+          color={colors.text}
           style={styles.completeIcon}
         />
       )}
-
       {isCurrentMonth && status === 'partial' && (
-        <View style={[styles.statusDot, { backgroundColor: Colors.text }]} />
+        <View style={[styles.statusDot, { backgroundColor: colors.text }]} />
       )}
     </TouchableOpacity>
   );

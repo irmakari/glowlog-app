@@ -5,7 +5,14 @@ import { Spacing } from '../../../../constants/spacing';
 
 export const styles = StyleSheet.create({
   container: {
-    paddingBottom: Spacing.xxl * 2,
+    paddingBottom: Spacing.sm,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+  },
+  halfCol: {
+    flex: 1,
   },
   textInput: {
     backgroundColor: Colors.white,
@@ -21,20 +28,36 @@ export const styles = StyleSheet.create({
     borderColor: Colors.alert,
   },
   multilineInput: {
-    minHeight: 80,
+    minHeight: 64,
     textAlignVertical: 'top',
   },
-  categoryGrid: {
+  categoryScroll: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.xs + 2,
+    gap: Spacing.xs,
+    paddingVertical: 4,
+    paddingHorizontal: 2,
+  },
+  customCategoryInputContainer: {
+    marginTop: Spacing.xs + 2,
   },
   categoryChip: {
-    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: Spacing.radiusPill,
     borderWidth: 1.5,
     borderColor: 'transparent',
+  },
+  categoryChipActive: {
+    borderColor: Colors.text,
+    borderWidth: 2,
+    shadowColor: Colors.text,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
   },
   categoryChipText: {
     fontSize: 13,
@@ -57,6 +80,11 @@ export const styles = StyleSheet.create({
   paoChipActive: {
     backgroundColor: Colors.text,
     borderColor: Colors.text,
+    shadowColor: Colors.text,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 2,
   },
   paoChipText: {
     fontSize: 12,
@@ -73,13 +101,14 @@ export const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     borderRadius: Spacing.radiusSm,
     paddingHorizontal: Spacing.md,
-    paddingVertical: 12,
+    paddingVertical: 10,
     borderWidth: 1,
     borderColor: Colors.border,
+    minHeight: 44,
   },
   datePickerText: {
     ...Typography.body,
-    fontSize: 15,
+    fontSize: 14,
     color: Colors.text,
   },
   photoContainer: {
@@ -88,8 +117,8 @@ export const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   photoPreview: {
-    width: 72,
-    height: 72,
+    width: 54,
+    height: 54,
     borderRadius: Spacing.radiusSm,
     overflow: 'hidden',
   },
@@ -102,7 +131,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: Colors.white,
     paddingHorizontal: Spacing.md,
-    paddingVertical: 10,
+    paddingVertical: 8,
     borderRadius: Spacing.radiusPill,
     borderWidth: 1,
     borderColor: Colors.border,
@@ -114,8 +143,8 @@ export const styles = StyleSheet.create({
     marginLeft: 6,
   },
   removePhotoButton: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 10,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 8,
   },
   removePhotoText: {
     ...Typography.caption,
@@ -125,7 +154,7 @@ export const styles = StyleSheet.create({
   buttonRow: {
     flexDirection: 'row',
     gap: Spacing.md,
-    marginTop: Spacing.lg,
+    marginTop: Spacing.md,
   },
   submitButton: {
     flex: 1,

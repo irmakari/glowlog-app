@@ -6,6 +6,10 @@ import Animated, {
   useSharedValue,
   withSpring,
   withTiming,
+  withRepeat,
+  withSequence,
+  withDelay,
+  Easing,
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
@@ -14,22 +18,40 @@ import { GlowScoreBreakdown } from '../../types';
 interface GlowRingProps {
   scoreBreakdown: GlowScoreBreakdown;
   size?: number;
+  isFocused?: boolean;
 }
 
 export const GlowRing: React.FC<GlowRingProps> = ({
   scoreBreakdown,
   size = 210,
+  isFocused = true,
 }) => {
   const scaleVal = useSharedValue(0.92);
   const opacityVal = useSharedValue(0);
+  const breathVal = useSharedValue(1);
 
   useEffect(() => {
-    scaleVal.value = withSpring(1, { damping: 14, stiffness: 100 });
-    opacityVal.value = withTiming(1, { duration: 300 });
-  }, [scoreBreakdown.score]);
+    if (isFocused) {
+      scaleVal.value = 0.93;
+      opacityVal.value = 0.4;
+      scaleVal.value = withSpring(1, { damping: 13, stiffness: 90 });
+      opacityVal.value = withTiming(1, { duration: 350 });
+    }
+  }, [isFocused, scoreBreakdown.score]);
+
+  useEffect(() => {
+    breathVal.value = withRepeat(
+      withSequence(
+        withDelay(4500, withTiming(1.032, { duration: 1500, easing: Easing.inOut(Easing.ease) })),
+        withTiming(1.0, { duration: 1500, easing: Easing.inOut(Easing.ease) })
+      ),
+      -1,
+      false
+    );
+  }, []);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scaleVal.value }],
+    transform: [{ scale: scaleVal.value * breathVal.value }],
     opacity: opacityVal.value,
   }));
 

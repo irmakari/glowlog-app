@@ -1,27 +1,28 @@
+import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
 import {
+  Alert,
+  Platform,
+  ScrollView,
   Text,
-  View,
   TextInput,
   TouchableOpacity,
-  Platform,
-  Alert,
+  View,
 } from 'react-native';
-import { Image } from 'expo-image';
-import { Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { FormField } from '../../../../components/ui/FormField';
 import { PillButton } from '../../../../components/ui/PillButton';
-import {
-  PRODUCT_CATEGORIES,
-  PAO_OPTIONS,
-} from '../../../../constants/productCategories';
-import { formatProductDate } from '../../utils/productDate.utils';
-import { CreateProductInput } from '../../types/product.types';
-import { ProductFormProps } from './ProductForm.types';
-import { styles } from './ProductForm.styles';
 import { Colors } from '../../../../constants/colors';
+import {
+  PAO_OPTIONS,
+  PRODUCT_CATEGORIES,
+} from '../../../../constants/productCategories';
+import { CreateProductInput } from '../../types/product.types';
+import { formatProductDate } from '../../utils/productDate.utils';
+import { styles } from './ProductForm.styles';
+import { ProductFormProps } from './ProductForm.types';
 
 export const ProductForm: React.FC<ProductFormProps> = ({
   mode,
@@ -30,9 +31,17 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   onCancel,
   loading = false,
 }) => {
+  const initialCatRaw = initialValues?.category?.toLowerCase() || 'cleanser';
+  const isKnownCat = PRODUCT_CATEGORIES.some((c) => c.id === initialCatRaw);
+
   const [name, setName] = useState(initialValues?.name || '');
   const [brand, setBrand] = useState(initialValues?.brand || '');
-  const [category, setCategory] = useState(initialValues?.category || 'cleanser');
+  const [category, setCategory] = useState<string>(
+    isKnownCat ? initialCatRaw : 'other'
+  );
+  const [customCategory, setCustomCategory] = useState<string>(
+    !isKnownCat && initialValues?.category ? initialValues.category : ''
+  );
   const [openedAt, setOpenedAt] = useState<Date>(
     initialValues?.openedAt ? new Date(initialValues.openedAt) : new Date()
   );
@@ -43,6 +52,14 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
   // Errors
   const [nameError, setNameError] = useState<string | undefined>(undefined);
+
+  const handleCategoryPress = (catId: string) => {
+    setCategory(catId);
+  };
+
+  const handlePaoPress = (value: number) => {
+    setPaoMonths(value);
+  };
 
   const handlePickImage = async () => {
     try {
@@ -98,10 +115,15 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
     const formattedDate = openedAt.toISOString().split('T')[0];
 
+    const finalCategory =
+      category.toLowerCase() === 'other'
+        ? customCategory.trim() || 'Other'
+        : category;
+
     const input: CreateProductInput = {
       name: name.trim(),
       brand: brand.trim() || undefined,
-      category,
+      category: finalCategory,
       openedAt: formattedDate,
       paoMonths: paoMonths > 0 ? paoMonths : undefined,
       imageUri,
@@ -140,20 +162,29 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
       {/* Category Selection */}
       <FormField label="Category" required>
-        <View style={styles.categoryGrid}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categoryScroll}
+        >
           {PRODUCT_CATEGORIES.map((cat) => {
             const isSelected = category.toLowerCase() === cat.id;
             return (
               <TouchableOpacity
                 key={cat.id}
-                activeOpacity={0.8}
-                onPress={() => setCategory(cat.id)}
+                activeOpacity={0.7}
+                onPress={() => handleCategoryPress(cat.id)}
                 style={[
                   styles.categoryChip,
                   { backgroundColor: cat.color },
-                  isSelected && { borderColor: Colors.text, borderWidth: 2 },
+                  isSelected && styles.categoryChipActive,
                 ]}
               >
+                <Ionicons
+                  name={cat.icon as any}
+                  size={14}
+                  color={Colors.text}
+                />
                 <Text
                   style={[
                     styles.categoryChipText,
@@ -165,14 +196,26 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               </TouchableOpacity>
             );
           })}
-        </View>
+        </ScrollView>
+
+        {category.toLowerCase() === 'other' && (
+          <View style={styles.customCategoryInputContainer}>
+            <TextInput
+              style={styles.textInput}
+              placeholder="e.g. Hair Oil, Body Wash..."
+              placeholderTextColor={Colors.textMuted}
+              value={customCategory}
+              onChangeText={setCustomCategory}
+            />
+          </View>
+        )}
       </FormField>
 
       {/* Opened Date */}
       <FormField label="Opened Date" required>
         <TouchableOpacity
           activeOpacity={0.8}
-          onPress={() => setShowDatePicker(true)}
+          onPress={() => setShowDatePicker((prev) => !prev)}
           style={styles.datePickerButton}
         >
           <Text style={styles.datePickerText}>
@@ -188,6 +231,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             display={Platform.OS === 'ios' ? 'spinner' : 'default'}
             maximumDate={new Date()}
             onChange={handleDateChange}
+            textColor={Colors.text}
+            themeVariant="light"
+            accentColor={Colors.text}
           />
         )}
       </FormField>
@@ -200,8 +246,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             return (
               <TouchableOpacity
                 key={pao.label}
-                activeOpacity={0.8}
-                onPress={() => setPaoMonths(pao.value)}
+                activeOpacity={0.7}
+                onPress={() => handlePaoPress(pao.value)}
                 style={[
                   styles.paoChip,
                   isSelected && styles.paoChipActive,
@@ -239,7 +285,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             onPress={handlePickImage}
             style={styles.photoButton}
           >
-            <Ionicons name="camera-outline" size={18} color={Colors.text} />
+            <Ionicons name="camera-outline" size={16} color={Colors.text} />
             <Text style={styles.photoButtonText}>
               {imageUri ? 'Change Photo' : 'Choose Photo'}
             </Text>
@@ -264,7 +310,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           placeholder="Add any notes about this product..."
           placeholderTextColor={Colors.textMuted}
           multiline
-          numberOfLines={3}
+          numberOfLines={2}
           value={notes}
           onChangeText={setNotes}
         />

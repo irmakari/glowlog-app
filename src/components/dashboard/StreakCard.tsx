@@ -6,6 +6,7 @@ import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing } from '../../constants/spacing';
 import { getLocalDateString } from '../../features/routines/utils/routineDate.utils';
+import { useTheme } from '../../context/ThemeContext';
 
 interface StreakCardProps {
   streakDays: number;
@@ -14,6 +15,7 @@ interface StreakCardProps {
 const WEEK_DAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
 export const StreakCard: React.FC<StreakCardProps> = ({ streakDays }) => {
+  const { colors, isDark } = useTheme();
   const todayKey = useMemo(() => getLocalDateString(), []);
   
   // Calculate current week's 7 days (Mon-Sun)
@@ -47,13 +49,22 @@ export const StreakCard: React.FC<StreakCardProps> = ({ streakDays }) => {
       <View style={styles.headerRow}>
         <View style={styles.titleRow}>
           <Ionicons name="flame" size={16} color="#E86339" style={{ marginRight: 4 }} />
-          <Text style={styles.titleText}>{streakDays} Day Streak</Text>
+          <Text style={[styles.titleText, { color: colors.text }]}>{streakDays} Day Streak</Text>
         </View>
-        <Text style={styles.caption}>This week</Text>
+        <Text style={[styles.caption, { color: colors.textSecondary }]}>This week</Text>
       </View>
 
       {/* 7-Day Icon Strip */}
-      <View style={styles.daysRow}>
+      <View
+        style={[
+          styles.daysRow,
+          {
+            backgroundColor: isDark ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.55)',
+            borderWidth: isDark ? 1 : 0,
+            borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
+          },
+        ]}
+      >
         {weekDaysInfo.map((day, idx) => {
           // If user has streak > 0 and day is past, highlight flame icon
           const hasFlame = day.isPast && (streakDays > 0 || day.isToday);
@@ -63,20 +74,22 @@ export const StreakCard: React.FC<StreakCardProps> = ({ streakDays }) => {
               <View
                 style={[
                   styles.iconCircle,
-                  hasFlame ? styles.circleActive : styles.circleInactive,
-                  day.isToday && styles.circleToday,
+                  hasFlame
+                    ? [styles.circleActive, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.12)' : Colors.white }]
+                    : styles.circleInactive,
+                  day.isToday && [styles.circleToday, { borderColor: colors.text }],
                 ]}
               >
                 <Ionicons
                   name="flame"
                   size={15}
-                  color={hasFlame ? '#E86339' : Colors.textMuted}
+                  color={hasFlame ? '#E86339' : (isDark ? 'rgba(255,255,255,0.2)' : Colors.textMuted)}
                 />
               </View>
               <Text
                 style={[
                   styles.dayLabel,
-                  day.isToday && styles.dayLabelToday,
+                  { color: day.isToday ? colors.text : colors.textSecondary },
                 ]}
               >
                 {day.label}

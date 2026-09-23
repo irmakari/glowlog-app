@@ -131,6 +131,40 @@ export function useTodayRoutine() {
     [morningSteps, eveningSteps, todayDateStr]
   );
 
+  const completeAllSteps = useCallback(
+    async (routineType: 'morning' | 'evening') => {
+      const isMorning = routineType === 'morning';
+      const steps = isMorning ? morningSteps : eveningSteps;
+      const uncompletedSteps = steps.filter((s) => !s.completed);
+
+      if (uncompletedSteps.length === 0) return;
+
+      // Optimistic update
+      const updateFn = (prev: TodayRoutineStepState[]) =>
+        prev.map((s) => ({ ...s, completed: true }));
+
+      if (isMorning) setMorningSteps(updateFn);
+      else setEveningSteps(updateFn);
+
+      try {
+        await Promise.all(
+          uncompletedSteps.map((step) =>
+            routineService.setRoutineStepCompleted(
+              step.id,
+              step.productId,
+              todayDateStr,
+              true
+            )
+          )
+        );
+      } catch (err) {
+        console.error('Failed to complete all steps:', err);
+        fetchTodayData(); // Sync on error
+      }
+    },
+    [morningSteps, eveningSteps, todayDateStr, fetchTodayData]
+  );
+
   const incrementWater = useCallback(async () => {
     try {
       const updated = await waterService.incrementWater(todayDateStr, hydrationGoal);
@@ -161,6 +195,7 @@ export function useTodayRoutine() {
     loading,
     error,
     toggleStep,
+    completeAllSteps,
     incrementWater,
     decrementWater,
     refreshToday: fetchTodayData,

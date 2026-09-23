@@ -55,6 +55,20 @@ describe('glowScore utils', () => {
       expect(result.score).toBeGreaterThanOrEqual(0.0);
       expect(Number.isNaN(result.score)).toBe(false);
     });
+
+    it('should cap hydration ratio at 100% when current hydration exceeds goal', () => {
+      const result = calculateGlowScore({
+        completedStepsCount: 4,
+        totalStepsCount: 4,
+        currentHydration: 12, // exceeds goal of 8
+        hydrationGoal: 8,
+        streakDays: 5,
+      });
+
+      expect(result.hydrationPercent).toBe(100);
+      expect(result.hydrationScore).toBe(2.0);
+      expect(result.score).toBe(10.0);
+    });
   });
 
   describe('getTimeBasedGreeting', () => {
