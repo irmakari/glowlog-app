@@ -393,7 +393,8 @@
     "conflict_tretinoin": "Using {{actives}} alongside tretinoin can over-irritate skin, and benzoyl peroxide can make tretinoin less effective. Check with your doctor.",
     "conflict_adapalene": "Combining {{actives}} with adapalene can over-irritate skin. Check with your doctor.",
     "sunTip": "{{name}} can make skin more sensitive to the sun. Don't skip sunscreen.",
-    "conflictDisclaimer": "General guidance only, not medical advice."
+    "conflictDisclaimer": "General guidance only, not medical advice.",
+    "notificationsDeniedDesc": "Allow GlowLog notifications in Settings to get dose reminders. The treatment was saved either way."
   },
   "productActives": {
     "title": "Active ingredients",

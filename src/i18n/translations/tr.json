@@ -393,7 +393,8 @@
     "conflict_tretinoin": "Tretinoin ile birlikte {{actives}} kullanmak cildi fazla tahriş edebilir; benzoil peroksit de tretinoinin etkisini azaltabilir. Doktorunuza danışın.",
     "conflict_adapalene": "Adapalen ile {{actives}} birlikte kullanmak cildi fazla tahriş edebilir. Doktorunuza danışın.",
     "sunTip": "{{name}} cildi güneşe karşı daha hassas yapabilir. Güneş kremini atlamayın.",
-    "conflictDisclaimer": "Yalnızca genel bilgidir, tıbbi tavsiye değildir."
+    "conflictDisclaimer": "Yalnızca genel bilgidir, tıbbi tavsiye değildir.",
+    "notificationsDeniedDesc": "Doz hatırlatıcıları almak için Ayarlar'dan GlowLog bildirimlerine izin verin. Tedavi yine de kaydedildi."
   },
   "productActives": {
     "title": "Etken maddeler",

@@ -29,6 +29,8 @@ import { settingsService, ExtendedAppSettings, SkinType } from '../../src/servic
 import { notificationService } from '../../src/services/notificationService';
 import { backupService } from '../../src/services/backupService';
 import { treatmentReminderService } from '../../src/features/treatments/services/treatmentReminderService';
+import { treatmentService } from '../../src/features/treatments/services/treatmentService';
+import { isTreatmentFinished } from '../../src/features/treatments/utils/treatmentSchedule.utils';
 import { useTheme, ThemeMode, DARK_MODE_ENABLED } from '../../src/context/ThemeContext';
 import { useTranslation } from '../../src/hooks/useTranslation';
 import { LanguageMode } from '../../src/context/LanguageContext';
@@ -64,11 +66,16 @@ export default function ProfileScreen() {
   // Restore Backup Modal State
   const [restoreModalVisible, setRestoreModalVisible] = useState(false);
   const [backupJsonText, setBackupJsonText] = useState('');
+  const [activeTreatmentCount, setActiveTreatmentCount] = useState(0);
 
   const loadSettings = useCallback(async () => {
     try {
-      const data = await settingsService.getSettings();
+      const [data, treatments] = await Promise.all([
+        settingsService.getSettings(),
+        treatmentService.getTreatments(),
+      ]);
       setSettings(data);
+      setActiveTreatmentCount(treatments.filter((tr) => !isTreatmentFinished(tr)).length);
     } catch (e) {
       console.error('Failed to load settings:', e);
     }
@@ -340,6 +347,25 @@ export default function ProfileScreen() {
             />
           </View>
         ))}
+      </GlowCard>
+
+      {/* Treatments */}
+      <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>{t('profile.treatmentsSection')}</Text>
+      <GlowCard variant="softPeach" padding={0} style={styles.card} onPress={() => router.push('/treatments')}>
+        <View style={styles.listRow}>
+          <View style={[styles.rowIconCircle, { backgroundColor: colors.white }]}>
+            <Ionicons name="medical" size={16} color="#C2683A" />
+          </View>
+          <View style={styles.flex1}>
+            <Text style={[styles.rowTitle, { color: colors.text }]}>{t('profile.treatmentsRow')}</Text>
+            <Text style={[styles.rowSubtitle, { color: colors.textSecondary }]}>
+              {activeTreatmentCount > 0
+                ? t('profile.treatmentsActive', { count: activeTreatmentCount })
+                : t('profile.treatmentsEmpty')}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+        </View>
       </GlowCard>
 
       {/* Appearance / Theme Selector (hidden while dark mode is locked off) */}

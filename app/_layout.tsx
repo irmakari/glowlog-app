@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, ActivityIndicator, StyleSheet, AppState } from 'react-native';
 import {
   useFonts,
   PlusJakartaSans_400Regular,
@@ -11,6 +11,7 @@ import {
   PlusJakartaSans_800ExtraBold,
 } from '@expo-google-fonts/plus-jakarta-sans';
 import { initDatabase } from '../src/services/database/db';
+import { treatmentReminderService } from '../src/features/treatments/services/treatmentReminderService';
 import { Colors } from '../src/constants/colors';
 
 import { ThemeProvider } from '../src/context/ThemeContext';
@@ -45,6 +46,16 @@ export default function RootLayout() {
   }, []);
 
   const isAppReady = dbReady && fontsLoaded;
+
+  // One-off treatment reminders only reach two weeks ahead: top them up on launch and once a day after
+  useEffect(() => {
+    if (!dbReady) return;
+    treatmentReminderService.syncIfStale();
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') treatmentReminderService.syncIfStale();
+    });
+    return () => subscription.remove();
+  }, [dbReady]);
 
   useEffect(() => {
     if (isAppReady) {
@@ -97,6 +108,14 @@ export default function RootLayout() {
           <Stack.Screen
             name="routine/index"
             options={{ presentation: 'modal', title: 'Routines' }}
+          />
+          <Stack.Screen
+            name="treatments/index"
+            options={{ presentation: 'modal', title: 'Treatments' }}
+          />
+          <Stack.Screen
+            name="treatments/edit"
+            options={{ presentation: 'pageSheet', title: 'Edit Treatment' }}
           />
           <Stack.Screen
             name="day/[date]"
