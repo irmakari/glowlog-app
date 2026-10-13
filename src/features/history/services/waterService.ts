@@ -35,18 +35,40 @@ export const waterService = {
    * Increment water intake up to goal
    */
   async incrementWater(dateStr: string, goal: number = 8): Promise<number> {
-    const current = await this.getWaterForDate(dateStr);
-    if (current >= goal) return current;
-    return await this.setWaterForDate(dateStr, current + 1);
+    const db = await getDb();
+    // Increment inside SQL: rapid taps would otherwise read the same value and lose increments
+    await db.runAsync(
+      `INSERT INTO water_logs (id, date, glasses)
+       VALUES (?, ?, MIN(1, ?))
+       ON CONFLICT(date) DO UPDATE SET
+         glasses = CASE WHEN glasses < ? THEN glasses + 1 ELSE glasses END`,
+      [`water-${dateStr}`, dateStr, goal, goal]
+    );
+    return this.getWaterForDate(dateStr);
   },
 
   /**
    * Decrement water intake down to 0
    */
   async decrementWater(dateStr: string): Promise<number> {
-    const current = await this.getWaterForDate(dateStr);
-    if (current <= 0) return 0;
-    return await this.setWaterForDate(dateStr, current - 1);
+    const db = await getDb();
+    await db.runAsync(
+      `UPDATE water_logs SET glasses = MAX(glasses - 1, 0) WHERE date = ?`,
+      [dateStr]
+    );
+    return this.getWaterForDate(dateStr);
+  },
+
+  /**
+   * Average glasses per logged day within an inclusive date-key range (days with no log are skipped)
+   */
+  async getAverageGlasses(fromKey: string, toKey: string): Promise<number | null> {
+    const db = await getDb();
+    const row = await db.getFirstAsync<{ avg: number | null }>(
+      `SELECT AVG(glasses) as avg FROM water_logs WHERE date >= ? AND date <= ? AND glasses > 0`,
+      [fromKey, toKey]
+    );
+    return row?.avg ?? null;
   },
 
   /**

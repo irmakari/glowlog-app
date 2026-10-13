@@ -1,4 +1,4 @@
-import { calculateGlowScore, getTimeBasedGreeting } from '../glowScore';
+import { calculateDayGlowScore, calculateGlowScore, getTimeBasedGreeting } from '../glowScore';
 
 describe('glowScore utils', () => {
   describe('calculateGlowScore', () => {
@@ -95,5 +95,16 @@ describe('glowScore utils', () => {
       expect(greeting.iconName).toBe('moon-outline');
       expect(greeting.iconColor).toBe('#7C5CBF');
     });
+  });
+});
+
+describe('calculateDayGlowScore', () => {
+  it('scores an empty day as 0', () => {
+    expect(calculateDayGlowScore(0, 7, 0, 8)).toBe(0);
+  });
+
+  it('counts an active day as a 1-day streak', () => {
+    // 7.0 routine + 2.0 hydration + 0.2 (1 of 5 streak days)
+    expect(calculateDayGlowScore(7, 7, 8, 8)).toBe(9.2);
   });
 });
