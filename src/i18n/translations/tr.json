@@ -82,7 +82,9 @@
     "archiveTitle": "Arşiv",
     "archiveSubtitle": "Arşivlediğiniz ürünler. Rafa geri alabilir ya da silebilirsiniz.",
     "noResults": "Aramanızla eşleşen ürün yok.",
-    "viewArchived": "Arşivlenen ürünler ({{count}})"
+    "viewArchived": "Arşivlenen ürünler ({{count}})",
+    "tabProducts": "Ürünler",
+    "tabTreatments": "Tedaviler"
   },
   "history": {
     "title": "Geçmiş",

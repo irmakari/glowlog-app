@@ -15,6 +15,10 @@ import { Spacing } from '../../../../constants/spacing';
 import { Typography } from '../../../../constants/typography';
 import { useTheme } from '../../../../context/ThemeContext';
 import { useTranslation } from '../../../../hooks/useTranslation';
+import { TreatmentList } from '../../../treatments/components/TreatmentList';
+import { useAddTreatment } from '../../../treatments/hooks/useAddTreatment';
+
+type ShelfSection = 'products' | 'treatments';
 
 export const ShelfScreen: React.FC = () => {
   const router = useRouter();
@@ -24,9 +28,12 @@ export const ShelfScreen: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [showArchived, setShowArchived] = useState<boolean>(false);
+  const [section, setSection] = useState<ShelfSection>('products');
+  const handleAddTreatment = useAddTreatment();
   // Leave the archive view automatically once its last product is restored or deleted
   const isArchiveView = showArchived && archivedProducts.length > 0;
   const products = isArchiveView ? archivedProducts : activeProducts;
+  const showTreatments = section === 'treatments' && !isArchiveView;
 
   const handleToggleArchive = () => {
     setShowArchived((prev) => !prev);
@@ -94,7 +101,11 @@ export const ShelfScreen: React.FC = () => {
             </Text>
           </View>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            {isArchiveView ? t('shelf.archiveSubtitle') : t('shelf.subtitle')}
+            {isArchiveView
+              ? t('shelf.archiveSubtitle')
+              : showTreatments
+                ? t('treatments.subtitle')
+                : t('shelf.subtitle')}
           </Text>
         </View>
         {isArchiveView ? (
@@ -107,86 +118,121 @@ export const ShelfScreen: React.FC = () => {
         ) : (
           <IconButton
             icon={<Ionicons name="add" size={22} color={colors.text} />}
-            onPress={handleAddProduct}
+            onPress={showTreatments ? handleAddTreatment : handleAddProduct}
             backgroundColor={colors.white}
             size={38}
           />
         )}
       </View>
 
-      {/* Search Bar */}
-      {products.length > 0 && (
-        <View
-          style={[
-            localStyles.searchContainer,
-            {
-              backgroundColor: colors.white,
-              borderColor: colors.border,
-            },
-          ]}
-        >
-          <Ionicons name="search-outline" size={18} color={colors.textSecondary} style={{ marginRight: 8 }} />
-          <TextInput
-            style={[localStyles.searchInput, { color: colors.text }]}
-            placeholder={t('shelf.searchPlaceholder')}
-            placeholderTextColor={colors.textMuted}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            clearButtonMode="while-editing"
-          />
-          {searchQuery ? (
-            <IconButton
-              icon={<Ionicons name="close-circle" size={18} color={colors.textSecondary} />}
-              onPress={() => setSearchQuery('')}
-              size={24}
-              backgroundColor="transparent"
-            />
-          ) : null}
+      {/* Products / Treatments switch */}
+      {!isArchiveView && (
+        <View style={[localStyles.segmentRow, { backgroundColor: colors.white, borderColor: colors.border }]}>
+          {(['products', 'treatments'] as const).map((id) => {
+            const isSelected = section === id;
+            return (
+              <TouchableOpacity
+                key={id}
+                activeOpacity={0.7}
+                onPress={() => setSection(id)}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: isSelected }}
+                style={[localStyles.segment, isSelected && { backgroundColor: colors.text }]}
+              >
+                <Ionicons
+                  name={id === 'products' ? 'grid-outline' : 'medical-outline'}
+                  size={14}
+                  color={isSelected ? colors.background : colors.text}
+                />
+                <Text style={[localStyles.segmentText, { color: isSelected ? colors.background : colors.text }]}>
+                  {t(id === 'products' ? 'shelf.tabProducts' : 'shelf.tabTreatments')}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
       )}
 
-      {/* Category Filter Chips Bar */}
-      {products.length > 0 && (
-        <View style={styles.chipsWrapper}>
-          <CategoryFilterChips
-            categories={categoryFilterItems}
-            selectedCategory={selectedCategory}
-            onSelectCategory={setSelectedCategory}
-          />
-        </View>
-      )}
-
-      {/* Loading state */}
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="small" color={Colors.text} />
-        </View>
-      ) : products.length === 0 ? (
-        /* Empty State */
-        <EmptyShelfState
-          onAddProduct={handleAddProduct}
-        />
+      {showTreatments ? (
+        <TreatmentList showAddButton={false} />
       ) : (
-        /* Clean Filtered Product Cards List */
-        <View style={styles.productList}>
-          {filteredProducts.length === 0 ? (
-            <Text style={[localStyles.noResultsText, { color: colors.textSecondary }]}>
-              {t('shelf.noResults')}
-            </Text>
-          ) : (
-            filteredProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onPress={handleProductPress}
+        <>
+
+        {/* Search Bar */}
+        {products.length > 0 && (
+          <View
+            style={[
+              localStyles.searchContainer,
+              {
+                backgroundColor: colors.white,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Ionicons name="search-outline" size={18} color={colors.textSecondary} style={{ marginRight: 8 }} />
+            <TextInput
+              style={[localStyles.searchInput, { color: colors.text }]}
+              placeholder={t('shelf.searchPlaceholder')}
+              placeholderTextColor={colors.textMuted}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              clearButtonMode="while-editing"
+            />
+            {searchQuery ? (
+              <IconButton
+                icon={<Ionicons name="close-circle" size={18} color={colors.textSecondary} />}
+                onPress={() => setSearchQuery('')}
+                size={24}
+                backgroundColor="transparent"
               />
-            ))
-          )}
-        </View>
+            ) : null}
+          </View>
+        )}
+
+        {/* Category Filter Chips Bar */}
+        {products.length > 0 && (
+          <View style={styles.chipsWrapper}>
+            <CategoryFilterChips
+              categories={categoryFilterItems}
+              selectedCategory={selectedCategory}
+              onSelectCategory={setSelectedCategory}
+            />
+          </View>
+        )}
+
+        {/* Loading state */}
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="small" color={Colors.text} />
+          </View>
+        ) : products.length === 0 ? (
+          /* Empty State */
+          <EmptyShelfState
+            onAddProduct={handleAddProduct}
+          />
+        ) : (
+          /* Clean Filtered Product Cards List */
+          <View style={styles.productList}>
+            {filteredProducts.length === 0 ? (
+              <Text style={[localStyles.noResultsText, { color: colors.textSecondary }]}>
+                {t('shelf.noResults')}
+              </Text>
+            ) : (
+              filteredProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onPress={handleProductPress}
+                />
+              ))
+            )}
+          </View>
+        )}
+        </>
       )}
 
       {/* Archive entry point */}
-      {!loading && !isArchiveView && archivedProducts.length > 0 && (
+      {!loading && !isArchiveView && !showTreatments && archivedProducts.length > 0 && (
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={handleToggleArchive}
@@ -204,6 +250,26 @@ export const ShelfScreen: React.FC = () => {
 };
 
 const localStyles = StyleSheet.create({
+  segmentRow: {
+    flexDirection: 'row',
+    borderRadius: Spacing.radiusPill,
+    borderWidth: 1,
+    padding: 3,
+    marginBottom: Spacing.sm,
+  },
+  segment: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    borderRadius: Spacing.radiusPill,
+  },
+  segmentText: {
+    ...Typography.bodyBold,
+    fontSize: 13,
+  },
   noResultsText: {
     ...Typography.body,
     fontSize: 14,

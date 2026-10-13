@@ -82,7 +82,9 @@
     "archiveTitle": "Archive",
     "archiveSubtitle": "Products you archived. Move them back to your shelf or delete them.",
     "noResults": "No products match your search.",
-    "viewArchived": "Archived products ({{count}})"
+    "viewArchived": "Archived products ({{count}})",
+    "tabProducts": "Products",
+    "tabTreatments": "Treatments"
   },
   "history": {
     "title": "History",
