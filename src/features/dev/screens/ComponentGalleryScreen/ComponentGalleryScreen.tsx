@@ -41,6 +41,7 @@ import { MOCK_DAILY_SUMMARY } from '../../mocks/dailySummary.mock';
 import { styles } from './ComponentGalleryScreen.styles';
 import { Colors } from '../../../../constants/colors';
 import { calculateGlowScore } from '../../../../utils/glowScore';
+import { getLocalDateString } from '../../../routines/utils/routineDate.utils';
 
 export const ComponentGalleryScreen: React.FC = () => {
   const router = useRouter();
@@ -138,9 +139,9 @@ export const ComponentGalleryScreen: React.FC = () => {
         </View>
 
         <Text style={styles.subtitle}>StreakCard (Singular & Plural):</Text>
-        <StreakCard streakDays={1} completedDates={[]} />
-        <StreakCard streakDays={6} completedDates={[]} />
-        <StreakCard streakDays={21} completedDates={[]} />
+        <StreakCard streakDays={1} completedDates={[]} todayKey={getLocalDateString()} />
+        <StreakCard streakDays={6} completedDates={[]} todayKey={getLocalDateString()} />
+        <StreakCard streakDays={21} completedDates={[]} todayKey={getLocalDateString()} />
 
         <Text style={styles.subtitle}>ProductAlertCard:</Text>
         <ProductAlertCard

@@ -9,6 +9,8 @@ interface IconButtonProps {
   onPress: () => void;
   size?: number;
   backgroundColor?: string;
+  // 'ghost' drops the circle background and shadow, leaving only the icon.
+  variant?: 'filled' | 'ghost';
   style?: StyleProp<ViewStyle>;
 }
 
@@ -17,10 +19,12 @@ export const IconButton: React.FC<IconButtonProps> = ({
   onPress,
   size = 40,
   backgroundColor,
+  variant = 'filled',
   style,
 }) => {
   const { colors } = useTheme();
-  const bg = backgroundColor || colors.white;
+  const isGhost = variant === 'ghost';
+  const bg = isGhost ? 'transparent' : backgroundColor || colors.white;
 
   const handlePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -33,6 +37,7 @@ export const IconButton: React.FC<IconButtonProps> = ({
       onPress={handlePress}
       style={[
         styles.button,
+        !isGhost && styles.shadow,
         {
           width: size,
           height: size,
@@ -51,6 +56,8 @@ const styles = StyleSheet.create({
   button: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  shadow: {
     ...Platform.select({
       ios: {
         shadowColor: Colors.text,

@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { GlowScoreBreakdown } from '../../types';
 import { useTheme } from '../../context/ThemeContext';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface GlowRingProps {
   scoreBreakdown: GlowScoreBreakdown;
@@ -28,6 +29,7 @@ export const GlowRing: React.FC<GlowRingProps> = ({
   isFocused = true,
 }) => {
   const { colors, isDark } = useTheme();
+  const { t } = useTranslation();
   const scaleVal = useSharedValue(0.92);
   const opacityVal = useSharedValue(0);
   const breathVal = useSharedValue(1);
@@ -193,7 +195,7 @@ export const GlowRing: React.FC<GlowRingProps> = ({
         <Text style={[styles.scoreText, { fontSize: scoreFontSize, lineHeight: scoreFontSize + 4, color: colors.text }]}>
           {scoreBreakdown.score.toFixed(1)}
         </Text>
-        <Text style={[styles.scoreLabel, { color: colors.textSecondary }]}>today&apos;s glow</Text>
+        <Text style={[styles.scoreLabel, { color: colors.textSecondary }]}>{t('today.glowTitle')}</Text>
 
         {perfectGlow && (
           <View style={styles.sparkleBadge}>

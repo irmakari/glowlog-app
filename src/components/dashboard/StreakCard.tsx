@@ -4,31 +4,34 @@ import { Ionicons } from '@expo/vector-icons';
 import { GlowCard } from '../ui/GlowCard';
 import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
-import { getLocalDateString } from '../../features/routines/utils/routineDate.utils';
+import { getLocalDateString, parseDateKey } from '../../features/routines/utils/routineDate.utils';
 import { useTheme } from '../../context/ThemeContext';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface StreakCardProps {
   streakDays: number;
   completedDates: string[];
+  todayKey: string;
 }
 
 const WEEK_DAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+const WEEK_DAYS_TR = ['P', 'S', 'Ç', 'P', 'C', 'C', 'P'];
 
-export const StreakCard: React.FC<StreakCardProps> = ({ streakDays, completedDates }) => {
+export const StreakCard: React.FC<StreakCardProps> = ({ streakDays, completedDates, todayKey }) => {
   const { colors, isDark } = useTheme();
-  const todayKey = useMemo(() => getLocalDateString(), []);
+  const { language, t } = useTranslation();
   const completedDateSet = useMemo(() => new Set(completedDates), [completedDates]);
   
   // Calculate current week's 7 days (Mon-Sun)
   const weekDaysInfo = useMemo(() => {
-    const today = new Date();
+    const today = parseDateKey(todayKey);
     const currentDayOfWeek = today.getDay(); // 0 = Sun, 1 = Mon...
     const distanceToMon = currentDayOfWeek === 0 ? -6 : 1 - currentDayOfWeek;
     
     const monday = new Date(today);
     monday.setDate(today.getDate() + distanceToMon);
 
-    return WEEK_DAYS.map((label, idx) => {
+    return (language === 'tr' ? WEEK_DAYS_TR : WEEK_DAYS).map((label, idx) => {
       const d = new Date(monday);
       d.setDate(monday.getDate() + idx);
       const dateKey = getLocalDateString(d);
@@ -42,7 +45,7 @@ export const StreakCard: React.FC<StreakCardProps> = ({ streakDays, completedDat
         isPast,
       };
     });
-  }, [todayKey]);
+  }, [todayKey, language]);
 
   return (
     <GlowCard variant="sageGreen" padding={14} style={styles.card}>
@@ -50,9 +53,9 @@ export const StreakCard: React.FC<StreakCardProps> = ({ streakDays, completedDat
       <View style={styles.headerRow}>
         <View style={styles.titleRow}>
           <Ionicons name="flame" size={16} color="#E86339" style={{ marginRight: 4 }} />
-          <Text style={[styles.titleText, { color: colors.text }]}>{streakDays} Day Streak</Text>
+          <Text style={[styles.titleText, { color: colors.text }]}>{t('today.streakHeader', { count: streakDays })}</Text>
         </View>
-        <Text style={[styles.caption, { color: colors.textSecondary }]}>This week</Text>
+        <Text style={[styles.caption, { color: colors.textSecondary }]}>{t('today.thisWeek')}</Text>
       </View>
 
       {/* 7-Day Icon Strip */}

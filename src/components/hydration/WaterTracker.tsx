@@ -12,21 +12,28 @@ import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing } from '../../constants/spacing';
 import { useTheme } from '../../context/ThemeContext';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface WaterTrackerProps {
   current: number;
   goal?: number;
+  weeklyAverage?: number | null;
   onIncrement: () => void;
   onDecrement: () => void;
 }
 
+const LITERS_PER_GLASS = 0.25;
+const formatLiters = (glasses: number) => `${(glasses * LITERS_PER_GLASS).toFixed(1)} L`;
+
 export const WaterTracker: React.FC<WaterTrackerProps> = ({
   current,
   goal = 8,
+  weeklyAverage = null,
   onIncrement,
   onDecrement,
 }) => {
   const { colors, isDark } = useTheme();
+  const { t } = useTranslation();
   const scaleVal = useSharedValue(1);
 
   const handleAdd = () => {
@@ -66,16 +73,16 @@ export const WaterTracker: React.FC<WaterTrackerProps> = ({
             <Ionicons name="water" size={16} color={colors.text} />
           </View>
           <View style={styles.titleTextCol}>
-            <Text style={[Typography.h3, { color: colors.text }]}>Hydration</Text>
-            <Text style={[styles.caption, { color: colors.textSecondary }]}>Water today</Text>
+            <Text style={[Typography.h3, { color: colors.text }]}>{t('today.hydrationTitle')}</Text>
+            <Text style={[styles.caption, { color: colors.textSecondary }]}>{t('today.waterToday')}</Text>
           </View>
         </View>
 
-        <Text style={[styles.headline, { color: colors.text }]}>{current} of {goal} glasses</Text>
+        <Text style={[styles.headline, { color: colors.text }]}>{t('history.glassesCount', { count: current, goal })}</Text>
         <Text style={[styles.subtext, { color: colors.textSecondary }]}>
           {isGoalReached
-            ? `Goal reached! You've drunk ${current}/${goal} glasses of water today. You are glowing 💧✨`
-            : `You drank ${current}/${goal} glasses of water. Keep going, only ${remaining} ${remaining === 1 ? 'glass' : 'glasses'} left for today.`}
+            ? t('today.goalReached', { count: current, goal })
+            : t('today.waterRemaining', { count: current, goal, remaining })}
         </Text>
       </View>
 
@@ -115,15 +122,17 @@ export const WaterTracker: React.FC<WaterTrackerProps> = ({
         ]}
       >
         <View style={styles.targetTextCol}>
-          <Text style={[styles.targetTitle, { color: colors.text }]}>Daily goal: {goal} glasses</Text>
+          <Text style={[styles.targetTitle, { color: colors.text }]}>{t('today.dailyGoal', { goal })}</Text>
           <View style={styles.targetStatsRow}>
             <View>
-              <Text style={[styles.statValue, { color: colors.text }]}>1.8 l/d</Text>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>AVERAGE</Text>
+              <Text style={[styles.statValue, { color: colors.text }]}>
+                {weeklyAverage !== null ? formatLiters(weeklyAverage) : '–'}
+              </Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('today.average')}</Text>
             </View>
             <View>
-              <Text style={[styles.statValue, { color: colors.text }]}>2.0 l/d</Text>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>TARGET</Text>
+              <Text style={[styles.statValue, { color: colors.text }]}>{formatLiters(goal)}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('today.target')}</Text>
             </View>
           </View>
         </View>
