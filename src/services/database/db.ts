@@ -95,7 +95,36 @@ export const initDatabase = async (): Promise<void> => {
       value TEXT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS treatments (
+      id TEXT PRIMARY KEY NOT NULL,
+      name TEXT NOT NULL,
+      kind TEXT NOT NULL,
+      active_key TEXT NOT NULL DEFAULT 'other',
+      dose_note TEXT,
+      frequency TEXT NOT NULL DEFAULT 'daily',
+      weekdays TEXT NOT NULL DEFAULT '[]',
+      times TEXT NOT NULL DEFAULT '[]',
+      start_date TEXT NOT NULL,
+      end_date TEXT,
+      reminder_enabled INTEGER DEFAULT 0,
+      archived INTEGER DEFAULT 0,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS treatment_logs (
+      id TEXT PRIMARY KEY NOT NULL,
+      treatment_id TEXT NOT NULL,
+      date TEXT NOT NULL,
+      slot TEXT NOT NULL,
+      status TEXT NOT NULL,
+      logged_at TEXT NOT NULL,
+      FOREIGN KEY (treatment_id) REFERENCES treatments(id) ON DELETE CASCADE,
+      UNIQUE(treatment_id, date, slot)
+    );
+
     CREATE INDEX IF NOT EXISTS idx_routine_logs_date ON routine_logs(date);
+    CREATE INDEX IF NOT EXISTS idx_treatment_logs_date ON treatment_logs(date);
     CREATE INDEX IF NOT EXISTS idx_water_logs_date ON water_logs(date);
     CREATE INDEX IF NOT EXISTS idx_product_usage_logs_date ON product_usage_logs(date);
   `);
@@ -113,6 +142,12 @@ export const initDatabase = async (): Promise<void> => {
   }
   try {
     await db.execAsync(`ALTER TABLE routine_steps ADD COLUMN updated_at TEXT;`);
+  } catch {
+    // Column already exists
+  }
+  try {
+    // JSON array of ProductActive ids, used for treatment conflict warnings
+    await db.execAsync(`ALTER TABLE products ADD COLUMN actives TEXT;`);
   } catch {
     // Column already exists
   }
