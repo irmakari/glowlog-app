@@ -2,6 +2,8 @@ import React, { createContext, useState, useEffect, useCallback, ReactNode } fro
 import en from '../i18n/translations/en.json';
 import tr from '../i18n/translations/tr.json';
 import { settingsService } from '../services/settingsService';
+import { notificationService } from '../services/notificationService';
+import { localizeDefaultRoutineSteps } from '../services/database/db';
 
 export type LanguageMode = 'en' | 'tr';
 
@@ -17,13 +19,13 @@ export interface LanguageContextType {
 }
 
 export const LanguageContext = createContext<LanguageContextType>({
-  language: 'en',
+  language: 'tr',
   setLanguage: async () => {},
   t: (key: string) => key,
 });
 
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [language, setLanguageState] = useState<LanguageMode>('en');
+  const [language, setLanguageState] = useState<LanguageMode>('tr');
 
   // Load language settings on app launch
   useEffect(() => {
@@ -44,6 +46,9 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     try {
       setLanguageState(newLang);
       await settingsService.updateSetting('language', newLang);
+      // Keep untouched default step names and scheduled reminder copy in the chosen language
+      await localizeDefaultRoutineSteps(newLang);
+      await notificationService.syncRemindersFromSettings();
     } catch (err) {
       console.error('Failed to save language setting:', err);
     }
