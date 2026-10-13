@@ -1,52 +1,71 @@
 import { StyleSheet } from 'react-native';
-import { Colors } from '../../../../constants/colors';
 import { Typography } from '../../../../constants/typography';
 import { Spacing } from '../../../../constants/spacing';
 
 export const styles = StyleSheet.create({
   card: {
-    marginVertical: Spacing.xs,
+    marginVertical: 6,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm + 2,
+    marginBottom: 10,
+  },
+  iconCircle: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
     ...Typography.h3,
     fontSize: 16,
-    marginBottom: Spacing.sm,
+    flex: 1,
+  },
+  count: {
+    ...Typography.bodyBold,
+    fontSize: 13,
+  },
+  listContainer: {
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 4,
   },
   itemRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 10,
+  },
+  itemBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(21, 21, 21, 0.06)',
   },
   itemIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: Colors.white,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: Spacing.sm,
+    marginRight: Spacing.sm + 2,
   },
   textCol: {
     flex: 1,
+    minWidth: 0,
   },
   brandText: {
     ...Typography.caption,
     fontSize: 10,
     fontWeight: '700',
-    color: Colors.textSecondary,
     textTransform: 'uppercase',
+    letterSpacing: 0.4,
   },
   nameText: {
     ...Typography.bodyBold,
     fontSize: 14,
-    color: Colors.text,
   },
   emptyText: {
     ...Typography.body,
     fontSize: 13,
-    color: Colors.textSecondary,
-    fontStyle: 'italic',
   },
 });

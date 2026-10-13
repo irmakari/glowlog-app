@@ -6,7 +6,7 @@ export const styles = StyleSheet.create({
   cell: {
     flex: 1,
     aspectRatio: 1,
-    margin: 3,
+    margin: 4,
     borderRadius: 999,
     alignItems: 'center',
     justifyContent: 'center',
@@ -14,7 +14,7 @@ export const styles = StyleSheet.create({
     position: 'relative',
   },
   cellOtherMonth: {
-    opacity: 0.25,
+    opacity: 0.35,
   },
   cellToday: {
     borderWidth: 2,

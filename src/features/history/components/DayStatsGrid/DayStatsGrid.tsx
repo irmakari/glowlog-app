@@ -1,14 +1,14 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, Text, View, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { StatCard } from '../../../../components/ui/StatCard';
 import { useDailySummary } from '../../hooks/useDailySummary';
-import { getLocalDateString } from '../../../routines/utils/routineDate.utils';
-import { calculateGlowScore } from '../../../../utils/glowScore';
-import { Colors } from '../../../../constants/colors';
+import { getLocalDateString, parseDateKey } from '../../../routines/utils/routineDate.utils';
+import { GlowCard } from '../../../../components/ui/GlowCard';
+import { calculateDayGlowScore } from '../../../../utils/glowScore';
 import { Typography } from '../../../../constants/typography';
 import { Spacing } from '../../../../constants/spacing';
 import { useTheme } from '../../../../context/ThemeContext';
+import { useTranslation } from '../../../../hooks/useTranslation';
 
 interface DayStatsGridProps {
   dateKey: string;
@@ -16,36 +16,28 @@ interface DayStatsGridProps {
 }
 
 export const DayStatsGrid: React.FC<DayStatsGridProps> = ({ dateKey, onOpenDetails }) => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
+  const { language, t } = useTranslation();
   const { summary, loading } = useDailySummary(dateKey);
-
-  const todayKey = useMemo(() => getLocalDateString(), []);
-  const isToday = dateKey === todayKey;
+  const isToday = dateKey === getLocalDateString();
 
   const stats = useMemo(() => {
     if (!summary) return null;
 
     const allSteps = [...summary.morningSteps, ...summary.eveningSteps];
-    const completedCount = allSteps.filter((s) => s.completed).length;
+    const completedCount = allSteps.filter((step) => step.completed).length;
     const totalCount = allSteps.length;
     const routinePercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
-
-    const glowBreakdown = calculateGlowScore({
-      completedStepsCount: completedCount,
-      totalStepsCount: totalCount,
-      currentHydration: summary.hydration,
-      hydrationGoal: summary.hydrationGoal,
-      streakDays: 1, // Default preview weight for day
-    });
+    const glowScore = calculateDayGlowScore(completedCount, totalCount, summary.hydration, summary.hydrationGoal);
 
     return {
       completedCount,
       totalCount,
       routinePercent,
-      glowScore: glowBreakdown.score,
+      glowScore,
       hydration: summary.hydration,
       hydrationGoal: summary.hydrationGoal,
-      productsCount: summary.productsUsed ? summary.productsUsed.length : 0,
+      productsCount: summary.productsUsed?.length ?? 0,
     };
   }, [summary]);
 
@@ -57,117 +49,170 @@ export const DayStatsGrid: React.FC<DayStatsGridProps> = ({ dateKey, onOpenDetai
     );
   }
 
-  if (!summary || !stats) {
-    return null;
-  }
+  if (!stats) return null;
+
+  const dateTitle = isToday
+    ? t('history.thisDayToday')
+    : parseDateKey(dateKey).toLocaleDateString(language === 'tr' ? 'tr-TR' : 'en-US', {
+      weekday: 'long', month: 'long', day: 'numeric',
+    });
+
+  const tileBg = isDark ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.6)';
+  const secondaryStats = [
+    { icon: 'water' as const, label: t('history.hydration'), value: `${stats.hydration}/${stats.hydrationGoal}`, tint: colors.softBlue },
+    { icon: 'sparkles' as const, label: t('history.glowScore'), value: stats.glowScore.toFixed(1), tint: colors.butterYellow },
+    { icon: 'cube' as const, label: t('history.products'), value: String(stats.productsCount), tint: colors.softLilac },
+  ];
 
   return (
     <View style={styles.container}>
-      {/* Title Header */}
       <View style={styles.headerRow}>
-        <View style={styles.rowCenter}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            {isToday ? 'This Day (Today)' : summary.formattedDate}
-          </Text>
-          {isToday && (
-            <View style={styles.todayBadge}>
-              <Text style={styles.todayBadgeText}>Today</Text>
-            </View>
-          )}
-        </View>
-        <TouchableOpacity activeOpacity={0.7} onPress={onOpenDetails} style={styles.detailBtn}>
-          <Text style={[styles.detailBtnText, { color: colors.textSecondary }]}>View Details</Text>
-          <Ionicons name="chevron-forward" size={14} color={colors.textSecondary} />
+        <Text style={[styles.sectionTitle, { color: colors.text }]} numberOfLines={1}>{dateTitle}</Text>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={onOpenDetails}
+          accessibilityRole="button"
+          hitSlop={8}
+          style={styles.detailBtn}
+        >
+          <Text style={[styles.detailBtnText, { color: colors.textSecondary }]}>{t('common.viewDetails')}</Text>
+          <Ionicons name="chevron-forward" size={15} color={colors.textSecondary} />
         </TouchableOpacity>
       </View>
 
-      {/* 2x2 Day Stats Grid */}
-      <View style={styles.grid}>
-        <StatCard
-          label="Routine"
-          value={`${stats.routinePercent}%`}
-          subtitle={`${stats.completedCount} of ${stats.totalCount} completed`}
-          variant="pink"
-          icon="sunny-outline"
-        />
+      <GlowCard variant="pink" padding={Spacing.lg} style={styles.card} onPress={onOpenDetails}>
+        <View style={styles.heroTop}>
+          <View style={styles.heroLabelRow}>
+            <Ionicons name="checkmark-done" size={16} color={colors.text} />
+            <Text style={[styles.metricLabel, { color: colors.text }]}>{t('history.routine')}</Text>
+          </View>
+          <Text style={[styles.progressCaption, { color: colors.textSecondary }]} numberOfLines={1}>
+            {t('history.stepsCompleted', { completed: stats.completedCount, total: stats.totalCount })}
+          </Text>
+        </View>
+        <Text style={[styles.progressValue, { color: colors.text }]}>{stats.routinePercent}%</Text>
+        <View style={[styles.progressTrack, { backgroundColor: isDark ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.7)' }]}>
+          <View style={[styles.progressFill, { width: `${stats.routinePercent}%`, backgroundColor: colors.text }]} />
+        </View>
 
-        <StatCard
-          label="Hydration"
-          value={`${stats.hydration} gl`}
-          subtitle={`${stats.hydration} of ${stats.hydrationGoal} glasses`}
-          variant="softBlue"
-          icon="water-outline"
-        />
-
-        <StatCard
-          label="Glow Score"
-          value={stats.glowScore.toFixed(1)}
-          subtitle="Daily Glow score"
-          variant="butterYellow"
-          icon="sparkles-outline"
-        />
-
-        <StatCard
-          label="Products"
-          value={stats.productsCount}
-          subtitle={stats.productsCount === 1 ? '1 product logged' : `${stats.productsCount} products logged`}
-          variant="softLilac"
-          icon="cube-outline"
-        />
-      </View>
+        <View style={styles.metricsRow}>
+          {secondaryStats.map((item) => (
+            <View key={item.label} style={[styles.metric, { backgroundColor: tileBg }]}>
+              <View style={[styles.metricIcon, { backgroundColor: item.tint }]}>
+                <Ionicons name={item.icon} size={14} color={colors.text} />
+              </View>
+              <Text style={[styles.metricValue, { color: colors.text }]} numberOfLines={1} adjustsFontSizeToFit>
+                {item.value}
+              </Text>
+              <Text style={[styles.metricName, { color: colors.textSecondary }]} numberOfLines={1} adjustsFontSizeToFit>
+                {item.label}
+              </Text>
+            </View>
+          ))}
+        </View>
+      </GlowCard>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: Spacing.xs,
+    marginTop: Spacing.lg,
   },
   loadingBox: {
-    paddingVertical: 20,
+    paddingVertical: Spacing.xxl,
     alignItems: 'center',
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: Spacing.xs,
-  },
-  rowCenter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
+    paddingHorizontal: 4,
   },
   sectionTitle: {
-    ...Typography.h2,
+    ...Typography.h3,
     fontSize: 18,
-    color: Colors.text,
-  },
-  todayBadge: {
-    backgroundColor: Colors.sageGreen,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 10,
-  },
-  todayBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: Colors.text,
+    flexShrink: 1,
+    textTransform: 'capitalize',
   },
   detailBtn: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 2,
+    minHeight: 36,
   },
   detailBtnText: {
     ...Typography.caption,
     fontSize: 12,
-    fontWeight: '600',
-    color: Colors.textSecondary,
-    marginRight: 2,
   },
-  grid: {
+  card: {
+    marginTop: Spacing.xs,
+  },
+  heroTop: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.xs + 2,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.sm,
+  },
+  heroLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  metricLabel: {
+    ...Typography.bodyBold,
+    fontSize: 14,
+  },
+  progressValue: {
+    ...Typography.h1,
+    fontSize: 40,
+    lineHeight: 46,
+    marginTop: Spacing.sm,
+  },
+  progressCaption: {
+    ...Typography.caption,
+    fontSize: 12,
+    flexShrink: 1,
+  },
+  progressTrack: {
+    height: 6,
+    borderRadius: 3,
+    overflow: 'hidden',
+    marginTop: Spacing.xs,
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  metricsRow: {
+    flexDirection: 'row',
+    marginTop: Spacing.lg,
+    gap: Spacing.sm,
+  },
+  metric: {
+    flex: 1,
+    minWidth: 0,
+    borderRadius: Spacing.radiusSm,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.sm,
+    alignItems: 'center',
+  },
+  metricIcon: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  metricValue: {
+    ...Typography.h3,
+    fontSize: 17,
+    marginTop: 6,
+  },
+  metricName: {
+    ...Typography.caption,
+    fontSize: 11,
+    marginTop: 1,
   },
 });

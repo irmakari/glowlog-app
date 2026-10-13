@@ -22,9 +22,12 @@ export const CalendarDay: React.FC<CalendarDayProps> = ({
     onPressDay(dateKey);
   };
 
+  // Future days get no fill so the logged part of the month stands out
   const backgroundColor = isSelected
     ? (isDark ? Colors.sageGreen : Colors.darkCard)
-    : (isDark ? '#3B3540' : Colors.white);
+    : isFuture
+      ? 'transparent'
+      : (isDark ? '#3B3540' : colors.background);
   const numberColor = isSelected
     ? (isDark ? Colors.darkCard : Colors.white)
     : ((!isCurrentMonth || isFuture) ? colors.textMuted : colors.text);
