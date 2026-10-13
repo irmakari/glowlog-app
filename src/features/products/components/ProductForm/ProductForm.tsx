@@ -20,6 +20,7 @@ import {
   PAO_OPTIONS,
   PRODUCT_CATEGORIES,
 } from '../../../../constants/productCategories';
+import { PRODUCT_ACTIVES, ProductActive } from '../../../../constants/productActives';
 import { CreateProductInput } from '../../types/product.types';
 import { formatProductDate } from '../../utils/productDate.utils';
 import { getLocalDateString, parseDateKey } from '../../../routines/utils/routineDate.utils';
@@ -55,6 +56,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   const [paoMonths, setPaoMonths] = useState<number>(initialValues?.paoMonths ?? 6);
   const [imageUri, setImageUri] = useState<string | undefined>(initialValues?.imageUri);
   const [notes, setNotes] = useState(initialValues?.notes || '');
+  const [actives, setActives] = useState<ProductActive[]>(initialValues?.actives ?? []);
+
+  const toggleActive = (id: ProductActive) =>
+    setActives((prev) => (prev.includes(id) ? prev.filter((a) => a !== id) : [...prev, id]));
 
   // Errors
   const [nameError, setNameError] = useState<string | undefined>(undefined);
@@ -134,6 +139,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       paoMonths: paoMonths > 0 ? paoMonths : undefined,
       imageUri,
       notes: notes.trim() || undefined,
+      actives,
     };
 
     await onSubmit(input);
@@ -215,6 +221,30 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             />
           </View>
         )}
+      </FormField>
+
+      {/* Active ingredients (feeds treatment conflict warnings) */}
+      <FormField label={t('productActives.title')}>
+        <View style={styles.paoGrid}>
+          {PRODUCT_ACTIVES.map((active) => {
+            const isSelected = actives.includes(active.id);
+            return (
+              <TouchableOpacity
+                key={active.id}
+                activeOpacity={0.7}
+                onPress={() => toggleActive(active.id)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isSelected }}
+                style={[styles.paoChip, isSelected && styles.paoChipActive]}
+              >
+                <Text style={[styles.paoChipText, isSelected && styles.paoChipTextActive]}>
+                  {t(`productActives.${active.id}`)}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+        <Text style={styles.fieldHint}>{t('productActives.hint')}</Text>
       </FormField>
 
       {/* Opened Date */}

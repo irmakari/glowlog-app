@@ -94,6 +94,11 @@ export const styles = StyleSheet.create({
   paoChipTextActive: {
     color: Colors.white,
   },
+  fieldHint: {
+    ...Typography.caption,
+    color: Colors.textSecondary,
+    marginTop: 6,
+  },
   datePickerButton: {
     flexDirection: 'row',
     alignItems: 'center',

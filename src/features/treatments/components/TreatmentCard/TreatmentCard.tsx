@@ -7,7 +7,9 @@ import { GlowCard } from '../../../../components/ui/GlowCard';
 import { Colors } from '../../../../constants/colors';
 import { useTheme } from '../../../../context/ThemeContext';
 import { useTranslation } from '../../../../hooks/useTranslation';
+import { useTreatmentConflicts } from '../../hooks/useTreatmentConflicts';
 import { useTreatmentDoses } from '../../hooks/useTreatmentDoses';
+import { TreatmentConflictNotice } from '../TreatmentConflictNotice';
 import { TreatmentDose, TreatmentDoseStatus } from '../../types/treatment.types';
 import { styles } from './TreatmentCard.styles';
 import { TreatmentCardProps } from './TreatmentCard.types';
@@ -106,11 +108,18 @@ const DoseRow: React.FC<DoseRowProps> = ({ dose, editable, isLast, onSetStatus }
  * The day's doses with taken / skipped controls. Renders nothing when no treatment is
  * running that day and nothing was logged.
  */
-export const TreatmentCard: React.FC<TreatmentCardProps> = ({ dateKey, editable = true, emptyText, style }) => {
+export const TreatmentCard: React.FC<TreatmentCardProps> = ({
+  dateKey,
+  editable = true,
+  emptyText,
+  showConflicts = false,
+  style,
+}) => {
   const router = useRouter();
   const { colors, isDark } = useTheme();
   const { t } = useTranslation();
   const { doses, runningTreatments, loaded, setDoseStatus } = useTreatmentDoses(dateKey);
+  const { conflicts } = useTreatmentConflicts();
 
   if (!loaded || (doses.length === 0 && runningTreatments.length === 0)) return null;
 
@@ -158,6 +167,8 @@ export const TreatmentCard: React.FC<TreatmentCardProps> = ({ dateKey, editable 
           ))}
         </View>
       )}
+
+      {showConflicts && <TreatmentConflictNotice conflicts={conflicts} compact />}
     </GlowCard>
   );
 };

@@ -3,6 +3,7 @@ import { View, TextInput, Alert } from 'react-native';
 import { FormField } from '../../../../components/ui/FormField';
 import { PillButton } from '../../../../components/ui/PillButton';
 import { ProductSelector } from '../ProductSelector';
+import { TreatmentConflictHint } from '../../../treatments/components/TreatmentConflictHint';
 import { RoutineStepFormProps } from './RoutineStepForm.types';
 import { styles } from './RoutineStepForm.styles';
 import { Colors } from '../../../../constants/colors';
@@ -59,6 +60,7 @@ export const RoutineStepForm: React.FC<RoutineStepFormProps> = ({
           selectedProductId={productId}
           onSelectProduct={setProductId}
         />
+        <TreatmentConflictHint productId={productId} />
       </FormField>
 
       <View style={styles.buttonRow}>

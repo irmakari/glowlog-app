@@ -116,7 +116,7 @@ export default function TodayScreen() {
       />
 
       {/* Treatment doses: only while a treatment is running */}
-      <TreatmentCard dateKey={todayDateStr} />
+      <TreatmentCard dateKey={todayDateStr} showConflicts />
 
       {/* Hydration Card */}
       <WaterTracker

@@ -1,6 +1,7 @@
 import { getDb } from '../../../services/database/db';
 import { Product, CreateProductInput, UpdateProductInput } from '../types/product.types';
 import { deleteProductImage, persistProductImage } from './productImageService';
+import { isProductActive, ProductActive } from '../../../constants/productActives';
 
 interface ProductRow {
   id: string;
@@ -11,12 +12,26 @@ interface ProductRow {
   pao_months: number | null;
   image_uri: string | null;
   notes: string | null;
+  actives: string | null;
   archived: number;
   created_at: string;
   updated_at: string;
   usage_count?: number;
   last_used_at?: string | null;
 }
+
+const parseActives = (value: string | null): ProductActive[] | undefined => {
+  if (!value) return undefined;
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.filter(isProductActive) : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+const serializeActives = (actives?: ProductActive[]): string | null =>
+  actives && actives.length > 0 ? JSON.stringify(actives) : null;
 
 function mapRowToProduct(row: ProductRow): Product {
   return {
@@ -28,6 +43,7 @@ function mapRowToProduct(row: ProductRow): Product {
     paoMonths: row.pao_months ?? undefined,
     imageUri: row.image_uri ?? undefined,
     notes: row.notes ?? undefined,
+    actives: parseActives(row.actives),
     archived: Boolean(row.archived),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -50,6 +66,20 @@ export const productService = {
       FROM products p
       WHERE p.archived = 0
       ORDER BY p.updated_at DESC
+    `);
+    return rows.map(mapRowToProduct);
+  },
+
+  /**
+   * Active products linked to at least one routine step: the ones actually being used
+   */
+  async getRoutineProducts(): Promise<Product[]> {
+    const db = await getDb();
+    const rows = await db.getAllAsync<ProductRow>(`
+      SELECT DISTINCT p.*
+      FROM products p
+      JOIN routine_steps rs ON rs.product_id = p.id
+      WHERE p.archived = 0
     `);
     return rows.map(mapRowToProduct);
   },
@@ -101,8 +131,8 @@ export const productService = {
     const id = `prod-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
 
     await db.runAsync(
-      `INSERT INTO products (id, name, brand, category, opened_at, pao_months, image_uri, notes, archived, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)`,
+      `INSERT INTO products (id, name, brand, category, opened_at, pao_months, image_uri, notes, actives, archived, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)`,
       [
         id,
         input.name,
@@ -112,6 +142,7 @@ export const productService = {
         input.paoMonths ?? null,
         persistProductImage(input.imageUri),
         input.notes || null,
+        serializeActives(input.actives),
         now,
         now,
       ]
@@ -141,13 +172,14 @@ export const productService = {
       ? persistProductImage(input.imageUri)
       : existing.imageUri || null;
     const notes = 'notes' in input ? input.notes || null : existing.notes || null;
+    const actives = 'actives' in input ? serializeActives(input.actives) : serializeActives(existing.actives);
     const archived = input.archived !== undefined ? (input.archived ? 1 : 0) : existing.archived ? 1 : 0;
 
     await db.runAsync(
       `UPDATE products 
-       SET name = ?, brand = ?, category = ?, opened_at = ?, pao_months = ?, image_uri = ?, notes = ?, archived = ?, updated_at = ?
+       SET name = ?, brand = ?, category = ?, opened_at = ?, pao_months = ?, image_uri = ?, notes = ?, actives = ?, archived = ?, updated_at = ?
        WHERE id = ?`,
-      [name, brand, category, openedAt, paoMonths, imageUri, notes, archived, now, id]
+      [name, brand, category, openedAt, paoMonths, imageUri, notes, actives, archived, now, id]
     );
 
     if (existing.imageUri && existing.imageUri !== imageUri) {

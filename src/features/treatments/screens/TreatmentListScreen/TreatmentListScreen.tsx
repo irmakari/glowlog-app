@@ -9,6 +9,8 @@ import { PillButton } from '../../../../components/ui/PillButton';
 import { EmptyState } from '../../../../components/ui/EmptyState';
 import { useTheme } from '../../../../context/ThemeContext';
 import { useTranslation } from '../../../../hooks/useTranslation';
+import { TreatmentConflictNotice } from '../../components/TreatmentConflictNotice';
+import { useTreatmentConflicts } from '../../hooks/useTreatmentConflicts';
 import { useTreatments } from '../../hooks/useTreatments';
 import { Treatment } from '../../types/treatment.types';
 import { ensureTreatmentDisclaimer } from '../../utils/treatmentDisclaimer';
@@ -61,6 +63,7 @@ export const TreatmentListScreen: React.FC = () => {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const { treatments, loading } = useTreatments();
+  const { conflicts, sunSensitive } = useTreatmentConflicts();
 
   const active = treatments.filter((tr) => !isTreatmentFinished(tr));
   const finished = treatments.filter((tr) => isTreatmentFinished(tr));
@@ -100,6 +103,8 @@ export const TreatmentListScreen: React.FC = () => {
         />
       ) : (
         <>
+          <TreatmentConflictNotice conflicts={conflicts} sunSensitive={sunSensitive} />
+
           {active.length > 0 && (
             <>
               <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>

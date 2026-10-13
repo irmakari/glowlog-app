@@ -1,3 +1,5 @@
+import { ProductActive } from '../../../constants/productActives';
+
 export interface Product {
   id: string;
   name: string;
@@ -7,6 +9,8 @@ export interface Product {
   paoMonths?: number;
   imageUri?: string;
   notes?: string;
+  /** Actives the user tagged, for treatment conflict warnings */
+  actives?: ProductActive[];
   archived: boolean;
   createdAt: string;
   updatedAt: string;
@@ -24,6 +28,7 @@ export interface CreateProductInput {
   paoMonths?: number;
   imageUri?: string;
   notes?: string;
+  actives?: ProductActive[];
 }
 
 export interface UpdateProductInput {
@@ -34,5 +39,6 @@ export interface UpdateProductInput {
   paoMonths?: number;
   imageUri?: string;
   notes?: string;
+  actives?: ProductActive[];
   archived?: boolean;
 }
