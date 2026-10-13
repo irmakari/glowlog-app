@@ -81,6 +81,16 @@ describe('treatmentSchedule.utils', () => {
       const alternate = makeTreatment({ id: 'y', frequency: 'every_other_day', startDate: '2026-10-13' });
       expect(getDosesForDate([archived, alternate], [], '2026-10-14')).toEqual([]);
     });
+
+    it('keeps logged doses of archived treatments as history', () => {
+      const archived = makeTreatment({ id: 'x', archived: true, times: ['08:00', '20:00'] });
+      const logs: TreatmentLog[] = [
+        { id: 'l1', treatmentId: 'x', date: '2026-10-10', slot: '08:00', status: 'taken', loggedAt: '' },
+      ];
+      expect(getDosesForDate([archived], logs, '2026-10-10').map((d) => [d.slot, d.status])).toEqual([
+        ['08:00', 'taken'],
+      ]);
+    });
   });
 
   describe('normalizeTimes', () => {

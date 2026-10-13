@@ -7,6 +7,7 @@ import { IconButton } from '../../../../components/ui/IconButton';
 import { GlowCard } from '../../../../components/ui/GlowCard';
 import { RoutineItem } from '../../../../components/routine/RoutineItem';
 import { ProductUsageList } from '../../components/ProductUsageList';
+import { TreatmentCard } from '../../../treatments/components/TreatmentCard';
 import { useDailySummary } from '../../hooks/useDailySummary';
 import { getLocalDateString, parseDateKey } from '../../../routines/utils/routineDate.utils';
 import { calculateDayGlowScore } from '../../../../utils/glowScore';
@@ -233,6 +234,8 @@ export const DailySummaryScreen: React.FC<DailySummaryScreenProps> = ({ date }) 
         editable={isEditing}
         onToggle={toggleStep}
       />
+
+      <TreatmentCard dateKey={date} editable={isEditing} emptyText={t('treatments.noDosesOnDay')} />
 
       {/* Hydration Card */}
       <GlowCard variant="softBlue" padding={16} style={styles.card}>

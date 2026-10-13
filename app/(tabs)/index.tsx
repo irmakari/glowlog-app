@@ -9,6 +9,7 @@ import { RoutineCard } from '../../src/components/routine/RoutineCard';
 import { WaterTracker } from '../../src/components/hydration/WaterTracker';
 import { ProductAlertCard } from '../../src/components/dashboard/ProductAlertCard';
 import { useTodayRoutine } from '../../src/features/routines/hooks/useTodayRoutine';
+import { TreatmentCard } from '../../src/features/treatments/components/TreatmentCard';
 import { Typography } from '../../src/constants/typography';
 import { Spacing } from '../../src/constants/spacing';
 import { Colors } from '../../src/constants/colors';
@@ -113,6 +114,9 @@ export default function TodayScreen() {
         onToggleStep={(id) => toggleStep(id, 'evening')}
         onCompleteAll={() => completeAllSteps('evening')}
       />
+
+      {/* Treatment doses: only while a treatment is running */}
+      <TreatmentCard dateKey={todayDateStr} />
 
       {/* Hydration Card */}
       <WaterTracker

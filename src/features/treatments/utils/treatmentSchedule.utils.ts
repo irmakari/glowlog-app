@@ -47,6 +47,8 @@ export function isTreatmentFinished(treatment: Treatment, todayKey: string = get
 
 /**
  * Every dose scheduled on the given day across the treatments, with its logged status.
+ * Archived treatments only contribute doses that were logged, so finished treatments
+ * still show up in past days' history without asking for new doses.
  * Sorted by time, then by treatment name.
  */
 export function getDosesForDate(
@@ -59,7 +61,7 @@ export function getDosesForDate(
   );
 
   return treatments
-    .filter((t) => !t.archived && isTreatmentDueOn(t, dateKey))
+    .filter((t) => isTreatmentDueOn(t, dateKey))
     .flatMap((treatment) =>
       treatment.times.map((slot) => ({
         treatment,
@@ -67,6 +69,7 @@ export function getDosesForDate(
         status: statusByKey.get(`${treatment.id}|${slot}`),
       }))
     )
+    .filter((dose) => !dose.treatment.archived || dose.status !== undefined)
     .sort((a, b) => a.slot.localeCompare(b.slot) || a.treatment.name.localeCompare(b.treatment.name));
 }
 
