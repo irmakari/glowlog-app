@@ -40,27 +40,30 @@ export const backupService = {
     try {
       const backup: GlowLogBackupData = JSON.parse(jsonString);
 
-      if (!backup.products || !backup.routineSteps || !backup.settings) {
+      if (
+        !backup ||
+        !Array.isArray(backup.products) ||
+        !Array.isArray(backup.routineSteps) ||
+        !Array.isArray(backup.settings)
+      ) {
         throw new Error('Invalid backup file structure.');
       }
 
       const db = await getDb();
 
-      // Begin transaction cleanup & restore
-      await db.execAsync('BEGIN TRANSACTION;');
-
-      try {
+      // Clear & restore atomically: any failure rolls back to the current data
+      await db.withExclusiveTransactionAsync(async (txn) => {
         // Clear existing tables
-        await db.execAsync('DELETE FROM product_usage_logs;');
-        await db.execAsync('DELETE FROM routine_logs;');
-        await db.execAsync('DELETE FROM routine_steps;');
-        await db.execAsync('DELETE FROM products;');
-        await db.execAsync('DELETE FROM water_logs;');
-        await db.execAsync('DELETE FROM settings;');
+        await txn.execAsync('DELETE FROM product_usage_logs;');
+        await txn.execAsync('DELETE FROM routine_logs;');
+        await txn.execAsync('DELETE FROM routine_steps;');
+        await txn.execAsync('DELETE FROM products;');
+        await txn.execAsync('DELETE FROM water_logs;');
+        await txn.execAsync('DELETE FROM settings;');
 
         // Restore Products
         for (const p of backup.products) {
-          await db.runAsync(
+          await txn.runAsync(
             `INSERT INTO products (id, name, brand, category, opened_at, pao_months, image_uri, notes, archived, created_at, updated_at)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
@@ -69,7 +72,7 @@ export const backupService = {
               p.brand || null,
               p.category,
               p.opened_at || null,
-              p.pao_months || null,
+              p.pao_months ?? null,
               p.image_uri || null,
               p.notes || null,
               p.archived || 0,
@@ -81,7 +84,7 @@ export const backupService = {
 
         // Restore Routine Steps
         for (const s of backup.routineSteps) {
-          await db.runAsync(
+          await txn.runAsync(
             `INSERT INTO routine_steps (id, routine_type, title, product_id, sort_order, created_at, updated_at)
              VALUES (?, ?, ?, ?, ?, ?, ?)`,
             [
@@ -89,7 +92,7 @@ export const backupService = {
               s.routine_type,
               s.title,
               s.product_id || null,
-              s.sort_order || 0,
+              s.sort_order ?? 0,
               s.created_at,
               s.updated_at || null,
             ]
@@ -98,16 +101,16 @@ export const backupService = {
 
         // Restore Routine Logs
         for (const rl of backup.routineLogs || []) {
-          await db.runAsync(
+          await txn.runAsync(
             `INSERT INTO routine_logs (id, routine_step_id, date, completed, completed_at)
              VALUES (?, ?, ?, ?, ?)`,
-            [rl.id, rl.routine_step_id, rl.date, rl.completed || 1, rl.completed_at]
+            [rl.id, rl.routine_step_id, rl.date, rl.completed ?? 1, rl.completed_at]
           );
         }
 
         // Restore Water Logs
         for (const w of backup.waterLogs || []) {
-          await db.runAsync(
+          await txn.runAsync(
             `INSERT INTO water_logs (id, date, glasses) VALUES (?, ?, ?)`,
             [w.id, w.date, w.glasses || 0]
           );
@@ -115,7 +118,7 @@ export const backupService = {
 
         // Restore Product Usage Logs
         for (const u of backup.productUsageLogs || []) {
-          await db.runAsync(
+          await txn.runAsync(
             `INSERT INTO product_usage_logs (id, product_id, date, used_at, source, source_id)
              VALUES (?, ?, ?, ?, ?, ?)`,
             [u.id, u.product_id, u.date, u.used_at, u.source || 'routine', u.source_id || null]
@@ -124,18 +127,14 @@ export const backupService = {
 
         // Restore Settings
         for (const st of backup.settings || []) {
-          await db.runAsync(
+          await txn.runAsync(
             `INSERT INTO settings (key, value) VALUES (?, ?)`,
             [st.key, st.value]
           );
         }
 
-        await db.execAsync('COMMIT;');
-        return true;
-      } catch (err) {
-        await db.execAsync('ROLLBACK;');
-        throw err;
-      }
+      });
+      return true;
     } catch (e: any) {
       console.error('Failed to import backup:', e);
       throw new Error(e?.message || 'Invalid backup data format.');
