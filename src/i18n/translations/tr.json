@@ -177,7 +177,7 @@
     "backupErrorTitle": "Yedekleme Hatası",
     "backupErrorDesc": "Yedek dışa aktarılamadı.",
     "restoreConfirmTitle": "Tüm veriler değiştirilsin mi?",
-    "restoreConfirmDesc": "Geri yükleme, bu cihazdaki ürünleri, rutinleri ve geçmişi silip yedektekilerle değiştirir.",
+    "restoreConfirmDesc": "Geri yükleme, bu cihazdaki ürünleri, rutinleri, tedavileri ve geçmişi silip yedektekilerle değiştirir.",
     "restoreConfirmAction": "Geri Yükle",
     "restoreSuccessTitle": "Başarılı ✨",
     "restoreSuccessDesc": "Veri yedeğiniz başarıyla geri yüklendi.",

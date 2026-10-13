@@ -177,7 +177,7 @@
     "backupErrorTitle": "Backup Error",
     "backupErrorDesc": "Failed to export backup data.",
     "restoreConfirmTitle": "Replace all data?",
-    "restoreConfirmDesc": "Restoring deletes the products, routines and history currently on this device and replaces them with the backup.",
+    "restoreConfirmDesc": "Restoring deletes the products, routines, treatments and history currently on this device and replaces them with the backup.",
     "restoreConfirmAction": "Restore",
     "restoreSuccessTitle": "Success ✨",
     "restoreSuccessDesc": "Your data backup has been successfully restored.",

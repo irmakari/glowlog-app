@@ -9,7 +9,12 @@ export interface GlowLogBackupData {
   waterLogs: any[];
   productUsageLogs: any[];
   settings: any[];
+  // Added in version 2; missing from older backups
+  treatments?: any[];
+  treatmentLogs?: any[];
 }
+
+export const BACKUP_VERSION = 2;
 
 export const backupService = {
   async exportBackup(): Promise<string> {
@@ -21,9 +26,11 @@ export const backupService = {
     const waterLogs = await db.getAllAsync('SELECT * FROM water_logs');
     const productUsageLogs = await db.getAllAsync('SELECT * FROM product_usage_logs');
     const settings = await db.getAllAsync('SELECT * FROM settings');
+    const treatments = await db.getAllAsync('SELECT * FROM treatments');
+    const treatmentLogs = await db.getAllAsync('SELECT * FROM treatment_logs');
 
     const backupData: GlowLogBackupData = {
-      version: 1,
+      version: BACKUP_VERSION,
       exportedAt: new Date().toISOString(),
       products,
       routineSteps,
@@ -31,6 +38,8 @@ export const backupService = {
       waterLogs,
       productUsageLogs,
       settings,
+      treatments,
+      treatmentLogs,
     };
 
     return JSON.stringify(backupData, null, 2);
@@ -44,7 +53,9 @@ export const backupService = {
         !backup ||
         !Array.isArray(backup.products) ||
         !Array.isArray(backup.routineSteps) ||
-        !Array.isArray(backup.settings)
+        !Array.isArray(backup.settings) ||
+        (backup.treatments !== undefined && !Array.isArray(backup.treatments)) ||
+        (backup.treatmentLogs !== undefined && !Array.isArray(backup.treatmentLogs))
       ) {
         throw new Error('Invalid backup file structure.');
       }
@@ -53,7 +64,10 @@ export const backupService = {
 
       // Clear & restore atomically: any failure rolls back to the current data
       await db.withExclusiveTransactionAsync(async (txn) => {
-        // Clear existing tables
+        // Clear existing tables. Treatments go too: a restore replaces everything, even from a
+        // version 1 backup that predates them.
+        await txn.execAsync('DELETE FROM treatment_logs;');
+        await txn.execAsync('DELETE FROM treatments;');
         await txn.execAsync('DELETE FROM product_usage_logs;');
         await txn.execAsync('DELETE FROM routine_logs;');
         await txn.execAsync('DELETE FROM routine_steps;');
@@ -64,8 +78,8 @@ export const backupService = {
         // Restore Products
         for (const p of backup.products) {
           await txn.runAsync(
-            `INSERT INTO products (id, name, brand, category, opened_at, pao_months, image_uri, notes, archived, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO products (id, name, brand, category, opened_at, pao_months, image_uri, notes, actives, archived, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               p.id,
               p.name,
@@ -75,6 +89,7 @@ export const backupService = {
               p.pao_months ?? null,
               p.image_uri || null,
               p.notes || null,
+              p.actives || null,
               p.archived || 0,
               p.created_at,
               p.updated_at,
@@ -122,6 +137,39 @@ export const backupService = {
             `INSERT INTO product_usage_logs (id, product_id, date, used_at, source, source_id)
              VALUES (?, ?, ?, ?, ?, ?)`,
             [u.id, u.product_id, u.date, u.used_at, u.source || 'routine', u.source_id || null]
+          );
+        }
+
+        // Restore Treatments
+        for (const tr of backup.treatments || []) {
+          await txn.runAsync(
+            `INSERT INTO treatments (id, name, kind, active_key, dose_note, frequency, weekdays, times, start_date, end_date, reminder_enabled, archived, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              tr.id,
+              tr.name,
+              tr.kind,
+              tr.active_key || 'other',
+              tr.dose_note || null,
+              tr.frequency || 'daily',
+              tr.weekdays || '[]',
+              tr.times || '[]',
+              tr.start_date,
+              tr.end_date || null,
+              tr.reminder_enabled || 0,
+              tr.archived || 0,
+              tr.created_at,
+              tr.updated_at,
+            ]
+          );
+        }
+
+        // Restore Treatment Logs
+        for (const tl of backup.treatmentLogs || []) {
+          await txn.runAsync(
+            `INSERT INTO treatment_logs (id, treatment_id, date, slot, status, logged_at)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [tl.id, tl.treatment_id, tl.date, tl.slot, tl.status, tl.logged_at]
           );
         }
 
