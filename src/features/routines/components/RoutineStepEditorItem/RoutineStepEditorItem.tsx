@@ -5,6 +5,7 @@ import * as Haptics from 'expo-haptics';
 import { RoutineStepEditorItemProps } from './RoutineStepEditorItem.types';
 import { styles } from './RoutineStepEditorItem.styles';
 import { Colors } from '../../../../constants/colors';
+import { useTranslation } from '../../../../hooks/useTranslation';
 
 export const RoutineStepEditorItem: React.FC<RoutineStepEditorItemProps> = ({
   step,
@@ -15,14 +16,15 @@ export const RoutineStepEditorItem: React.FC<RoutineStepEditorItemProps> = ({
   onMoveUp,
   onMoveDown,
 }) => {
+  const { t } = useTranslation();
   const handleDeleteConfirm = () => {
     Alert.alert(
-      'Remove this step?',
-      'Past routine logs for this step will still be kept for history.',
+      t('routineEditor.removeStep'),
+      t('routineEditor.removeStepDesc'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Remove',
+          text: t('routineEditor.remove'),
           style: 'destructive',
           onPress: () => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -70,7 +72,7 @@ export const RoutineStepEditorItem: React.FC<RoutineStepEditorItemProps> = ({
             {step.product.name}
           </Text>
         ) : step.isProductArchived ? (
-          <Text style={styles.archivedText}>Product archived</Text>
+          <Text style={styles.archivedText}>{t('today.productArchived')}</Text>
         ) : null}
       </View>
 

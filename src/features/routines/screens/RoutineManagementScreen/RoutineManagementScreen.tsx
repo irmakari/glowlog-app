@@ -8,16 +8,19 @@ import { RoutineEditor } from '../../components/RoutineEditor';
 import { RoutineManagementScreenProps } from './RoutineManagementScreen.types';
 import { styles } from './RoutineManagementScreen.styles';
 import { Colors } from '../../../../constants/colors';
+import { useTranslation } from '../../../../hooks/useTranslation';
 
 export const RoutineManagementScreen: React.FC<RoutineManagementScreenProps> = ({
   initialType = 'morning',
+  initialEditStepId,
 }) => {
   const router = useRouter();
+  const { t } = useTranslation();
 
   return (
     <Screen scrollable padding={16}>
       <View style={styles.headerRow}>
-        <Text style={styles.title}>Edit Routines</Text>
+        <Text style={styles.title}>{t('routineEditor.editRoutines')}</Text>
         <IconButton
           icon={<Ionicons name="close" size={20} color={Colors.text} />}
           onPress={() => router.back()}
@@ -26,7 +29,7 @@ export const RoutineManagementScreen: React.FC<RoutineManagementScreenProps> = (
         />
       </View>
 
-      <RoutineEditor initialType={initialType} />
+      <RoutineEditor initialType={initialType} initialEditStepId={initialEditStepId} />
     </Screen>
   );
 };

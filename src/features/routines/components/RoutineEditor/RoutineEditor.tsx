@@ -13,14 +13,17 @@ import { styles } from './RoutineEditor.styles';
 import { Colors } from '../../../../constants/colors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../../../context/ThemeContext';
+import { useTranslation } from '../../../../hooks/useTranslation';
 
 export const RoutineEditor: React.FC<RoutineEditorProps> = ({
   initialType = 'morning',
+  initialEditStepId,
 }) => {
   const [activeType, setActiveType] = useState<RoutineType>(initialType);
   const { height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [keyboardOffset] = useState(() => new Animated.Value(0));
   const sheetMaxHeight = keyboardOffset.interpolate({
     inputRange: [0, height],
@@ -66,6 +69,15 @@ export const RoutineEditor: React.FC<RoutineEditorProps> = ({
       hideSubscription?.remove();
     };
   }, [height, keyboardOffset, modalVisible]);
+
+  // Open the requested step's form once, as soon as it appears in the loaded steps
+  const [pendingEditStepId, setPendingEditStepId] = useState(initialEditStepId);
+  const pendingEditStep = pendingEditStepId ? steps.find((s) => s.id === pendingEditStepId) : undefined;
+  if (pendingEditStep) {
+    setPendingEditStepId(undefined);
+    setEditingStep(pendingEditStep);
+    setModalVisible(true);
+  }
 
   const handleSwitchType = (type: RoutineType) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -114,7 +126,7 @@ export const RoutineEditor: React.FC<RoutineEditorProps> = ({
               activeType === 'morning' && styles.segmentTextActive,
             ]}
           >
-            Morning
+            {t('routineEditor.morning')}
           </Text>
         </TouchableOpacity>
 
@@ -137,7 +149,7 @@ export const RoutineEditor: React.FC<RoutineEditorProps> = ({
               activeType === 'evening' && styles.segmentTextActive,
             ]}
           >
-            Evening
+            {t('routineEditor.evening')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -145,7 +157,7 @@ export const RoutineEditor: React.FC<RoutineEditorProps> = ({
       {/* Routine Title */}
       <View style={styles.headerRow}>
         <Text style={styles.titleText}>
-          {activeType === 'morning' ? 'Morning Routine ✨' : 'Evening Routine 🌙'}
+          {activeType === 'morning' ? `${t('today.routineCardMorningTitle')} ✨` : `${t('today.routineCardEveningTitle')} 🌙`}
         </Text>
       </View>
 
@@ -154,11 +166,11 @@ export const RoutineEditor: React.FC<RoutineEditorProps> = ({
         <GlowCard variant="cream" padding={16} style={styles.emptyContainer}>
           <Text style={styles.emptyText}>
             {activeType === 'morning'
-              ? 'Your morning ritual is waiting ✨'
-              : 'Create a calm little night routine.'}
+              ? t('today.morningEmpty')
+              : t('today.eveningEmpty')}
           </Text>
           <PillButton
-            title="+ Add first step"
+            title={t('routineEditor.addFirstStep')}
             onPress={handleOpenAddModal}
             variant="primary"
             size="sm"
@@ -180,7 +192,7 @@ export const RoutineEditor: React.FC<RoutineEditorProps> = ({
           ))}
 
           <PillButton
-            title="+ Add routine step"
+            title={t('routineEditor.addRoutineStep')}
             onPress={handleOpenAddModal}
             variant="secondary"
             pastelColor={activeType === 'morning' ? 'pink' : 'softLilac'}
@@ -208,7 +220,7 @@ export const RoutineEditor: React.FC<RoutineEditorProps> = ({
             contentContainerStyle={[styles.modalContent, { paddingBottom: Math.max(insets.bottom, 16) + 16 }]}
           >
             <Text style={[styles.modalTitle, { color: colors.text }]}>
-              {editingStep ? 'Edit Routine Step' : 'Add Routine Step'}
+              {editingStep ? t('routineEditor.editRoutineStep') : t('routineEditor.addRoutineStepTitle')}
             </Text>
             <RoutineStepForm
               initialValues={editingStep}

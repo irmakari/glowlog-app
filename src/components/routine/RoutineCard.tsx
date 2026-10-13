@@ -1,15 +1,18 @@
-import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { ActionSheetIOS, Alert, Platform, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
+import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring } from 'react-native-reanimated';
+import Svg, { Circle } from 'react-native-svg';
 import { GlowCard } from '../ui/GlowCard';
 import { PillButton } from '../ui/PillButton';
 import { RoutineItem } from './RoutineItem';
 import { Colors, ColorVariant } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
-import { Spacing } from '../../constants/spacing';
 import { TodayRoutineStepState, RoutineType } from '../../features/routines/types/routine.types';
 import { useTheme } from '../../context/ThemeContext';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface RoutineCardProps {
   type: RoutineType;
@@ -17,6 +20,48 @@ interface RoutineCardProps {
   onToggleStep: (id: string) => void;
   onCompleteAll?: () => void;
 }
+
+const ACCENTS: Record<RoutineType, { variant: ColorVariant; ink: string }> = {
+  morning: { variant: 'pink', ink: '#B4507F' },
+  evening: { variant: 'softLilac', ink: '#7C5CBF' },
+};
+
+const COMPLETE_GREEN = '#4F7A2E';
+
+const RING_SIZE = 36;
+const RING_STROKE = 4;
+const RING_RADIUS = (RING_SIZE - RING_STROKE) / 2;
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
+
+const ProgressRing: React.FC<{ ratio: number; color: string; trackColor: string }> = ({
+  ratio,
+  color,
+  trackColor,
+}) => (
+  <Svg width={RING_SIZE} height={RING_SIZE}>
+    <Circle
+      cx={RING_SIZE / 2}
+      cy={RING_SIZE / 2}
+      r={RING_RADIUS}
+      stroke={trackColor}
+      strokeWidth={RING_STROKE}
+      fill="none"
+    />
+    {ratio > 0 && (
+      <Circle
+        cx={RING_SIZE / 2}
+        cy={RING_SIZE / 2}
+        r={RING_RADIUS}
+        stroke={color}
+        strokeWidth={RING_STROKE}
+        strokeLinecap="round"
+        strokeDasharray={`${RING_CIRCUMFERENCE * ratio} ${RING_CIRCUMFERENCE}`}
+        fill="none"
+        transform={`rotate(-90 ${RING_SIZE / 2} ${RING_SIZE / 2})`}
+      />
+    )}
+  </Svg>
+);
 
 export const RoutineCard: React.FC<RoutineCardProps> = ({
   type,
@@ -26,103 +71,125 @@ export const RoutineCard: React.FC<RoutineCardProps> = ({
 }) => {
   const router = useRouter();
   const { colors, isDark } = useTheme();
+  const { t } = useTranslation();
   const isMorning = type === 'morning';
   const completedCount = steps.filter((s) => s.completed).length;
   const totalCount = steps.length;
   const progressRatio = totalCount > 0 ? completedCount / totalCount : 0;
 
-  const cardVariant: ColorVariant = isMorning ? 'pink' : 'softLilac';
+  const accent = ACCENTS[type];
+  // Frosted white layers sit on the pastel card instead of a second solid color
+  const frost = isDark ? 'rgba(255, 255, 255, 0.10)' : 'rgba(255, 255, 255, 0.62)';
   const iconName = isMorning ? 'sunny' : 'moon';
-  const title = isMorning ? 'Morning Routine' : 'Evening Routine';
+  const title = isMorning ? t('today.routineCardMorningTitle') : t('today.routineCardEveningTitle');
+  const isComplete = totalCount > 0 && completedCount === totalCount;
+  const canCompleteAll = totalCount > 0 && !isComplete && !!onCompleteAll;
+
+  // Celebrate only when the user finishes the routine, not when a finished routine loads
+  const ringScale = useSharedValue(1);
+  const previous = useRef({ isComplete, totalCount });
+  useEffect(() => {
+    const prev = previous.current;
+    previous.current = { isComplete, totalCount };
+    if (isComplete && !prev.isComplete && prev.totalCount === totalCount) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      ringScale.value = withSequence(withSpring(1.18, { damping: 8 }), withSpring(1));
+    }
+  }, [isComplete, totalCount, ringScale]);
+
+  const ringAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: ringScale.value }],
+  }));
 
   const handleEditRoutine = () => {
     router.push(`/routine/edit?type=${type}`);
   };
 
-  const buttonBg = isDark ? 'rgba(255, 255, 255, 0.12)' : Colors.white;
+  const handleLinkProduct = (stepId: string) => {
+    router.push(`/routine/edit?type=${type}&stepId=${encodeURIComponent(stepId)}`);
+  };
+
+  const handleOpenMenu = () => {
+    const actions = [
+      ...(canCompleteAll ? [{ label: t('today.markAll'), run: () => onCompleteAll?.() }] : []),
+      { label: t('today.editRoutine'), run: handleEditRoutine },
+    ];
+
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          title,
+          options: [...actions.map((a) => a.label), t('common.cancel')],
+          cancelButtonIndex: actions.length,
+        },
+        (index) => actions[index]?.run()
+      );
+      return;
+    }
+
+    Alert.alert(title, undefined, [
+      ...actions.map((a) => ({ text: a.label, onPress: a.run })),
+      { text: t('common.cancel'), style: 'cancel' as const },
+    ]);
+  };
 
   return (
-    <GlowCard variant={cardVariant} padding={16} style={styles.card}>
+    <GlowCard variant={accent.variant} padding={16} style={styles.card}>
       <View style={styles.header}>
-        <View style={styles.titleRow}>
-          <View style={styles.iconCircle}>
-            <Ionicons name={iconName} size={20} color={colors.text} />
-          </View>
-          <View>
-            <Text style={[Typography.h3, { color: colors.text }]}>{title}</Text>
-            <Text style={[styles.progressSubtext, { color: colors.textSecondary }]}>
-              {totalCount === 0
-                ? 'No steps added'
-                : `${completedCount} of ${totalCount} completed`}
-            </Text>
-          </View>
+        <View style={[styles.iconCircle, { backgroundColor: frost }]}>
+          <Ionicons name={iconName} size={20} color={isDark ? colors.text : accent.ink} />
         </View>
 
-        <View style={styles.rightHeaderRow}>
-          {totalCount > 0 && completedCount < totalCount && onCompleteAll && (
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={onCompleteAll}
-              style={[styles.completeAllBtn, { backgroundColor: buttonBg }]}
-            >
-              <Ionicons name="checkmark-done" size={14} color={colors.text} style={{ marginRight: 5 }} />
-              <Text style={[styles.completeAllText, { color: colors.text }]}>Mark all</Text>
-            </TouchableOpacity>
-          )}
-
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={handleEditRoutine}
-            style={[styles.editButton, { backgroundColor: buttonBg }]}
-          >
-            <Ionicons name="pencil" size={14} color={colors.text} />
-          </TouchableOpacity>
+        <View style={styles.titleCol}>
+          <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>{title}</Text>
+          <Text style={[styles.progressSubtext, { color: colors.textSecondary }]} numberOfLines={1}>
+            {totalCount === 0
+              ? t('today.noSteps')
+              : t('history.stepsCompleted', { completed: completedCount, total: totalCount })}
+          </Text>
         </View>
+
+        {totalCount > 0 && (
+          <Animated.View style={[styles.ringWrapper, ringAnimatedStyle]}>
+            <ProgressRing
+              ratio={progressRatio}
+              color={isComplete ? COMPLETE_GREEN : colors.text}
+              trackColor={frost}
+            />
+            {isComplete && (
+              <Ionicons name="checkmark" size={18} color={COMPLETE_GREEN} style={styles.ringCheck} />
+            )}
+          </Animated.View>
+        )}
+
+        <TouchableOpacity
+          activeOpacity={0.6}
+          onPress={handleOpenMenu}
+          accessibilityRole="button"
+          accessibilityLabel={`${title}: ${t('today.editRoutine')}`}
+          hitSlop={8}
+          style={styles.menuButton}
+        >
+          <Ionicons name="ellipsis-horizontal" size={20} color={colors.textSecondary} />
+        </TouchableOpacity>
       </View>
 
-      {/* Progress Bar */}
-      {totalCount > 0 && (
-        <View
-          style={[
-            styles.progressBarBackground,
-            { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.65)' },
-          ]}
-        >
-          <View
-            style={[
-              styles.progressBarFill,
-              { width: `${progressRatio * 100}%`, backgroundColor: colors.text },
-            ]}
-          />
-        </View>
-      )}
-
-      {/* Step Rows or Empty State */}
       {totalCount === 0 ? (
-        <View style={styles.emptyContainer}>
+        <View style={[styles.panel, styles.emptyContainer, { backgroundColor: frost }]}>
           <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
             {isMorning
-              ? 'Your morning ritual is waiting ✨'
-              : 'Create a calm little night routine.'}
+              ? t('today.morningEmpty')
+              : t('today.eveningEmpty')}
           </Text>
           <PillButton
-            title="Build routine"
+            title={t('today.buildRoutine')}
             onPress={handleEditRoutine}
             variant="primary"
             size="sm"
           />
         </View>
       ) : (
-        <View
-          style={[
-            styles.listContainer,
-            {
-              backgroundColor: isDark ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.55)',
-              borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
-              borderWidth: isDark ? 1 : 0,
-            },
-          ]}
-        >
+        <View style={[styles.panel, styles.listContainer, { backgroundColor: frost }]}>
           {steps.map((step, index) => {
             const productName = step.product
               ? `${step.product.brand ? step.product.brand + ' ' : ''}${step.product.name}`
@@ -137,6 +204,7 @@ export const RoutineCard: React.FC<RoutineCardProps> = ({
                 isProductArchived={step.isProductArchived}
                 completed={step.completed}
                 onToggle={onToggleStep}
+                onLinkProduct={handleLinkProduct}
                 isLast={index === steps.length - 1}
               />
             );
@@ -149,79 +217,58 @@ export const RoutineCard: React.FC<RoutineCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    marginVertical: 10,
+    marginVertical: 8,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    gap: 12,
   },
   iconCircle: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: Spacing.sm + 2,
+  },
+  titleCol: {
+    flex: 1,
+    minWidth: 0,
+  },
+  title: {
+    ...Typography.h3,
+    fontSize: 17,
   },
   progressSubtext: {
     ...Typography.caption,
-    fontSize: 12,
+    fontSize: 13,
     marginTop: 1,
     color: Colors.textSecondary,
   },
-  rightHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  completeAllBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.white,
-    height: 34,
-    paddingHorizontal: 11,
-    borderRadius: Spacing.radiusPill,
-  },
-  completeAllText: {
-    ...Typography.caption,
-    fontSize: 12,
-    fontWeight: '700',
-    color: Colors.text,
-  },
-  editButton: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: Colors.white,
+  ringWrapper: {
     alignItems: 'center',
     justifyContent: 'center',
   },
-  progressBarBackground: {
-    height: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.65)',
-    borderRadius: 2,
-    overflow: 'hidden',
-    marginBottom: 10,
+  ringCheck: {
+    position: 'absolute',
   },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: Colors.text,
-    borderRadius: 2,
+  menuButton: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: -6,
+  },
+  panel: {
+    marginTop: 14,
+    borderRadius: 18,
   },
   listContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.55)',
-    borderRadius: 18,
     paddingHorizontal: 14,
-    paddingVertical: 4,
+    paddingVertical: 2,
   },
   emptyContainer: {
-    paddingVertical: Spacing.md,
+    paddingVertical: 16,
     alignItems: 'center',
   },
   emptyText: {

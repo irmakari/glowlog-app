@@ -6,12 +6,14 @@ import { Product } from '../../../products/types/product.types';
 import { ProductSelectorProps } from './ProductSelector.types';
 import { styles } from './ProductSelector.styles';
 import { Colors } from '../../../../constants/colors';
+import { useTranslation } from '../../../../hooks/useTranslation';
 
 export const ProductSelector: React.FC<ProductSelectorProps> = ({
   selectedProductId,
   onSelectProduct,
   productsOverride,
 }) => {
+  const { t } = useTranslation();
   const [products, setProducts] = useState<Product[]>(productsOverride || []);
 
   useEffect(() => {
@@ -34,7 +36,7 @@ export const ProductSelector: React.FC<ProductSelectorProps> = ({
         ]}
       >
         <View style={styles.textCol}>
-          <Text style={styles.nameText}>None / Generic Step</Text>
+          <Text style={styles.nameText}>{t('routineEditor.noneGeneric')}</Text>
         </View>
         {!selectedProductId && (
           <Ionicons name="checkmark-circle" size={18} color={Colors.text} />
@@ -43,7 +45,7 @@ export const ProductSelector: React.FC<ProductSelectorProps> = ({
 
       {displayedProducts.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No products on your Shelf yet.</Text>
+          <Text style={styles.emptyText}>{t('routineEditor.noShelfProducts')}</Text>
         </View>
       ) : (
         displayedProducts.map((prod) => {
