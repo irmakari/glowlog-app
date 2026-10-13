@@ -28,7 +28,7 @@ export const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   productList: {
-    paddingBottom: Spacing.xxl * 2,
+    paddingBottom: Spacing.sm,
   },
   categorySection: {
     marginBottom: Spacing.sm,

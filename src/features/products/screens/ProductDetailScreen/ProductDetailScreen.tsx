@@ -7,7 +7,7 @@ import { Screen } from '../../../../components/ui/Screen';
 import { IconButton } from '../../../../components/ui/IconButton';
 import { GlowCard } from '../../../../components/ui/GlowCard';
 import { PillButton } from '../../../../components/ui/PillButton';
-import { getCategoryOption } from '../../../../constants/productCategories';
+import { getCategoryDisplayName, getCategoryOption } from '../../../../constants/productCategories';
 import { useProduct } from '../../hooks/useProduct';
 import { productService } from '../../services/productService';
 import {
@@ -18,9 +18,12 @@ import {
 import { ProductDetailScreenProps } from './ProductDetailScreen.types';
 import { styles } from './ProductDetailScreen.styles';
 import { Colors } from '../../../../constants/colors';
+import { useTranslation } from '../../../../hooks/useTranslation';
 
 export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ id }) => {
   const router = useRouter();
+  const { language, t } = useTranslation();
+  const locale = language === 'tr' ? 'tr-TR' : 'en-US';
   const { product, loading } = useProduct(id);
 
   if (loading) {
@@ -40,11 +43,11 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ id }) 
           <IconButton
             icon={<Ionicons name="arrow-back" size={20} color={Colors.text} />}
             onPress={() => router.back()}
-            backgroundColor={Colors.white}
+            variant="ghost"
           />
         </View>
         <View style={styles.notFoundContainer}>
-          <Text style={styles.nameText}>Product not found</Text>
+          <Text style={styles.nameText}>{t('products.notFound')}</Text>
         </View>
       </Screen>
     );
@@ -54,18 +57,51 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ id }) 
   const daysOpened = getDaysSinceOpened(product.openedAt);
   const paoStatus = getPAOStatus(product.openedAt, product.paoMonths);
 
+  const handleUnarchive = async () => {
+    try {
+      await productService.unarchiveProduct(product.id);
+      router.back();
+    } catch (err) {
+      console.error('Failed to unarchive product:', err);
+      Alert.alert(t('common.error'), t('products.updateFailed'));
+    }
+  };
+
+  const handleDelete = () => {
+    Alert.alert(
+      t('products.deleteConfirm'),
+      t('products.deleteDesc'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('common.delete'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await productService.deleteProduct(product.id);
+              router.back();
+            } catch (err) {
+              console.error('Failed to delete product:', err);
+              Alert.alert(t('common.error'), t('products.deleteFailed'));
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const handleEdit = () => {
     router.push(`/product/edit/${product.id}`);
   };
 
   const handleArchive = () => {
     Alert.alert(
-      'Archive this product?',
-      "You can keep its past activity while removing it from your active shelf.",
+      t('products.archiveConfirm'),
+      t('products.archiveDesc'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Archive',
+          text: t('products.archive'),
           style: 'destructive',
           onPress: async () => {
             try {
@@ -73,6 +109,7 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ id }) 
               router.back();
             } catch (err) {
               console.error('Failed to archive product:', err);
+              Alert.alert(t('common.error'), t('products.updateFailed'));
             }
           },
         },
@@ -87,7 +124,7 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ id }) 
         <IconButton
           icon={<Ionicons name="arrow-back" size={20} color={Colors.text} />}
           onPress={() => router.back()}
-          backgroundColor={Colors.white}
+          variant="ghost"
           size={38}
         />
         <IconButton
@@ -119,51 +156,51 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ id }) 
 
       <View style={styles.badgeRow}>
         <View style={[styles.categoryBadge, { backgroundColor: categoryInfo.color }]}>
-          <Text style={styles.categoryBadgeText}>{categoryInfo.label}</Text>
+          <Text style={styles.categoryBadgeText}>{getCategoryDisplayName(product.category, t)}</Text>
         </View>
       </View>
 
       {/* Details Card */}
       <GlowCard variant="cream" padding={14} style={styles.detailsCard}>
         <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Opened Date</Text>
+          <Text style={styles.detailLabel}>{t('products.openedDate')}</Text>
           <Text style={styles.detailValue}>
-            {formatProductDate(product.openedAt)}
+            {product.openedAt ? formatProductDate(product.openedAt, locale) : t('products.unopened')}
           </Text>
         </View>
 
         <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Open For</Text>
+          <Text style={styles.detailLabel}>{t('products.openFor')}</Text>
           <Text style={styles.detailValue}>
-            {daysOpened !== null ? `${daysOpened} days` : 'Unopened'}
+            {daysOpened !== null ? t('products.days', { count: daysOpened }) : t('products.unopened')}
           </Text>
         </View>
 
         <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>PAO Duration</Text>
+          <Text style={styles.detailLabel}>{t('products.paoDuration')}</Text>
           <Text style={styles.detailValue}>
-            {product.paoMonths ? `${product.paoMonths} months` : 'Not specified'}
+            {product.paoMonths ? t('products.months', { count: product.paoMonths }) : t('products.notSpecified')}
           </Text>
         </View>
 
         <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Logged Uses</Text>
+          <Text style={styles.detailLabel}>{t('products.loggedUses')}</Text>
           <Text style={styles.detailValue}>{product.usageCount || 0}</Text>
         </View>
 
         <View style={[styles.detailRow, { borderBottomWidth: 0 }]}>
-          <Text style={styles.detailLabel}>Last Used</Text>
+          <Text style={styles.detailLabel}>{t('products.lastUsed')}</Text>
           <Text style={styles.detailValue}>
-            {product.lastUsedAt ? formatProductDate(product.lastUsedAt) : 'Not logged yet'}
+            {product.lastUsedAt ? formatProductDate(product.lastUsedAt, locale) : t('products.notLogged')}
           </Text>
         </View>
       </GlowCard>
 
       {/* PAO Notice Banner if applicable */}
-      {paoStatus.isNotice && (
+      {paoStatus.isExpired && (
         <GlowCard variant="softPeach" padding={12}>
           <Text style={{ ...styles.detailValue, color: Colors.alert }}>
-            Notice: {paoStatus.message}
+            {t('today.notice')}: {t('products.paoNotice', { opened: paoStatus.monthsOpen, recommended: product.paoMonths ?? 0 })}
           </Text>
         </GlowCard>
       )}
@@ -171,29 +208,49 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ id }) 
       {/* Notes */}
       {product.notes ? (
         <GlowCard variant="white" padding={14} style={styles.notesCard}>
-          <Text style={styles.notesTitle}>Notes</Text>
+          <Text style={styles.notesTitle}>{t('products.notes')}</Text>
           <Text style={styles.notesText}>{product.notes}</Text>
         </GlowCard>
       ) : null}
 
       {/* Action Buttons with Dynamic Category Color Theme */}
-      <View style={styles.actionRow}>
-        <PillButton
-          title="Edit Product"
-          onPress={handleEdit}
-          variant="secondary"
-          customColor={categoryInfo.color}
-          size="md"
-          style={styles.buttonFlex}
-        />
-        <PillButton
-          title="Archive Product"
-          onPress={handleArchive}
-          variant="outline"
-          size="md"
-          style={styles.buttonFlex}
-        />
-      </View>
+      {product.archived ? (
+        <View style={styles.actionRow}>
+          <PillButton
+            title={t('products.unarchiveProduct')}
+            onPress={handleUnarchive}
+            variant="secondary"
+            customColor={categoryInfo.color}
+            size="md"
+            style={styles.buttonFlex}
+          />
+          <PillButton
+            title={t('products.deleteProduct')}
+            onPress={handleDelete}
+            variant="outline"
+            size="md"
+            style={styles.buttonFlex}
+          />
+        </View>
+      ) : (
+        <View style={styles.actionRow}>
+          <PillButton
+            title={t('products.editProduct')}
+            onPress={handleEdit}
+            variant="secondary"
+            customColor={categoryInfo.color}
+            size="md"
+            style={styles.buttonFlex}
+          />
+          <PillButton
+            title={t('products.archiveProduct')}
+            onPress={handleArchive}
+            variant="outline"
+            size="md"
+            style={styles.buttonFlex}
+          />
+        </View>
+      )}
     </Screen>
   );
 };

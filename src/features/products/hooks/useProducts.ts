@@ -5,15 +5,19 @@ import { Product } from '../types/product.types';
 
 export function useProducts() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [archivedProducts, setArchivedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchProducts = useCallback(async () => {
     try {
-      setLoading(true);
       setError(null);
-      const data = await productService.getActiveProducts();
-      setProducts(data);
+      const [active, archived] = await Promise.all([
+        productService.getActiveProducts(),
+        productService.getArchivedProducts(),
+      ]);
+      setProducts(active);
+      setArchivedProducts(archived);
     } catch (err: any) {
       console.error('Error fetching products:', err);
       setError(err?.message || 'Failed to load products');
@@ -30,6 +34,7 @@ export function useProducts() {
 
   return {
     products,
+    archivedProducts,
     loading,
     error,
     refreshProducts: fetchProducts,

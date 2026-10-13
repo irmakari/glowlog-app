@@ -159,4 +159,15 @@ export const styles = StyleSheet.create({
   submitButton: {
     flex: 1,
   },
+  openedToggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.sm,
+  },
+  openedToggleText: {
+    ...Typography.body,
+    fontSize: 14,
+    color: Colors.text,
+  },
 });
