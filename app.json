@@ -6,10 +6,13 @@
     "orientation": "portrait",
     "icon": "./assets/images/glowlog-icon.png",
     "scheme": "glowlogapp",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "ios": {
       "bundleIdentifier": "com.irmakari.glowlog",
-      "supportsTablet": false
+      "supportsTablet": false,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
