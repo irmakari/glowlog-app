@@ -4,6 +4,7 @@ import tr from '../i18n/translations/tr.json';
 import { settingsService } from '../services/settingsService';
 import { notificationService } from '../services/notificationService';
 import { localizeDefaultRoutineSteps } from '../services/database/db';
+import { treatmentReminderService } from '../features/treatments/services/treatmentReminderService';
 
 export type LanguageMode = 'en' | 'tr';
 
@@ -49,6 +50,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
       // Keep untouched default step names and scheduled reminder copy in the chosen language
       await localizeDefaultRoutineSteps(newLang);
       await notificationService.syncRemindersFromSettings();
+      await treatmentReminderService.sync();
     } catch (err) {
       console.error('Failed to save language setting:', err);
     }

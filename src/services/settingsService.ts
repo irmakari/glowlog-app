@@ -8,6 +8,8 @@ export interface ExtendedAppSettings extends AppSettings {
   userName?: string;
   skinType?: SkinType;
   language?: 'en' | 'tr';
+  /** Shown once, before the first treatment is added */
+  treatmentDisclaimerAccepted?: boolean;
 }
 
 export const DEFAULT_SETTINGS: ExtendedAppSettings = {
@@ -45,6 +47,7 @@ export const settingsService = {
     const userName = settingsMap.get('userName') || DEFAULT_SETTINGS.userName;
     const skinType = (settingsMap.get('skinType') as SkinType) || DEFAULT_SETTINGS.skinType;
     const language = (settingsMap.get('language') as ExtendedAppSettings['language']) || DEFAULT_SETTINGS.language;
+    const treatmentDisclaimerAccepted = settingsMap.get('treatmentDisclaimerAccepted') === 'true';
 
     return {
       hydrationGoal: isNaN(hydrationGoal) || hydrationGoal <= 0 ? 8 : hydrationGoal,
@@ -57,6 +60,7 @@ export const settingsService = {
       userName,
       skinType,
       language,
+      treatmentDisclaimerAccepted,
     };
   },
 

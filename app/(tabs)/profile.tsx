@@ -17,71 +17,21 @@ import {
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Screen } from '../../src/components/ui/Screen';
 import { GlowCard } from '../../src/components/ui/GlowCard';
 import { PillButton } from '../../src/components/ui/PillButton';
 import { IconButton } from '../../src/components/ui/IconButton';
+import { TimePickerChip } from '../../src/components/ui/TimePickerChip';
 import { Typography } from '../../src/constants/typography';
 import { Spacing } from '../../src/constants/spacing';
 import { Colors } from '../../src/constants/colors';
 import { settingsService, ExtendedAppSettings, SkinType } from '../../src/services/settingsService';
 import { notificationService } from '../../src/services/notificationService';
 import { backupService } from '../../src/services/backupService';
+import { treatmentReminderService } from '../../src/features/treatments/services/treatmentReminderService';
 import { useTheme, ThemeMode, DARK_MODE_ENABLED } from '../../src/context/ThemeContext';
 import { useTranslation } from '../../src/hooks/useTranslation';
 import { LanguageMode } from '../../src/context/LanguageContext';
-
-const timeToDate = (time: string): Date => {
-  const [hours, minutes] = time.split(':').map(Number);
-  const date = new Date();
-  date.setHours(hours || 0, minutes || 0, 0, 0);
-  return date;
-};
-
-const dateToTime = (date: Date): string =>
-  `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-
-const ReminderTimePicker: React.FC<{ value: string; onChange: (time: string) => void }> = ({ value, onChange }) => {
-  const { colors } = useTheme();
-  const { language } = useTranslation();
-  const [androidOpen, setAndroidOpen] = useState(false);
-
-  const handleChange = (event: DateTimePickerEvent, date?: Date) => {
-    if (Platform.OS === 'android') setAndroidOpen(false);
-    if (event.type === 'set' && date) onChange(dateToTime(date));
-  };
-
-  if (Platform.OS === 'ios') {
-    return (
-      <DateTimePicker
-        value={timeToDate(value)}
-        mode="time"
-        display="compact"
-        minuteInterval={5}
-        locale={language === 'tr' ? 'tr-TR' : 'en-US'}
-        themeVariant="light"
-        accentColor={colors.text}
-        onChange={handleChange}
-        style={styles.timePicker}
-      />
-    );
-  }
-
-  return (
-    <>
-      <TouchableOpacity
-        onPress={() => setAndroidOpen(true)}
-        style={[styles.timeChip, { backgroundColor: colors.white }]}
-      >
-        <Text style={[styles.timeChipText, { color: colors.text }]}>{value}</Text>
-      </TouchableOpacity>
-      {androidOpen && (
-        <DateTimePicker value={timeToDate(value)} mode="time" is24Hour onChange={handleChange} />
-      )}
-    </>
-  );
-};
 
 const SKIN_TYPES: { id: SkinType; labelEn: string; labelTr: string; icon: string }[] = [
   { id: 'Combination', labelEn: 'Combination', labelTr: 'Karma', icon: 'partly-sunny-outline' },
@@ -229,6 +179,7 @@ export default function ProfileScreen() {
       await setLanguage(restored.language ?? 'tr');
       await setThemeMode(restored.themeMode);
       await notificationService.syncRemindersFromSettings();
+      await treatmentReminderService.sync();
 
       Alert.alert(t('profile.restoreSuccessTitle'), t('profile.restoreSuccessDesc'));
     } catch (err: any) {
@@ -379,7 +330,7 @@ export default function ProfileScreen() {
               </Text>
             </View>
             {reminder.enabled && (
-              <ReminderTimePicker value={reminder.time} onChange={reminder.onTime} />
+              <TimePickerChip value={reminder.time} onChange={reminder.onTime} />
             )}
             <Switch
               value={reminder.enabled}
@@ -869,18 +820,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     minWidth: 26,
     textAlign: 'center',
-  },
-  timePicker: {
-    marginRight: -4,
-  },
-  timeChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-  },
-  timeChipText: {
-    ...Typography.bodyBold,
-    fontSize: 13,
   },
   segmentRow: {
     flexDirection: 'row',
