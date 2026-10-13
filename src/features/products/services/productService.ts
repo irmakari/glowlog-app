@@ -1,6 +1,6 @@
 import { getDb } from '../../../services/database/db';
 import { Product, CreateProductInput, UpdateProductInput } from '../types/product.types';
-import { persistProductImage } from './productImageService';
+import { deleteProductImage, persistProductImage } from './productImageService';
 
 interface ProductRow {
   id: string;
@@ -49,6 +49,23 @@ export const productService = {
         (SELECT MAX(used_at) FROM product_usage_logs pul WHERE pul.product_id = p.id) as last_used_at
       FROM products p
       WHERE p.archived = 0
+      ORDER BY p.updated_at DESC
+    `);
+    return rows.map(mapRowToProduct);
+  },
+
+  /**
+   * Fetch archived products, most recently archived first
+   */
+  async getArchivedProducts(): Promise<Product[]> {
+    const db = await getDb();
+    const rows = await db.getAllAsync<ProductRow>(`
+      SELECT
+        p.*,
+        (SELECT COUNT(*) FROM product_usage_logs pul WHERE pul.product_id = p.id) as usage_count,
+        (SELECT MAX(used_at) FROM product_usage_logs pul WHERE pul.product_id = p.id) as last_used_at
+      FROM products p
+      WHERE p.archived = 1
       ORDER BY p.updated_at DESC
     `);
     return rows.map(mapRowToProduct);
@@ -115,14 +132,15 @@ export const productService = {
 
     const now = new Date().toISOString();
     const name = input.name !== undefined ? input.name : existing.name;
-    const brand = input.brand !== undefined ? input.brand : existing.brand || null;
+    // Optional fields: a present key with an empty value clears the field
+    const brand = 'brand' in input ? input.brand || null : existing.brand || null;
     const category = input.category !== undefined ? input.category : existing.category;
-    const openedAt = input.openedAt !== undefined ? input.openedAt : existing.openedAt || null;
-    const paoMonths = input.paoMonths !== undefined ? input.paoMonths : existing.paoMonths ?? null;
+    const openedAt = 'openedAt' in input ? input.openedAt || null : existing.openedAt || null;
+    const paoMonths = 'paoMonths' in input ? input.paoMonths ?? null : existing.paoMonths ?? null;
     const imageUri = input.imageUri !== undefined
       ? persistProductImage(input.imageUri)
       : existing.imageUri || null;
-    const notes = input.notes !== undefined ? input.notes : existing.notes || null;
+    const notes = 'notes' in input ? input.notes || null : existing.notes || null;
     const archived = input.archived !== undefined ? (input.archived ? 1 : 0) : existing.archived ? 1 : 0;
 
     await db.runAsync(
@@ -131,6 +149,10 @@ export const productService = {
        WHERE id = ?`,
       [name, brand, category, openedAt, paoMonths, imageUri, notes, archived, now, id]
     );
+
+    if (existing.imageUri && existing.imageUri !== imageUri) {
+      deleteProductImage(existing.imageUri);
+    }
 
     const updated = await this.getProductById(id);
     if (!updated) throw new Error('Failed to retrieve updated product');
@@ -150,11 +172,26 @@ export const productService = {
   },
 
   /**
-   * Delete a product permanently
+   * Move an archived product back onto the active shelf
+   */
+  async unarchiveProduct(id: string): Promise<void> {
+    const db = await getDb();
+    const now = new Date().toISOString();
+    await db.runAsync(
+      `UPDATE products SET archived = 0, updated_at = ? WHERE id = ?`,
+      [now, id]
+    );
+  },
+
+  /**
+   * Delete a product permanently, along with its usage history and stored photo.
+   * Routine steps that linked it are kept and simply become unlinked.
    */
   async deleteProduct(id: string): Promise<void> {
     const db = await getDb();
+    const existing = await this.getProductById(id);
     await db.runAsync(`DELETE FROM products WHERE id = ?`, [id]);
+    deleteProductImage(existing?.imageUri);
   },
 
 };

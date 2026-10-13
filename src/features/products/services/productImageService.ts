@@ -18,3 +18,21 @@ export function persistProductImage(uri: string | undefined): string | null {
   source.copy(destination);
   return destination.uri;
 }
+
+/**
+ * Deletes a product photo that GlowLog copied into its own storage.
+ * Files outside the product-images folder (or on web) are never touched.
+ */
+export function deleteProductImage(uri: string | null | undefined): void {
+  if (!uri || Platform.OS === 'web') return;
+
+  const imagesDirectory = new Directory(Paths.document, 'product-images');
+  if (!uri.startsWith(imagesDirectory.uri)) return;
+
+  try {
+    const file = new File(uri);
+    if (file.exists) file.delete();
+  } catch (err) {
+    console.warn('Failed to delete product image:', err);
+  }
+}
