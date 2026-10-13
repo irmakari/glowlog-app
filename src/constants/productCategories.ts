@@ -34,3 +34,19 @@ export const getCategoryOption = (categoryId: string): ProductCategoryOption => 
   const found = PRODUCT_CATEGORIES.find((c) => c.id === categoryId.toLowerCase());
   return found || { id: 'other', label: categoryId, color: Colors.mutedGray, variant: 'mutedGray', icon: 'cube' };
 };
+
+/**
+ * Category id used for filtering: custom categories (typed under "Other") group under 'other'.
+ */
+export const getCategoryFilterId = (category: string): string => {
+  const id = category.toLowerCase();
+  return PRODUCT_CATEGORIES.some((c) => c.id === id) ? id : 'other';
+};
+
+/**
+ * Display name for a stored category: translated for built-in ids, verbatim for custom ones.
+ */
+export const getCategoryDisplayName = (category: string, t: (key: string) => string): string => {
+  const id = category.toLowerCase();
+  return PRODUCT_CATEGORIES.some((c) => c.id === id) ? t(`products.${id}`) : category;
+};

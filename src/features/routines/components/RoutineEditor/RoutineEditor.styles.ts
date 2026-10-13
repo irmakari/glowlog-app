@@ -62,4 +62,24 @@ export const styles = StyleSheet.create({
     fontSize: 20,
     marginBottom: Spacing.md,
   },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+  },
+  modalSheet: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    flexGrow: 0,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+  },
+  modalContent: {
+    paddingHorizontal: 20,
+    paddingTop: 24,
+  },
 });

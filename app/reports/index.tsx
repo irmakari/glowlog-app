@@ -1,6 +1,6 @@
 import React from 'react';
-import { FullMonthlyReportScreen } from '../../src/features/history/screens/FullMonthlyReportScreen/FullMonthlyReportScreen';
+import { MonthlyReportScreen } from '../../src/features/history/screens/MonthlyReportScreen/MonthlyReportScreen';
 
 export default function ReportsRoute() {
-  return <FullMonthlyReportScreen />;
+  return <MonthlyReportScreen />;
 }

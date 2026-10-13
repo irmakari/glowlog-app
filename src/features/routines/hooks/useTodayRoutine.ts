@@ -1,10 +1,14 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { AppState } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { routineService } from '../services/routineService';
 import { waterService } from '../../history/services/waterService';
+import { productService } from '../../products/services/productService';
+import { getPAOStatus } from '../../products/utils/productDate.utils';
 import { settingsService } from '../../../services/settingsService';
 import { TodayRoutineStepState } from '../types/routine.types';
 import { getLocalDateString, calculateStreakFromLogs } from '../utils/routineDate.utils';
+import { shiftDateKey } from '../../history/utils/calendar.utils';
 import { calculateGlowScore } from '../../../utils/glowScore';
 import { GlowScoreBreakdown } from '../../../types';
 
@@ -14,28 +18,38 @@ export function useTodayRoutine() {
   const [eveningSteps, setEveningSteps] = useState<TodayRoutineStepState[]>([]);
   const [hydrationCurrent, setHydrationCurrent] = useState<number>(0);
   const [hydrationGoal, setHydrationGoal] = useState<number>(8);
+  const [hydrationWeeklyAverage, setHydrationWeeklyAverage] = useState<number | null>(null);
+  const [expiredProductNames, setExpiredProductNames] = useState<string[]>([]);
   const [userName, setUserName] = useState<string>('');
   const [skinType, setSkinType] = useState<string>('Combination');
   const [streakDays, setStreakDays] = useState<number>(0);
+  const [completedDates, setCompletedDates] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const todayDateStr = useMemo(() => getLocalDateString(), []);
+  // "Today" must follow the clock: the tab stays mounted across midnight
+  const [todayDateStr, setTodayDateStr] = useState<string>(() => getLocalDateString());
+  const todayRef = useRef(todayDateStr);
 
   const fetchTodayData = useCallback(async () => {
+    const today = getLocalDateString();
+    todayRef.current = today;
+    setTodayDateStr(today);
+
     try {
-      setLoading(true);
       setError(null);
 
-      // Fetch routine steps, completion logs, water intake, settings & streak from SQLite
-      const [mSteps, eSteps, todayLogs, waterGlasses, completedDates, appSettings] = await Promise.all([
-        routineService.getRoutineStepsWithProducts('morning'),
-        routineService.getRoutineStepsWithProducts('evening'),
-        routineService.getRoutineLogsForDate(todayDateStr),
-        waterService.getWaterForDate(todayDateStr),
-        routineService.getAllCompletedDates(),
-        settingsService.getSettings(),
-      ]);
+      const [mSteps, eSteps, todayLogs, waterGlasses, completedDates, appSettings, weeklyAverage, products] =
+        await Promise.all([
+          routineService.getRoutineStepsWithProducts('morning'),
+          routineService.getRoutineStepsWithProducts('evening'),
+          routineService.getRoutineLogsForDate(today),
+          waterService.getWaterForDate(today),
+          routineService.getAllCompletedDates(),
+          settingsService.getSettings(),
+          waterService.getAverageGlasses(shiftDateKey(today, -6), today),
+          productService.getActiveProducts(),
+        ]);
 
       if (!appSettings.onboardingCompleted) {
         router.replace('/onboarding');
@@ -43,34 +57,38 @@ export function useTodayRoutine() {
       }
 
       const completedStepIds = new Set(todayLogs.map((l) => l.routineStepId));
-
-      const morningState: TodayRoutineStepState[] = mSteps.map((step) => ({
+      const withCompletion = (step: (typeof mSteps)[number]): TodayRoutineStepState => ({
         ...step,
         completed: completedStepIds.has(step.id),
-      }));
+      });
 
-      const eveningState: TodayRoutineStepState[] = eSteps.map((step) => ({
-        ...step,
-        completed: completedStepIds.has(step.id),
-      }));
-
-      setMorningSteps(morningState);
-      setEveningSteps(eveningState);
+      setMorningSteps(mSteps.map(withCompletion));
+      setEveningSteps(eSteps.map(withCompletion));
       setHydrationCurrent(waterGlasses);
       setHydrationGoal(appSettings.hydrationGoal);
+      setHydrationWeeklyAverage(weeklyAverage);
+      setExpiredProductNames(
+        products
+          .filter((p) => getPAOStatus(p.openedAt, p.paoMonths).isExpired)
+          .map((p) => p.name)
+      );
       setUserName(appSettings.userName || '');
       setSkinType(appSettings.skinType || 'Combination');
-
-      // 2. Calculate streak from real database logs
-      const streak = calculateStreakFromLogs(completedDates, todayDateStr);
-      setStreakDays(streak);
+      setStreakDays(calculateStreakFromLogs(completedDates, today));
+      setCompletedDates(completedDates);
     } catch (err: any) {
       console.error('Error fetching today routine data:', err);
       setError(err?.message || 'Failed to load today routine');
     } finally {
       setLoading(false);
     }
-  }, [todayDateStr]);
+  }, [router]);
+
+  const refreshStreak = useCallback(async () => {
+    const dates = await routineService.getAllCompletedDates();
+    setCompletedDates(dates);
+    setStreakDays(calculateStreakFromLogs(dates, todayRef.current));
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -78,7 +96,16 @@ export function useTodayRoutine() {
     }, [fetchTodayData])
   );
 
-  // Compute Glow Score dynamically from actual SQLite state
+  // Coming back to the app on a new day should show a fresh day, not yesterday's checklist
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active' && getLocalDateString() !== todayRef.current) {
+        fetchTodayData();
+      }
+    });
+    return () => subscription.remove();
+  }, [fetchTodayData]);
+
   const glowScoreBreakdown: GlowScoreBreakdown = useMemo(() => {
     const allSteps = [...morningSteps, ...eveningSteps];
     const completedCount = allSteps.filter((s) => s.completed).length;
@@ -101,34 +128,25 @@ export function useTodayRoutine() {
       if (!targetStep) return;
 
       const newCompleted = !targetStep.completed;
+      const setSteps = isMorning ? setMorningSteps : setEveningSteps;
 
       // Optimistic UI update
-      const updateFn = (prev: TodayRoutineStepState[]) =>
-        prev.map((s) => (s.id === stepId ? { ...s, completed: newCompleted } : s));
-
-      if (isMorning) {
-        setMorningSteps(updateFn);
-      } else {
-        setEveningSteps(updateFn);
-      }
+      setSteps((prev) => prev.map((s) => (s.id === stepId ? { ...s, completed: newCompleted } : s)));
 
       try {
         await routineService.setRoutineStepCompleted(
           stepId,
-          targetStep.productId,
-          todayDateStr,
+          targetStep.product?.id,
+          todayRef.current,
           newCompleted
         );
+        await refreshStreak();
       } catch (err) {
         console.error('Failed to toggle routine step:', err);
-        // Rollback state on error
-        const rollbackFn = (prev: TodayRoutineStepState[]) =>
-          prev.map((s) => (s.id === stepId ? { ...s, completed: !newCompleted } : s));
-        if (isMorning) setMorningSteps(rollbackFn);
-        else setEveningSteps(rollbackFn);
+        setSteps((prev) => prev.map((s) => (s.id === stepId ? { ...s, completed: !newCompleted } : s)));
       }
     },
-    [morningSteps, eveningSteps, todayDateStr]
+    [morningSteps, eveningSteps, refreshStreak]
   );
 
   const completeAllSteps = useCallback(
@@ -139,58 +157,59 @@ export function useTodayRoutine() {
 
       if (uncompletedSteps.length === 0) return;
 
-      // Optimistic update
-      const updateFn = (prev: TodayRoutineStepState[]) =>
-        prev.map((s) => ({ ...s, completed: true }));
-
-      if (isMorning) setMorningSteps(updateFn);
-      else setEveningSteps(updateFn);
+      const setSteps = isMorning ? setMorningSteps : setEveningSteps;
+      setSteps((prev) => prev.map((s) => ({ ...s, completed: true })));
 
       try {
-        await Promise.all(
-          uncompletedSteps.map((step) =>
-            routineService.setRoutineStepCompleted(
-              step.id,
-              step.productId,
-              todayDateStr,
-              true
-            )
-          )
-        );
+        for (const step of uncompletedSteps) {
+          await routineService.setRoutineStepCompleted(step.id, step.product?.id, todayRef.current, true);
+        }
+        await refreshStreak();
       } catch (err) {
         console.error('Failed to complete all steps:', err);
         fetchTodayData(); // Sync on error
       }
     },
-    [morningSteps, eveningSteps, todayDateStr, fetchTodayData]
+    [morningSteps, eveningSteps, fetchTodayData, refreshStreak]
   );
+
+  const refreshWeeklyAverage = useCallback(async () => {
+    const today = todayRef.current;
+    setHydrationWeeklyAverage(await waterService.getAverageGlasses(shiftDateKey(today, -6), today));
+  }, []);
 
   const incrementWater = useCallback(async () => {
     try {
-      const updated = await waterService.incrementWater(todayDateStr, hydrationGoal);
+      const updated = await waterService.incrementWater(todayRef.current, hydrationGoal);
       setHydrationCurrent(updated);
+      await refreshWeeklyAverage();
     } catch (err) {
       console.error('Failed to increment water:', err);
     }
-  }, [todayDateStr, hydrationGoal]);
+  }, [hydrationGoal, refreshWeeklyAverage]);
 
   const decrementWater = useCallback(async () => {
     try {
-      const updated = await waterService.decrementWater(todayDateStr);
+      const updated = await waterService.decrementWater(todayRef.current);
       setHydrationCurrent(updated);
+      await refreshWeeklyAverage();
     } catch (err) {
       console.error('Failed to decrement water:', err);
     }
-  }, [todayDateStr]);
+  }, [refreshWeeklyAverage]);
 
   return {
+    todayDateStr,
     morningSteps,
     eveningSteps,
     hydrationCurrent,
     hydrationGoal,
+    hydrationWeeklyAverage,
+    expiredProductNames,
     userName,
     skinType,
     streakDays,
+    completedDates,
     glowScoreBreakdown,
     loading,
     error,

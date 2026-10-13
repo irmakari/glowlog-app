@@ -1,7 +1,6 @@
 import { getDb } from '../../../services/database/db';
 import {
   RoutineType,
-  RoutineStep,
   RoutineStepWithProduct,
   RoutineLog,
   CreateRoutineStepInput,
@@ -62,7 +61,10 @@ export const routineService = {
         updatedAt: row.updated_at ?? undefined,
       };
 
-      if (row.product_id && row.prod_name) {
+      if (row.product_id && row.prod_name && row.prod_archived) {
+        // Archived products stay linked but are no longer shown or logged as used
+        step.isProductArchived = true;
+      } else if (row.product_id && row.prod_name) {
         step.product = {
           id: row.product_id,
           name: row.prod_name,
@@ -72,11 +74,10 @@ export const routineService = {
           paoMonths: row.prod_pao_months ?? undefined,
           imageUri: row.prod_image_uri ?? undefined,
           notes: row.prod_notes ?? undefined,
-          archived: Boolean(row.prod_archived),
+          archived: false,
           createdAt: row.prod_created_at || row.created_at,
           updatedAt: row.prod_updated_at || row.created_at,
         };
-        step.isProductArchived = Boolean(row.prod_archived);
       }
 
       return step;
@@ -126,7 +127,8 @@ export const routineService = {
       updates.push('title = ?');
       params.push(input.title);
     }
-    if (input.productId !== undefined) {
+    // `productId: undefined` means "unlink", so check for the key rather than the value
+    if ('productId' in input) {
       updates.push('product_id = ?');
       params.push(input.productId || null);
     }
@@ -216,8 +218,8 @@ export const routineService = {
       // 2. Log product usage if linked product exists (Idempotent: prevent duplicate usage logs)
       if (productId) {
         const existingUsage = await db.getFirstAsync<{ id: string }>(
-          `SELECT id FROM product_usage_logs WHERE product_id = ? AND date = ? AND source = 'routine' AND source_id = ?`,
-          [productId, dateStr, routineStepId]
+          `SELECT id FROM product_usage_logs WHERE date = ? AND source = 'routine' AND source_id = ?`,
+          [dateStr, routineStepId]
         );
 
         if (!existingUsage) {
@@ -236,13 +238,11 @@ export const routineService = {
         [routineStepId, dateStr]
       );
 
-      // 2. Remove automatic product usage log for this routine step
-      if (productId) {
-        await db.runAsync(
-          `DELETE FROM product_usage_logs WHERE product_id = ? AND date = ? AND source = 'routine' AND source_id = ?`,
-          [productId, dateStr, routineStepId]
-        );
-      }
+      // 2. Remove the automatic usage log for this step, even if its linked product changed since
+      await db.runAsync(
+        `DELETE FROM product_usage_logs WHERE date = ? AND source = 'routine' AND source_id = ?`,
+        [dateStr, routineStepId]
+      );
     }
   },
 

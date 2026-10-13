@@ -1,12 +1,36 @@
 import * as SQLite from 'expo-sqlite';
 
-let dbInstance: SQLite.SQLiteDatabase | null = null;
+let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
-export const getDb = async (): Promise<SQLite.SQLiteDatabase> => {
-  if (!dbInstance) {
-    dbInstance = await SQLite.openDatabaseAsync('glowlog.db');
+// Cache the open promise so concurrent first callers share a single connection.
+export const getDb = (): Promise<SQLite.SQLiteDatabase> => {
+  if (!dbPromise) {
+    dbPromise = SQLite.openDatabaseAsync('glowlog.db').catch((err) => {
+      dbPromise = null;
+      throw err;
+    });
   }
-  return dbInstance;
+  return dbPromise;
+};
+
+// Local YYYY-MM-DD (kept here to avoid a services -> features import)
+const toLocalDateKey = (date: Date): string =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+/**
+ * First local date the user had GlowLog. Days before it are not counted as missed in stats.
+ * Falls back to the earliest log for installs that predate the firstLaunchDate setting.
+ */
+export const getTrackingStartKey = async (): Promise<string> => {
+  const db = await getDb();
+  const row = await db.getFirstAsync<{ start: string | null }>(
+    `SELECT MIN(d) as start FROM (
+       SELECT value as d FROM settings WHERE key = 'firstLaunchDate'
+       UNION ALL SELECT MIN(date) FROM routine_logs
+       UNION ALL SELECT MIN(date) FROM water_logs WHERE glasses > 0
+     ) WHERE d IS NOT NULL`
+  );
+  return row?.start ?? toLocalDateKey(new Date());
 };
 
 export const initDatabase = async (): Promise<void> => {
@@ -79,60 +103,105 @@ export const initDatabase = async (): Promise<void> => {
   // Safe columns migration for existing databases
   try {
     await db.execAsync(`ALTER TABLE product_usage_logs ADD COLUMN source TEXT DEFAULT 'routine';`);
-  } catch (e) {
+  } catch {
     // Column already exists
   }
   try {
     await db.execAsync(`ALTER TABLE product_usage_logs ADD COLUMN source_id TEXT;`);
-  } catch (e) {
+  } catch {
     // Column already exists
   }
   try {
     await db.execAsync(`ALTER TABLE routine_steps ADD COLUMN updated_at TEXT;`);
-  } catch (e) {
+  } catch {
     // Column already exists
   }
 
-  // Check if routine steps exist, if not seed defaults
-  const existingSteps = await db.getAllAsync<{ count: number }>(
+  // Seed default settings (INSERT OR IGNORE keeps values the user already has)
+  await db.runAsync(
+    `INSERT OR IGNORE INTO settings (key, value) VALUES
+     ('hydrationGoal', '8'),
+     ('onboardingCompleted', 'false'),
+     ('morningReminderEnabled', 'false'),
+     ('eveningReminderEnabled', 'false')`
+  );
+  await db.runAsync(
+    `INSERT OR IGNORE INTO settings (key, value) VALUES ('firstLaunchDate', ?)`,
+    [toLocalDateKey(new Date())]
+  );
+
+  // Seed default routine steps only once, so a user who deletes every step doesn't get them back
+  const seededRow = await db.getFirstAsync<{ value: string }>(
+    `SELECT value FROM settings WHERE key = 'defaultRoutineSeeded'`
+  );
+  if (seededRow?.value === 'true') return;
+
+  const existingSteps = await db.getFirstAsync<{ count: number }>(
     'SELECT COUNT(*) as count FROM routine_steps'
   );
-  
-  if (existingSteps[0]?.count === 0) {
+
+  if ((existingSteps?.count ?? 0) === 0) {
     const now = new Date().toISOString();
+    const titles = DEFAULT_ROUTINE_TITLES.tr;
 
-    // Seed default Morning steps
     await db.runAsync(
-      `INSERT INTO routine_steps (id, routine_type, title, sort_order, created_at, updated_at) VALUES 
-       ('step-m-1', 'morning', 'Cleanser', 0, ?, ?),
-       ('step-m-2', 'morning', 'Vitamin C', 1, ?, ?),
-       ('step-m-3', 'morning', 'Moisturizer', 2, ?, ?),
-       ('step-m-4', 'morning', 'SPF', 3, ?, ?)`,
-      [now, now, now, now, now, now, now, now]
-    );
-
-    // Seed default Evening steps
-    await db.runAsync(
-      `INSERT INTO routine_steps (id, routine_type, title, sort_order, created_at, updated_at) VALUES 
-       ('step-e-1', 'evening', 'Double Cleanse', 0, ?, ?),
-       ('step-e-2', 'evening', 'Serum / Treatment', 1, ?, ?),
-       ('step-e-3', 'evening', 'Night Cream', 2, ?, ?)`,
-      [now, now, now, now, now, now]
+      `INSERT INTO routine_steps (id, routine_type, title, sort_order, created_at, updated_at) VALUES
+       ('step-m-1', 'morning', ?, 0, ?, ?),
+       ('step-m-2', 'morning', ?, 1, ?, ?),
+       ('step-m-3', 'morning', ?, 2, ?, ?),
+       ('step-m-4', 'morning', ?, 3, ?, ?),
+       ('step-e-1', 'evening', ?, 0, ?, ?),
+       ('step-e-2', 'evening', ?, 1, ?, ?),
+       ('step-e-3', 'evening', ?, 2, ?, ?)`,
+      DEFAULT_ROUTINE_STEP_IDS.flatMap((id) => [titles[id], now, now])
     );
   }
 
-  // Seed default settings if empty
-  const existingSettings = await db.getAllAsync<{ count: number }>(
-    'SELECT COUNT(*) as count FROM settings'
+  await db.runAsync(
+    `INSERT INTO settings (key, value) VALUES ('defaultRoutineSeeded', 'true')
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value`
   );
+};
 
-  if (existingSettings[0]?.count === 0) {
+export const DEFAULT_ROUTINE_STEP_IDS = [
+  'step-m-1', 'step-m-2', 'step-m-3', 'step-m-4',
+  'step-e-1', 'step-e-2', 'step-e-3',
+] as const;
+
+type DefaultRoutineStepId = (typeof DEFAULT_ROUTINE_STEP_IDS)[number];
+
+export const DEFAULT_ROUTINE_TITLES: Record<'en' | 'tr', Record<DefaultRoutineStepId, string>> = {
+  en: {
+    'step-m-1': 'Cleanser',
+    'step-m-2': 'Vitamin C',
+    'step-m-3': 'Moisturizer',
+    'step-m-4': 'SPF',
+    'step-e-1': 'Double Cleanse',
+    'step-e-2': 'Serum / Treatment',
+    'step-e-3': 'Night Cream',
+  },
+  tr: {
+    'step-m-1': 'Temizleyici',
+    'step-m-2': 'C Vitamini',
+    'step-m-3': 'Nemlendirici',
+    'step-m-4': 'Güneş Kremi',
+    'step-e-1': 'Çift Aşamalı Temizlik',
+    'step-e-2': 'Serum / Bakım',
+    'step-e-3': 'Gece Kremi',
+  },
+};
+
+/**
+ * Renames untouched default routine steps into the given language.
+ * Steps the user already renamed are left alone.
+ */
+export const localizeDefaultRoutineSteps = async (language: 'en' | 'tr'): Promise<void> => {
+  const db = await getDb();
+  const now = new Date().toISOString();
+  for (const id of DEFAULT_ROUTINE_STEP_IDS) {
     await db.runAsync(
-      `INSERT INTO settings (key, value) VALUES 
-       ('hydrationGoal', '8'),
-       ('onboardingCompleted', 'false'),
-       ('morningReminderEnabled', 'false'),
-       ('eveningReminderEnabled', 'false')`
+      `UPDATE routine_steps SET title = ?, updated_at = ? WHERE id = ? AND title IN (?, ?)`,
+      [DEFAULT_ROUTINE_TITLES[language][id], now, id, DEFAULT_ROUTINE_TITLES.en[id], DEFAULT_ROUTINE_TITLES.tr[id]]
     );
   }
 };

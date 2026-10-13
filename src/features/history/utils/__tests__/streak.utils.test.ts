@@ -1,13 +1,9 @@
 import { calculateStreaks } from '../streak.utils';
 import { getLocalDateString } from '../../../routines/utils/routineDate.utils';
+import { shiftDateKey } from '../calendar.utils';
 
 function getOffsetDateString(baseDateStr: string, offsetDays: number): string {
-  const date = new Date(baseDateStr);
-  date.setDate(date.getDate() - offsetDays);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  return shiftDateKey(baseDateStr, -offsetDays);
 }
 
 describe('streak.utils', () => {

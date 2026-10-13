@@ -1,4 +1,4 @@
-import { getLocalDateString, calculateStreakFromLogs } from '../routineDate.utils';
+import { getLocalDateString, calculateStreakFromLogs, parseDateKey } from '../routineDate.utils';
 
 describe('routineDate.utils', () => {
   describe('getLocalDateString', () => {
@@ -37,5 +37,17 @@ describe('routineDate.utils', () => {
       const logs = ['2026-08-26', '2026-08-27', '2026-08-26', '2026-08-25'];
       expect(calculateStreakFromLogs(logs, '2026-08-27')).toBe(3);
     });
+  });
+
+  describe('parseDateKey', () => {
+    it('parses a date key as local midnight (no UTC day shift)', () => {
+      const date = parseDateKey('2026-03-01');
+      expect([date.getFullYear(), date.getMonth(), date.getDate(), date.getHours()]).toEqual([2026, 2, 1, 0]);
+      expect(getLocalDateString(parseDateKey('2026-12-31'))).toBe('2026-12-31');
+    });
+  });
+
+  it('should count a streak across a month boundary', () => {
+    expect(calculateStreakFromLogs(['2026-03-01', '2026-02-28', '2026-02-27'], '2026-03-01')).toBe(3);
   });
 });

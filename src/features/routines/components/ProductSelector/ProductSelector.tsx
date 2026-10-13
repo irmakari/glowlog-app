@@ -6,21 +6,23 @@ import { Product } from '../../../products/types/product.types';
 import { ProductSelectorProps } from './ProductSelector.types';
 import { styles } from './ProductSelector.styles';
 import { Colors } from '../../../../constants/colors';
+import { useTranslation } from '../../../../hooks/useTranslation';
 
 export const ProductSelector: React.FC<ProductSelectorProps> = ({
   selectedProductId,
   onSelectProduct,
   productsOverride,
 }) => {
+  const { t } = useTranslation();
   const [products, setProducts] = useState<Product[]>(productsOverride || []);
 
   useEffect(() => {
-    if (productsOverride) {
-      setProducts(productsOverride);
-      return;
+    if (!productsOverride) {
+      productService.getActiveProducts().then(setProducts).catch(console.error);
     }
-    productService.getActiveProducts().then(setProducts).catch(console.error);
   }, [productsOverride]);
+
+  const displayedProducts = productsOverride ?? products;
 
   return (
     <View style={styles.container}>
@@ -34,19 +36,19 @@ export const ProductSelector: React.FC<ProductSelectorProps> = ({
         ]}
       >
         <View style={styles.textCol}>
-          <Text style={styles.nameText}>None / Generic Step</Text>
+          <Text style={styles.nameText}>{t('routineEditor.noneGeneric')}</Text>
         </View>
         {!selectedProductId && (
           <Ionicons name="checkmark-circle" size={18} color={Colors.text} />
         )}
       </TouchableOpacity>
 
-      {products.length === 0 ? (
+      {displayedProducts.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No products on your Shelf yet.</Text>
+          <Text style={styles.emptyText}>{t('routineEditor.noShelfProducts')}</Text>
         </View>
       ) : (
-        products.map((prod) => {
+        displayedProducts.map((prod) => {
           const isSelected = selectedProductId === prod.id;
           return (
             <TouchableOpacity

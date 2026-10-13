@@ -20,7 +20,7 @@ export const DEFAULT_SETTINGS: ExtendedAppSettings = {
   themeMode: 'system',
   userName: '',
   skinType: 'Combination',
-  language: 'en',
+  language: 'tr',
 };
 
 export const settingsService = {

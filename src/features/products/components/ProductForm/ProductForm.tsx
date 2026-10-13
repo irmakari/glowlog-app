@@ -7,6 +7,7 @@ import {
   Alert,
   Platform,
   ScrollView,
+  Switch,
   Text,
   TextInput,
   TouchableOpacity,
@@ -21,8 +22,10 @@ import {
 } from '../../../../constants/productCategories';
 import { CreateProductInput } from '../../types/product.types';
 import { formatProductDate } from '../../utils/productDate.utils';
+import { getLocalDateString, parseDateKey } from '../../../routines/utils/routineDate.utils';
 import { styles } from './ProductForm.styles';
 import { ProductFormProps } from './ProductForm.types';
+import { useTranslation } from '../../../../hooks/useTranslation';
 
 export const ProductForm: React.FC<ProductFormProps> = ({
   mode,
@@ -31,6 +34,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   onCancel,
   loading = false,
 }) => {
+  const { language, t } = useTranslation();
   const initialCatRaw = initialValues?.category?.toLowerCase() || 'cleanser';
   const isKnownCat = PRODUCT_CATEGORIES.some((c) => c.id === initialCatRaw);
 
@@ -43,8 +47,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     !isKnownCat && initialValues?.category ? initialValues.category : ''
   );
   const [openedAt, setOpenedAt] = useState<Date>(
-    initialValues?.openedAt ? new Date(initialValues.openedAt) : new Date()
+    initialValues?.openedAt ? parseDateKey(initialValues.openedAt) : new Date()
   );
+  // Editing a product saved without an opened date keeps it unopened
+  const [isOpened, setIsOpened] = useState<boolean>(mode === 'create' || Boolean(initialValues?.openedAt));
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [paoMonths, setPaoMonths] = useState<number>(initialValues?.paoMonths ?? 6);
   const [imageUri, setImageUri] = useState<string | undefined>(initialValues?.imageUri);
@@ -66,8 +72,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
         Alert.alert(
-          'Permission Required',
-          'GlowLog needs photo library access so you can add product photos.'
+          t('products.permissionRequired'),
+          t('products.photoPermission')
         );
         return;
       }
@@ -88,7 +94,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   };
 
   const handleRemoveImage = () => {
-    setImageUri(undefined);
+    setImageUri('');
   };
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
@@ -105,7 +111,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     let valid = true;
 
     if (!name.trim()) {
-      setNameError('Product name is required');
+      setNameError(t('products.nameRequired'));
       valid = false;
     } else {
       setNameError(undefined);
@@ -113,7 +119,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
     if (!valid) return;
 
-    const formattedDate = openedAt.toISOString().split('T')[0];
 
     const finalCategory =
       category.toLowerCase() === 'other'
@@ -124,7 +129,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       name: name.trim(),
       brand: brand.trim() || undefined,
       category: finalCategory,
-      openedAt: formattedDate,
+      // Local date key: toISOString() would shift the day in timezones ahead of UTC late at night
+      openedAt: isOpened ? getLocalDateString(openedAt) : undefined,
       paoMonths: paoMonths > 0 ? paoMonths : undefined,
       imageUri,
       notes: notes.trim() || undefined,
@@ -136,10 +142,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   return (
     <View style={styles.container}>
       {/* Product Name */}
-      <FormField label="Product Name" required error={nameError}>
+      <FormField label={t('products.name')} required error={nameError}>
         <TextInput
           style={[styles.textInput, nameError ? styles.textInputError : null]}
-          placeholder="e.g. Niacinamide 10% + Zinc 1%"
+          placeholder={t('products.namePlaceholder')}
           placeholderTextColor={Colors.textMuted}
           value={name}
           onChangeText={(val) => {
@@ -150,10 +156,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       </FormField>
 
       {/* Brand */}
-      <FormField label="Brand">
+      <FormField label={t('products.brand')}>
         <TextInput
           style={styles.textInput}
-          placeholder="e.g. The Ordinary"
+          placeholder={t('products.brandPlaceholder')}
           placeholderTextColor={Colors.textMuted}
           value={brand}
           onChangeText={setBrand}
@@ -161,7 +167,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       </FormField>
 
       {/* Category Selection */}
-      <FormField label="Category" required>
+      <FormField label={t('products.category')} required>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -191,7 +197,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     isSelected && { fontWeight: '800' },
                   ]}
                 >
-                  {cat.label}
+                  {t(`products.${cat.id}`)}
                 </Text>
               </TouchableOpacity>
             );
@@ -202,7 +208,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           <View style={styles.customCategoryInputContainer}>
             <TextInput
               style={styles.textInput}
-              placeholder="e.g. Hair Oil, Body Wash..."
+              placeholder={t('products.customCategoryPlaceholder')}
               placeholderTextColor={Colors.textMuted}
               value={customCategory}
               onChangeText={setCustomCategory}
@@ -212,25 +218,41 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       </FormField>
 
       {/* Opened Date */}
-      <FormField label="Opened Date" required>
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={() => setShowDatePicker((prev) => !prev)}
-          style={styles.datePickerButton}
-        >
-          <Text style={styles.datePickerText}>
-            {formatProductDate(openedAt.toISOString().split('T')[0])}
-          </Text>
-          <Ionicons name="calendar-outline" size={18} color={Colors.text} />
-        </TouchableOpacity>
+      <FormField label={t('products.openedDate')}>
+        <View style={styles.openedToggleRow}>
+          <Text style={styles.openedToggleText}>{t('products.alreadyOpened')}</Text>
+          <Switch
+            value={isOpened}
+            onValueChange={(value) => {
+              setIsOpened(value);
+              if (!value) setShowDatePicker(false);
+            }}
+            trackColor={{ false: Colors.border, true: Colors.sageGreen }}
+            thumbColor={Colors.white}
+          />
+        </View>
 
-        {showDatePicker && (
+        {isOpened && (
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => setShowDatePicker((prev) => !prev)}
+            style={styles.datePickerButton}
+          >
+            <Text style={styles.datePickerText}>
+              {formatProductDate(getLocalDateString(openedAt), language === 'tr' ? 'tr-TR' : 'en-US')}
+            </Text>
+            <Ionicons name="calendar-outline" size={18} color={Colors.text} />
+          </TouchableOpacity>
+        )}
+
+        {isOpened && showDatePicker && (
           <DateTimePicker
             value={openedAt}
             mode="date"
             display={Platform.OS === 'ios' ? 'spinner' : 'default'}
             maximumDate={new Date()}
             onChange={handleDateChange}
+            locale={language === 'tr' ? 'tr-TR' : 'en-US'}
             textColor={Colors.text}
             themeVariant="light"
             accentColor={Colors.text}
@@ -239,13 +261,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       </FormField>
 
       {/* PAO / Period After Opening */}
-      <FormField label="Use After Opening (PAO)">
+      <FormField label={t('products.pao')}>
         <View style={styles.paoGrid}>
           {PAO_OPTIONS.map((pao) => {
             const isSelected = paoMonths === pao.value;
             return (
               <TouchableOpacity
-                key={pao.label}
+                key={pao.value ? t('products.months', { count: pao.value }) : t('products.paoUnsure')}
                 activeOpacity={0.7}
                 onPress={() => handlePaoPress(pao.value)}
                 style={[
@@ -259,7 +281,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     isSelected && styles.paoChipTextActive,
                   ]}
                 >
-                  {pao.label}
+                  {pao.value ? t('products.months', { count: pao.value }) : t('products.paoUnsure')}
                 </Text>
               </TouchableOpacity>
             );
@@ -268,7 +290,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       </FormField>
 
       {/* Product Photo */}
-      <FormField label="Product Photo (Optional)">
+      <FormField label={t('products.photo')}>
         <View style={styles.photoContainer}>
           {imageUri ? (
             <View style={styles.photoPreview}>
@@ -287,7 +309,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           >
             <Ionicons name="camera-outline" size={16} color={Colors.text} />
             <Text style={styles.photoButtonText}>
-              {imageUri ? 'Change Photo' : 'Choose Photo'}
+              {imageUri ? t('products.changePhoto') : t('products.choosePhoto')}
             </Text>
           </TouchableOpacity>
 
@@ -297,17 +319,17 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               onPress={handleRemoveImage}
               style={styles.removePhotoButton}
             >
-              <Text style={styles.removePhotoText}>Remove</Text>
+              <Text style={styles.removePhotoText}>{t('routineEditor.remove')}</Text>
             </TouchableOpacity>
           )}
         </View>
       </FormField>
 
       {/* Notes */}
-      <FormField label="Notes (Optional)">
+      <FormField label={t('products.notesOptional')}>
         <TextInput
           style={[styles.textInput, styles.multilineInput]}
-          placeholder="Add any notes about this product..."
+          placeholder={t('products.notesPlaceholder')}
           placeholderTextColor={Colors.textMuted}
           multiline
           numberOfLines={2}
@@ -320,14 +342,14 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       <View style={styles.buttonRow}>
         {onCancel && (
           <PillButton
-            title="Cancel"
+            title={t('common.cancel')}
             onPress={onCancel}
             variant="ghost"
             size="md"
           />
         )}
         <PillButton
-          title={mode === 'create' ? 'Save Product' : 'Update Product'}
+          title={mode === 'create' ? t('products.saveProduct') : t('products.updateProduct')}
           onPress={handleSubmit}
           variant="primary"
           size="md"

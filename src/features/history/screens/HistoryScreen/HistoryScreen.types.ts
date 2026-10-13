@@ -1,1 +1,1 @@
-export interface HistoryScreenProps {}
+export type HistoryScreenProps = Record<string, never>;

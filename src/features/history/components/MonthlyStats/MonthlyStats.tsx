@@ -1,151 +1,84 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
-import { StatCard } from '../../../../components/ui/StatCard';
+import { GlowCard } from '../../../../components/ui/GlowCard';
 import { MonthlyStatsProps } from './MonthlyStats.types';
 import { styles } from './MonthlyStats.styles';
-import { Colors } from '../../../../constants/colors';
-import { Typography } from '../../../../constants/typography';
-import { Spacing } from '../../../../constants/spacing';
+import { useTheme } from '../../../../context/ThemeContext';
+import { useTranslation } from '../../../../hooks/useTranslation';
 
 export const MonthlyStatsView: React.FC<MonthlyStatsProps> = ({
   stats,
   onOpenMonthlyReport,
-  onOpenFullReports,
 }) => {
+  const { colors, isDark } = useTheme();
+  const { t } = useTranslation();
+  const tileBg = isDark ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.6)';
+  const days = (count: number) => t(count === 1 ? 'history.dayCountOne' : 'history.dayCountOther', { count });
+
   return (
     <View style={styles.container}>
-      <View style={localStyles.headerRow}>
-        <Text style={styles.sectionTitle}>This month</Text>
+      <View style={styles.headerRow}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('history.thisMonthTitle')}</Text>
         {onOpenMonthlyReport && (
-          <TouchableOpacity activeOpacity={0.7} onPress={onOpenMonthlyReport} style={localStyles.detailBtn}>
-            <Text style={localStyles.detailBtnText}>View Report</Text>
-            <Ionicons name="chevron-forward" size={14} color={Colors.text} />
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={onOpenMonthlyReport}
+            accessibilityRole="button"
+            hitSlop={8}
+            style={styles.detailBtn}
+          >
+            <Text style={[styles.detailBtnText, { color: colors.textSecondary }]}>{t('history.viewReport')}</Text>
+            <Ionicons name="chevron-forward" size={15} color={colors.textSecondary} />
           </TouchableOpacity>
         )}
       </View>
 
-      <View style={styles.grid}>
-        <StatCard
-          label="Routine Consistency"
-          value={`${stats.routineConsistencyPercent}%`}
-          subtitle={`${stats.completedDays} of ${stats.trackedDays} days complete`}
-          variant="pink"
-        />
-
-        <StatCard
-          label="Average Hydration"
-          value={`${stats.averageHydration} gl`}
-          subtitle="glasses per day"
-          variant="softBlue"
-        />
-
-        <StatCard
-          label="Current Streak"
-          value={`${stats.currentStreak}d`}
-          subtitle="days going strong"
-          variant="sageGreen"
-        />
-
-        <StatCard
-          label="Best Streak"
-          value={`${stats.bestStreak}d`}
-          subtitle="all-time record"
-          variant="butterYellow"
-        />
-      </View>
-
-      {onOpenFullReports && (
-        <TouchableOpacity
-          activeOpacity={0.82}
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            onOpenFullReports();
-          }}
-          style={localStyles.reportCard}
-        >
-          <View style={localStyles.iconCircle}>
-            <Ionicons name="calendar-outline" size={18} color={Colors.text} />
+      <GlowCard variant="sageGreen" padding={16} style={styles.card}>
+        <View style={styles.progressHeader}>
+          <View style={styles.labelRow}>
+            <Ionicons name="trending-up" size={16} color={colors.text} />
+            <Text style={[styles.metricLabel, { color: colors.text }]}>{t('history.routineConsistency')}</Text>
           </View>
-          <View style={localStyles.reportTextContent}>
-            <Text style={localStyles.reportTitle}>Full Monthly Reports</Text>
-            <Text style={localStyles.reportSubtitle}>Browse all past months & daily breakdowns</Text>
+          <Text style={[styles.progressValue, { color: colors.text }]}>{stats.routineConsistencyPercent}%</Text>
+        </View>
+        <View style={[styles.progressTrack, { backgroundColor: isDark ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.7)' }]}>
+          <View style={[styles.progressFill, { width: `${stats.routineConsistencyPercent}%`, backgroundColor: colors.text }]} />
+        </View>
+        <Text style={[styles.progressCaption, { color: colors.textSecondary }]}>
+          {t('history.daysComplete', { completed: stats.completedDays, total: stats.trackedDays })}
+        </Text>
+
+        <View style={styles.metricsRow}>
+          <View style={[styles.metric, { backgroundColor: tileBg }]}>
+            <View style={styles.metricHeading}>
+              <Ionicons name="water" size={13} color="#5294E2" />
+              <Text style={[styles.metricName, { color: colors.textSecondary }]} numberOfLines={1}>
+                {t('history.averageHydration')}
+              </Text>
+            </View>
+            <Text style={[styles.metricValue, { color: colors.text }]} numberOfLines={1} adjustsFontSizeToFit>
+              {t('history.glassCount', { count: stats.averageHydration })}
+            </Text>
+            <Text style={[styles.metricSub, { color: colors.textSecondary }]}>{t('history.perDay')}</Text>
           </View>
-          <View style={localStyles.arrowCircle}>
-            <Ionicons name="arrow-forward" size={16} color={Colors.text} />
+          <View style={[styles.metric, { backgroundColor: tileBg }]}>
+            <View style={styles.metricHeading}>
+              <Ionicons name="flame" size={13} color="#E86339" />
+              <Text style={[styles.metricName, { color: colors.textSecondary }]} numberOfLines={1}>
+                {t('history.currentStreak')}
+              </Text>
+            </View>
+            <Text style={[styles.metricValue, { color: colors.text }]} numberOfLines={1} adjustsFontSizeToFit>
+              {days(stats.currentStreak)}
+            </Text>
+            <Text style={[styles.metricSub, { color: colors.textSecondary }]} numberOfLines={1}>
+              {t('history.bestStreak')}: {days(stats.bestStreak)}
+            </Text>
           </View>
-        </TouchableOpacity>
-      )}
+        </View>
+      </GlowCard>
+
     </View>
   );
 };
-
-const localStyles = StyleSheet.create({
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  detailBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  detailBtnText: {
-    ...Typography.caption,
-    fontSize: 12,
-    fontWeight: '600',
-    color: Colors.textSecondary,
-    marginRight: 2,
-  },
-  reportCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.white,
-    marginTop: Spacing.md,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: 'rgba(21, 21, 21, 0.08)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  iconCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    backgroundColor: Colors.cardCream,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  reportTextContent: {
-    flex: 1,
-  },
-  reportTitle: {
-    ...Typography.h3,
-    fontSize: 14,
-    fontWeight: '700',
-    color: Colors.text,
-  },
-  reportSubtitle: {
-    ...Typography.caption,
-    fontSize: 11,
-    color: Colors.textSecondary,
-    marginTop: 1,
-  },
-  arrowCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: 'rgba(21, 21, 21, 0.05)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 8,
-  },
-});

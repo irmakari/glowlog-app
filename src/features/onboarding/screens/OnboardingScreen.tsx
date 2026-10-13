@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,17 +19,21 @@ import { Typography } from '../../../constants/typography';
 import { Spacing } from '../../../constants/spacing';
 import { Colors } from '../../../constants/colors';
 import { settingsService, SkinType } from '../../../services/settingsService';
+import { useTranslation } from '../../../hooks/useTranslation';
+import { LanguageMode } from '../../../context/LanguageContext';
+import { localizeDefaultRoutineSteps } from '../../../services/database/db';
 
 const SKIN_TYPES: { id: SkinType; label: string; icon: string; desc: string }[] = [
-  { id: 'Combination', label: 'Combination', icon: 'partly-sunny-outline', desc: 'Oily T-zone, normal cheeks' },
-  { id: 'Dry', label: 'Dry', icon: 'water-outline', desc: 'Tight, flaky, needs hydration' },
-  { id: 'Oily', label: 'Oily', icon: 'sparkles-outline', desc: 'Excess shine, enlarged pores' },
-  { id: 'Sensitive', label: 'Sensitive', icon: 'leaf-outline', desc: 'Redness, easily irritated' },
-  { id: 'Normal', label: 'Normal', icon: 'sunny-outline', desc: 'Balanced, comfortable feel' },
+  { id: 'Combination', label: 'combination', icon: 'partly-sunny-outline', desc: 'combinationDesc' },
+  { id: 'Dry', label: 'dry', icon: 'water-outline', desc: 'dryDesc' },
+  { id: 'Oily', label: 'oily', icon: 'sparkles-outline', desc: 'oilyDesc' },
+  { id: 'Sensitive', label: 'sensitive', icon: 'leaf-outline', desc: 'sensitiveDesc' },
+  { id: 'Normal', label: 'normal', icon: 'sunny-outline', desc: 'normalDesc' },
 ];
 
 export const OnboardingScreen: React.FC = () => {
   const router = useRouter();
+  const { language, setLanguage, t } = useTranslation();
   const [step, setStep] = useState<number>(1);
   const [name, setName] = useState<string>('');
   const [skinType, setSkinType] = useState<SkinType>('Combination');
@@ -58,9 +63,11 @@ export const OnboardingScreen: React.FC = () => {
         hydrationGoal,
         onboardingCompleted: true,
       });
+      await localizeDefaultRoutineSteps(language);
       router.replace('/(tabs)');
     } catch (e) {
       console.error('Failed to save onboarding settings:', e);
+      Alert.alert(t('common.error'), t('onboarding.saveFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -78,7 +85,7 @@ export const OnboardingScreen: React.FC = () => {
             <IconButton
               icon={<Ionicons name="arrow-back" size={20} color={Colors.text} />}
               onPress={handlePrevStep}
-              backgroundColor={Colors.white}
+              variant="ghost"
               size={38}
             />
           ) : (
@@ -102,17 +109,36 @@ export const OnboardingScreen: React.FC = () => {
         {/* Step 1: Name */}
         {step === 1 && (
           <View style={styles.stepContainer}>
-            <Text style={styles.badgeLabel}>Welcome to GlowLog</Text>
-            <Text style={styles.heroTitle}>What should we call you?</Text>
+            <View style={styles.languageRow}>
+              {(['tr', 'en'] as LanguageMode[]).map((lang) => {
+                const isSelected = language === lang;
+                return (
+                  <TouchableOpacity
+                    key={lang}
+                    activeOpacity={0.8}
+                    onPress={() => setLanguage(lang)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: isSelected }}
+                    style={[styles.languageChip, isSelected && styles.languageChipSelected]}
+                  >
+                    <Text style={[styles.languageChipText, isSelected && styles.languageChipTextSelected]}>
+                      {lang === 'tr' ? 'Türkçe' : 'English'}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            <Text style={styles.badgeLabel}>{t('onboarding.welcome')}</Text>
+            <Text style={styles.heroTitle}>{t('onboarding.step1Title')}</Text>
             <Text style={styles.heroSubtitle}>
-              Let's personalize your daily skincare routine and morning greetings.
+              {t('onboarding.step1Subtitle')}
             </Text>
 
             <GlowCard variant="cream" padding={20} style={styles.inputCard}>
-              <Text style={styles.fieldLabel}>Your Name or Nickname</Text>
+              <Text style={styles.fieldLabel}>{t('onboarding.nameLabel')}</Text>
               <TextInput
                 style={styles.textInput}
-                placeholder="e.g. İrmak"
+                placeholder={t('onboarding.namePlaceholder')}
                 placeholderTextColor={Colors.textMuted}
                 value={name}
                 onChangeText={setName}
@@ -127,10 +153,10 @@ export const OnboardingScreen: React.FC = () => {
         {/* Step 2: Skin Type */}
         {step === 2 && (
           <View style={styles.stepContainer}>
-            <Text style={styles.badgeLabel}>Step 2 of 3</Text>
-            <Text style={styles.heroTitle}>What is your skin type?</Text>
+            <Text style={styles.badgeLabel}>{t('onboarding.stepOfThree', { step: 2 })}</Text>
+            <Text style={styles.heroTitle}>{t('onboarding.step2Title')}</Text>
             <Text style={styles.heroSubtitle}>
-              Select the option that best describes how your skin feels most days.
+              {t('onboarding.step2Subtitle')}
             </Text>
 
             <View style={styles.skinTypeList}>
@@ -160,8 +186,8 @@ export const OnboardingScreen: React.FC = () => {
                         />
                       </View>
                       <View style={styles.flex1}>
-                        <Text style={styles.skinTypeTitle}>{st.label}</Text>
-                        <Text style={styles.skinTypeDesc}>{st.desc}</Text>
+                        <Text style={styles.skinTypeTitle}>{t(`onboarding.${st.label}`)}</Text>
+                        <Text style={styles.skinTypeDesc}>{t(`onboarding.${st.desc}`)}</Text>
                       </View>
                       {isSelected && (
                         <Ionicons name="checkmark-circle" size={22} color={Colors.text} />
@@ -177,16 +203,16 @@ export const OnboardingScreen: React.FC = () => {
         {/* Step 3: Water Goal */}
         {step === 3 && (
           <View style={styles.stepContainer}>
-            <Text style={styles.badgeLabel}>Step 3 of 3</Text>
-            <Text style={styles.heroTitle}>Daily Hydration Goal</Text>
+            <Text style={styles.badgeLabel}>{t('onboarding.stepOfThree', { step: 3 })}</Text>
+            <Text style={styles.heroTitle}>{t('onboarding.step3Title')}</Text>
             <Text style={styles.heroSubtitle}>
-              Hydrated skin starts from within! How many glasses of water is your daily target?
+              {t('onboarding.step3SubtitleDaily')}
             </Text>
 
             <GlowCard variant="softBlue" padding={24} style={styles.waterCard}>
               <Ionicons name="water" size={48} color="#5294E2" style={{ marginBottom: 12 }} />
-              <Text style={styles.waterGoalCount}>{hydrationGoal} Glasses</Text>
-              <Text style={styles.waterGoalSubtext}>~ {(hydrationGoal * 0.25).toFixed(1)} Liters daily</Text>
+              <Text style={styles.waterGoalCount}>{t('onboarding.glasses', { count: hydrationGoal })}</Text>
+              <Text style={styles.waterGoalSubtext}>{t('onboarding.litersDaily', { count: (hydrationGoal * 0.25).toFixed(1) })}</Text>
 
               <View style={styles.stepperRow}>
                 <IconButton
@@ -210,7 +236,7 @@ export const OnboardingScreen: React.FC = () => {
         {/* Bottom Action Bar */}
         <View style={styles.bottomBar}>
           <PillButton
-            title={step === 3 ? 'Start Glowing' : 'Continue'}
+            title={step === 3 ? t('common.startGlowing') : t('onboarding.continue')}
             onPress={handleNextStep}
             variant="primary"
             size="lg"
@@ -226,6 +252,31 @@ export const OnboardingScreen: React.FC = () => {
 const styles = StyleSheet.create({
   flex1: {
     flex: 1,
+  },
+  languageRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: Spacing.md,
+  },
+  languageChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.white,
+  },
+  languageChipSelected: {
+    backgroundColor: Colors.text,
+    borderColor: Colors.text,
+  },
+  languageChipText: {
+    ...Typography.bodyBold,
+    fontSize: 13,
+    color: Colors.text,
+  },
+  languageChipTextSelected: {
+    color: Colors.white,
   },
   topBar: {
     flexDirection: 'row',

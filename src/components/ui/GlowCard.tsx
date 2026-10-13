@@ -8,7 +8,7 @@ import {
   Platform,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { Colors, ColorVariant, CARD_COLORS, DARK_CARD_COLORS } from '../../constants/colors';
+import { Colors, ColorVariant, CARD_COLORS, DARK_CARD_COLORS, DARK_CARD_BORDERS } from '../../constants/colors';
 import { Spacing } from '../../constants/spacing';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -49,7 +49,7 @@ export const GlowCard: React.FC<GlowCardProps> = ({
     padding,
     borderRadius,
     borderWidth: bordered ? 1.5 : (isDark ? 1 : 0),
-    borderColor: bordered ? (isDark ? colors.borderDark : Colors.borderDark) : (isDark ? colors.border : 'transparent'),
+    borderColor: bordered ? (isDark ? colors.borderDark : Colors.borderDark) : (isDark ? DARK_CARD_BORDERS[variant] : 'transparent'),
   };
 
   if (onPress) {

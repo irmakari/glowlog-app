@@ -1,15 +1,16 @@
 import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { GlowCard } from '../../../../components/ui/GlowCard';
 import { CalendarDay } from '../CalendarDay';
+import { GlowCard } from '../../../../components/ui/GlowCard';
 import { getCalendarGridDays } from '../../utils/calendar.utils';
 import { HistoryCalendarProps } from './HistoryCalendar.types';
 import { styles } from './HistoryCalendar.styles';
 import { Colors } from '../../../../constants/colors';
 import { useTheme } from '../../../../context/ThemeContext';
+import { useTranslation } from '../../../../hooks/useTranslation';
 
-const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 export const HistoryCalendar: React.FC<HistoryCalendarProps> = ({
   history,
@@ -20,6 +21,8 @@ export const HistoryCalendar: React.FC<HistoryCalendarProps> = ({
   onPressDay,
 }) => {
   const { colors, isDark } = useTheme();
+  const { language, t } = useTranslation();
+  const weekdays = language === 'tr' ? ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'] : WEEKDAYS;
 
   const gridDays = useMemo(() => {
     return getCalendarGridDays(history.year, history.month);
@@ -33,17 +36,22 @@ export const HistoryCalendar: React.FC<HistoryCalendarProps> = ({
     return rows;
   }, [gridDays]);
 
-  const arrowBg = isDark ? 'rgba(255, 255, 255, 0.12)' : Colors.white;
+  const arrowBg = isDark ? 'rgba(255, 255, 255, 0.12)' : colors.background;
 
   return (
-    <GlowCard variant="cream" padding={14} style={styles.card}>
+    <GlowCard variant="white" padding={14} style={styles.calendar}>
       {/* Month Header Nav */}
       <View style={styles.monthHeader}>
-        <Text style={[styles.monthTitle, { color: colors.text }]}>{history.formattedMonth}</Text>
+        <Text style={[styles.monthTitle, { color: colors.text }]}>
+          {new Date(history.year, history.month - 1, 1).toLocaleDateString(language === 'tr' ? 'tr-TR' : 'en-US', { month: 'long', year: 'numeric' })}
+        </Text>
         <View style={styles.navRow}>
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={onPrevMonth}
+            accessibilityRole="button"
+            accessibilityLabel={t('history.previousMonth')}
+            hitSlop={6}
             style={[styles.navArrow, { backgroundColor: arrowBg }]}
           >
             <Ionicons name="chevron-back" size={18} color={colors.text} />
@@ -53,6 +61,9 @@ export const HistoryCalendar: React.FC<HistoryCalendarProps> = ({
             activeOpacity={0.7}
             disabled={!canGoNext}
             onPress={onNextMonth}
+            accessibilityRole="button"
+            accessibilityLabel={t('history.nextMonth')}
+            hitSlop={6}
             style={[styles.navArrow, { backgroundColor: arrowBg }, !canGoNext && styles.navArrowDisabled]}
           >
             <Ionicons name="chevron-forward" size={18} color={colors.text} />
@@ -62,7 +73,7 @@ export const HistoryCalendar: React.FC<HistoryCalendarProps> = ({
 
       {/* Weekday Labels */}
       <View style={styles.weekdayRow}>
-        {WEEKDAYS.map((day) => (
+        {weekdays.map((day) => (
           <View key={day} style={styles.weekdayCell}>
             <Text style={[styles.weekdayText, { color: colors.textSecondary }]}>{day}</Text>
           </View>
@@ -90,15 +101,15 @@ export const HistoryCalendar: React.FC<HistoryCalendarProps> = ({
       <View style={styles.legendRow}>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: Colors.sageGreen }]} />
-          <Text style={styles.legendText}>Complete</Text>
+          <Text style={[styles.legendText, { color: colors.textSecondary }]}>{t('history.complete')}</Text>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: Colors.butterYellow }]} />
-          <Text style={styles.legendText}>Partial</Text>
+          <Text style={[styles.legendText, { color: colors.textSecondary }]}>{t('history.partial')}</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: Colors.white, borderWidth: 1, borderColor: Colors.border }]} />
-          <Text style={styles.legendText}>Empty</Text>
+          <View style={[styles.legendDot, { backgroundColor: isDark ? '#3B3540' : Colors.white, borderWidth: 1, borderColor: colors.border }]} />
+          <Text style={[styles.legendText, { color: colors.textSecondary }]}>{t('history.empty')}</Text>
         </View>
       </View>
     </GlowCard>

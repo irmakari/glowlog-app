@@ -1,11 +1,26 @@
 import { StyleSheet } from 'react-native';
-import { Typography } from '../../../../constants/typography';
 import { Spacing } from '../../../../constants/spacing';
+import { Typography } from '../../../../constants/typography';
 
 export const styles = StyleSheet.create({
-  header: {
+  loadingContainer: {
+    paddingVertical: Spacing.xxl,
+    alignItems: 'center',
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.sm,
     marginTop: Spacing.xs,
-    marginBottom: Spacing.xs,
+    marginBottom: Spacing.sm,
+  },
+  headerTextCol: {
+    flex: 1,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   title: {
     ...Typography.h1,
@@ -17,8 +32,16 @@ export const styles = StyleSheet.create({
     fontSize: 13,
     marginTop: 2,
   },
-  loadingContainer: {
-    paddingVertical: Spacing.xxl,
+  todayPill: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 12,
+    minHeight: 36,
+    borderRadius: Spacing.radiusPill,
+  },
+  todayPillText: {
+    ...Typography.bodyBold,
+    fontSize: 13,
   },
 });

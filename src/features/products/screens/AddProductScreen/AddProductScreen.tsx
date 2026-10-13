@@ -9,9 +9,11 @@ import { productService } from '../../services/productService';
 import { CreateProductInput } from '../../types/product.types';
 import { styles } from './AddProductScreen.styles';
 import { Colors } from '../../../../constants/colors';
+import { useTranslation } from '../../../../hooks/useTranslation';
 
 export const AddProductScreen: React.FC = () => {
   const router = useRouter();
+  const { t } = useTranslation();
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (input: CreateProductInput) => {
@@ -21,7 +23,7 @@ export const AddProductScreen: React.FC = () => {
       router.back();
     } catch (err: any) {
       console.error('Failed to create product:', err);
-      Alert.alert('Error', err?.message || 'Failed to save product. Please try again.');
+      Alert.alert(t('common.error'), err?.message || t('products.saveFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -30,7 +32,7 @@ export const AddProductScreen: React.FC = () => {
   return (
     <Screen scrollable padding={16} edges={['bottom', 'left', 'right']} contentContainerStyle={styles.scrollContent}>
       <View style={styles.headerRow}>
-        <Text style={styles.title}>Add New Product</Text>
+        <Text style={styles.title}>{t('products.addTitle')}</Text>
         <IconButton
           icon={<Ionicons name="close" size={20} color={Colors.text} />}
           onPress={() => router.back()}

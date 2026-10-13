@@ -1,1 +1,1 @@
-export interface DbInspectorProps {}
+export type DbInspectorProps = Record<string, never>;

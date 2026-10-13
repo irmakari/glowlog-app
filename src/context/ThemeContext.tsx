@@ -5,6 +5,8 @@ import { settingsService } from '../services/settingsService';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 
+export const DARK_MODE_ENABLED = false;
+
 interface ThemeContextType {
   themeMode: ThemeMode;
   isDark: boolean;
@@ -34,8 +36,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     await settingsService.updateSetting('themeMode', mode);
   };
 
-  const isDark =
-    themeMode === 'dark' || (themeMode === 'system' && deviceColorScheme === 'dark');
+  // Dark mode is locked off for the first release: several screens still use static light
+  // colors. Flip DARK_MODE_ENABLED once they are themed; it also re-shows the Appearance card in Profile.
+  const isDark = DARK_MODE_ENABLED &&
+    (themeMode === 'dark' || (themeMode === 'system' && deviceColorScheme === 'dark'));
 
   const colors = isDark ? DarkColors : LightColors;
 

@@ -1,7 +1,8 @@
-import { getDb } from '../../../services/database/db';
+import { getDb, getTrackingStartKey } from '../../../services/database/db';
+import { settingsService } from '../../../services/settingsService';
 import { waterService } from './waterService';
 import { getLocalDateString } from '../../routines/utils/routineDate.utils';
-import { calculateGlowScore } from '../../../utils/glowScore';
+import { calculateDayGlowScore } from '../../../utils/glowScore';
 
 export interface DailyHydrationPoint {
   day: number;
@@ -54,6 +55,8 @@ export const monthlyAnalyticsService = {
     const monthPrefix = `${year}-${String(month).padStart(2, '0')}`;
     const daysInMonth = new Date(year, month, 0).getDate();
     const todayKey = getLocalDateString();
+    const startKey = await getTrackingStartKey();
+    const { hydrationGoal } = await settingsService.getSettings();
 
     // 1. Water logs for month
     const waterLogs = await waterService.getWaterLogsForMonth(year, month);
@@ -63,12 +66,12 @@ export const monthlyAnalyticsService = {
     for (let day = 1; day <= daysInMonth; day++) {
       const dateKey = `${monthPrefix}-${String(day).padStart(2, '0')}`;
       const glasses = waterLogs[dateKey] || 0;
-      totalWaterSum += glasses;
+      if (dateKey >= startKey && dateKey <= todayKey) totalWaterSum += glasses;
       dailyHydration.push({
         day,
         dateKey,
         glasses,
-        goal: 8,
+        goal: hydrationGoal,
       });
     }
 
@@ -105,6 +108,7 @@ export const monthlyAnalyticsService = {
 
     routineRows.forEach((r) => {
       dateCompletedMap[r.date] = (dateCompletedMap[r.date] || 0) + r.step_count;
+      if (r.date < startKey || r.date > todayKey) return;
       if (r.routine_type === 'morning') {
         morningCompletedSum += r.step_count;
       } else {
@@ -143,31 +147,25 @@ export const monthlyAnalyticsService = {
       const formattedDate = `${monthShortNames[month - 1]} ${day}, ${weekdayStr}`;
 
       const isFuture = dateKey > todayKey;
+      // Days before the user started with GlowLog aren't "missed", so they don't count in stats
+      const isTracked = !isFuture && dateKey >= startKey;
 
       let status: 'complete' | 'partial' | 'empty' | 'future' = 'empty';
       if (isFuture) {
         status = 'future';
       } else if (totalStepsConfigured > 0 && completedSteps >= totalStepsConfigured) {
         status = 'complete';
-        completedDays++;
-        trackedDays++;
       } else if (completedSteps > 0) {
         status = 'partial';
-        partialDays++;
-        trackedDays++;
-      } else {
-        status = 'empty';
-        emptyDays++;
-        trackedDays++;
       }
 
-      const glowBreakdown = calculateGlowScore({
-        completedStepsCount: completedSteps,
-        totalStepsCount: totalStepsConfigured,
-        currentHydration: hydration,
-        hydrationGoal: 8,
-        streakDays: 1,
-      });
+      if (isTracked) {
+        trackedDays++;
+        if (status === 'complete') completedDays++;
+        else if (status === 'partial') partialDays++;
+        else emptyDays++;
+      }
+
 
       dailyBreakdown.push({
         day,
@@ -177,9 +175,9 @@ export const monthlyAnalyticsService = {
         completedSteps,
         totalSteps: totalStepsConfigured,
         hydration,
-        hydrationGoal: 8,
+        hydrationGoal,
         productsCount,
-        glowScore: glowBreakdown.score,
+        glowScore: calculateDayGlowScore(completedSteps, totalStepsConfigured, hydration, hydrationGoal),
       });
     }
 

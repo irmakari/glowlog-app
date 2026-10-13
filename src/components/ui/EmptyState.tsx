@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View, StyleProp, ViewStyle } from 'react-native';
+import { StyleSheet, Text, StyleProp, ViewStyle } from 'react-native';
 import { GlowCard } from './GlowCard';
 import { PillButton } from './PillButton';
 import { Typography } from '../../constants/typography';

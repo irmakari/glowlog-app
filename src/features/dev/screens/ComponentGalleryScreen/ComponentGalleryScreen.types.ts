@@ -1,1 +1,1 @@
-export interface ComponentGalleryScreenProps {}
+export type ComponentGalleryScreenProps = Record<string, never>;

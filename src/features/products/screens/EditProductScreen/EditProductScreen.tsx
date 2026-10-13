@@ -11,9 +11,11 @@ import { CreateProductInput } from '../../types/product.types';
 import { EditProductScreenProps } from './EditProductScreen.types';
 import { styles } from './EditProductScreen.styles';
 import { Colors } from '../../../../constants/colors';
+import { useTranslation } from '../../../../hooks/useTranslation';
 
 export const EditProductScreen: React.FC<EditProductScreenProps> = ({ id }) => {
   const router = useRouter();
+  const { t } = useTranslation();
   const { product, loading } = useProduct(id);
   const [submitting, setSubmitting] = useState(false);
 
@@ -25,7 +27,7 @@ export const EditProductScreen: React.FC<EditProductScreenProps> = ({ id }) => {
       router.back();
     } catch (err: any) {
       console.error('Failed to update product:', err);
-      Alert.alert('Error', err?.message || 'Failed to update product. Please try again.');
+      Alert.alert(t('common.error'), err?.message || t('products.updateFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -44,7 +46,7 @@ export const EditProductScreen: React.FC<EditProductScreenProps> = ({ id }) => {
   return (
     <Screen scrollable padding={16} edges={['bottom', 'left', 'right']} contentContainerStyle={styles.scrollContent}>
       <View style={styles.headerRow}>
-        <Text style={styles.title}>Edit Product 🧴</Text>
+        <Text style={styles.title}>{t('products.editTitle')}</Text>
         <IconButton
           icon={<Ionicons name="close" size={20} color={Colors.text} />}
           onPress={() => router.back()}

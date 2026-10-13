@@ -6,6 +6,8 @@ import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing } from '../../constants/spacing';
 import { GlowScoreBreakdown } from '../../types';
+import { useTheme } from '../../context/ThemeContext';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface GlowScoreCardProps {
   scoreBreakdown: GlowScoreBreakdown;
@@ -22,11 +24,12 @@ export const GlowScoreCard: React.FC<GlowScoreCardProps> = ({
   streakDays,
   isFocused = true,
 }) => {
+  const { colors } = useTheme();
+  const { t } = useTranslation();
   return (
     <View style={styles.heroContainer}>
       <View style={styles.titleRow}>
-        <Text style={styles.heroTitle}>Today's Glow</Text>
-        <Ionicons name="sparkles" size={16} color="#E59935" style={{ marginLeft: 4 }} />
+        <Text style={[styles.heroTitle, { color: colors.textSecondary }]}>{t('today.glowTitle')}</Text>
       </View>
 
       <View style={styles.ringWrapper}>
@@ -37,20 +40,20 @@ export const GlowScoreCard: React.FC<GlowScoreCardProps> = ({
       <View style={styles.pillRow}>
         <View style={[styles.pill, { backgroundColor: Colors.pink }]}>
           <Text style={styles.pillText}>
-            Routine {scoreBreakdown.completedStepsCount}/{scoreBreakdown.totalStepsCount}
+            {t('today.routinePill', { completed: scoreBreakdown.completedStepsCount, total: scoreBreakdown.totalStepsCount })}
           </Text>
         </View>
 
         <View style={[styles.pill, { backgroundColor: Colors.softBlue }]}>
           <Text style={styles.pillText}>
-            Water {currentHydration}/{hydrationGoal}
+            {t('today.waterPill', { count: currentHydration, goal: hydrationGoal })}
           </Text>
         </View>
 
         <View style={[styles.pill, { backgroundColor: Colors.butterYellow, flexDirection: 'row', alignItems: 'center' }]}>
           <Ionicons name="flame" size={13} color="#E56A35" style={{ marginRight: 4 }} />
           <Text style={styles.pillText}>
-            {streakDays}d Streak
+            {t('today.streakPill', { count: streakDays })}
           </Text>
         </View>
       </View>

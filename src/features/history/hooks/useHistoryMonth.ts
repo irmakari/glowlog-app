@@ -2,7 +2,6 @@ import { useState, useCallback } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { historyService } from '../services/historyService';
 import { MonthlyHistory, MonthlyStats } from '../types/history.types';
-import { getLocalDateString } from '../../routines/utils/routineDate.utils';
 
 export function useHistoryMonth() {
   const today = new Date();
@@ -54,7 +53,7 @@ export function useHistoryMonth() {
     } else {
       setCurrentMonth((m) => m - 1);
     }
-  }, [currentMonth]);
+  }, [currentMonth, setCurrentMonth, setCurrentYear]);
 
   const goToNextMonth = useCallback(() => {
     if (!canGoNext()) return;
@@ -64,7 +63,13 @@ export function useHistoryMonth() {
     } else {
       setCurrentMonth((m) => m + 1);
     }
-  }, [currentMonth, canGoNext]);
+  }, [currentMonth, canGoNext, setCurrentMonth, setCurrentYear]);
+
+  const showDate = useCallback((dateKey: string) => {
+    const [year, month] = dateKey.split('-').map(Number);
+    setCurrentYear(year);
+    setCurrentMonth(month);
+  }, [setCurrentYear, setCurrentMonth]);
 
   return {
     currentYear,
@@ -76,6 +81,7 @@ export function useHistoryMonth() {
     canGoNext: canGoNext(),
     goToPrevMonth,
     goToNextMonth,
+    showDate,
     refreshHistory: fetchMonthData,
   };
 }

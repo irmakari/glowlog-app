@@ -3,12 +3,13 @@ import { Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { GlowCard } from '../../../../components/ui/GlowCard';
-import { getCategoryOption } from '../../../../constants/productCategories';
-import { formatOpenedDuration } from '../../utils/productDate.utils';
+import { getCategoryDisplayName, getCategoryOption } from '../../../../constants/productCategories';
+import { getDaysSinceOpened, getPAOStatus } from '../../utils/productDate.utils';
 import { ProductCardProps } from './ProductCard.types';
 import { styles } from './ProductCard.styles';
 import { Colors } from '../../../../constants/colors';
 import { useTheme } from '../../../../context/ThemeContext';
+import { useTranslation } from '../../../../hooks/useTranslation';
 
 export const ProductCard: React.FC<ProductCardProps> = ({
   product,
@@ -16,8 +17,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   style,
 }) => {
   const { colors, isDark } = useTheme();
+  const { t } = useTranslation();
   const categoryInfo = getCategoryOption(product.category);
-  const openedDurationText = formatOpenedDuration(product.openedAt);
+  const openedDays = getDaysSinceOpened(product.openedAt);
+  const openedDurationText = openedDays === null ? t('products.unopened')
+    : openedDays === 0 ? t('products.openedToday')
+    : openedDays === 1 ? t('products.openedYesterday')
+    : openedDays < 30 ? t('products.openedDaysAgo', { count: openedDays })
+    : openedDays < 365 ? t('products.openedMonthsAgo', { count: Math.floor(openedDays / 30) })
+    : t('products.openedYearsAgo', { count: Math.floor(openedDays / 365) });
+  const isPastPao = getPAOStatus(product.openedAt, product.paoMonths).isExpired;
 
   return (
     <GlowCard
@@ -65,7 +74,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               ]}
             >
               <Text style={[styles.categoryBadgeText, { color: isDark ? colors.text : Colors.text }]}>
-                {categoryInfo.label}
+                {getCategoryDisplayName(product.category, t)}
               </Text>
             </View>
           </View>
@@ -79,6 +88,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               <Ionicons name="time-outline" size={12} color={colors.textSecondary} />
               <Text style={[styles.metaText, { color: colors.textSecondary }]}>{openedDurationText}</Text>
             </View>
+            {isPastPao && (
+              <View style={styles.metaItem}>
+                <Ionicons name="alert-circle-outline" size={12} color={Colors.alert} />
+                <Text style={[styles.metaText, { color: Colors.alert }]}>{t('products.pastPao')}</Text>
+              </View>
+            )}
           </View>
         </View>
       </View>

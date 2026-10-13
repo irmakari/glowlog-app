@@ -1,1 +1,1 @@
-export interface AddProductScreenProps {}
+export type AddProductScreenProps = Record<string, never>;

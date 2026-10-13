@@ -4,23 +4,25 @@ import { Typography } from '../../../../constants/typography';
 import { Spacing } from '../../../../constants/spacing';
 
 export const styles = StyleSheet.create({
-  card: {
-    marginVertical: Spacing.sm,
+  calendar: {
+    marginTop: Spacing.xs,
   },
   monthHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: Spacing.md,
+    paddingHorizontal: 4,
   },
   monthTitle: {
-    ...Typography.h2,
-    fontSize: 18,
+    ...Typography.h3,
+    fontSize: 17,
+    textTransform: 'capitalize',
   },
   navArrow: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     backgroundColor: Colors.white,
     alignItems: 'center',
     justifyContent: 'center',
@@ -45,7 +47,6 @@ export const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: Colors.textSecondary,
-    textTransform: 'uppercase',
   },
   gridContainer: {
     flexDirection: 'row',

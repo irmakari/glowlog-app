@@ -30,8 +30,8 @@ export const DbInspector: React.FC<DbInspectorProps> = () => {
 
   const fetchTableRows = useCallback(async (tableName: TableName) => {
     try {
-      setLoading(true);
       const db = await getDb();
+      setLoading(true);
       const result = await db.getAllAsync(`SELECT * FROM ${tableName}`);
       setRows(result || []);
     } catch (err) {
@@ -43,6 +43,8 @@ export const DbInspector: React.FC<DbInspectorProps> = () => {
   }, []);
 
   useEffect(() => {
+    // The inspector mirrors the selected external database table.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchTableRows(activeTable);
   }, [activeTable, fetchTableRows]);
 
@@ -84,7 +86,7 @@ export const DbInspector: React.FC<DbInspectorProps> = () => {
       {loading ? (
         <ActivityIndicator size="small" color={Colors.text} style={{ marginVertical: 10 }} />
       ) : rows.length === 0 ? (
-        <Text style={styles.emptyText}>No rows in table '{activeTable}'.</Text>
+        <Text style={styles.emptyText}>No rows in table &apos;{activeTable}&apos;.</Text>
       ) : (
         <ScrollView style={styles.jsonContainer} nestedScrollEnabled>
           <Text style={styles.jsonText}>{JSON.stringify(rows, null, 2)}</Text>

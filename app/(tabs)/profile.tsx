@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   StyleSheet,
   Text,
@@ -12,9 +12,12 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  Linking,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import Constants from 'expo-constants';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Screen } from '../../src/components/ui/Screen';
 import { GlowCard } from '../../src/components/ui/GlowCard';
 import { PillButton } from '../../src/components/ui/PillButton';
@@ -25,17 +28,66 @@ import { Colors } from '../../src/constants/colors';
 import { settingsService, ExtendedAppSettings, SkinType } from '../../src/services/settingsService';
 import { notificationService } from '../../src/services/notificationService';
 import { backupService } from '../../src/services/backupService';
-import { useTheme, ThemeMode } from '../../src/context/ThemeContext';
+import { useTheme, ThemeMode, DARK_MODE_ENABLED } from '../../src/context/ThemeContext';
 import { useTranslation } from '../../src/hooks/useTranslation';
+import { LanguageMode } from '../../src/context/LanguageContext';
 
-const MORNING_TIMES = ['07:00', '08:00', '08:30', '09:00'];
-const EVENING_TIMES = ['20:00', '20:30', '21:00', '22:00'];
+const timeToDate = (time: string): Date => {
+  const [hours, minutes] = time.split(':').map(Number);
+  const date = new Date();
+  date.setHours(hours || 0, minutes || 0, 0, 0);
+  return date;
+};
+
+const dateToTime = (date: Date): string =>
+  `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+
+const ReminderTimePicker: React.FC<{ value: string; onChange: (time: string) => void }> = ({ value, onChange }) => {
+  const { colors } = useTheme();
+  const { language } = useTranslation();
+  const [androidOpen, setAndroidOpen] = useState(false);
+
+  const handleChange = (event: DateTimePickerEvent, date?: Date) => {
+    if (Platform.OS === 'android') setAndroidOpen(false);
+    if (event.type === 'set' && date) onChange(dateToTime(date));
+  };
+
+  if (Platform.OS === 'ios') {
+    return (
+      <DateTimePicker
+        value={timeToDate(value)}
+        mode="time"
+        display="compact"
+        minuteInterval={5}
+        locale={language === 'tr' ? 'tr-TR' : 'en-US'}
+        themeVariant="light"
+        accentColor={colors.text}
+        onChange={handleChange}
+        style={styles.timePicker}
+      />
+    );
+  }
+
+  return (
+    <>
+      <TouchableOpacity
+        onPress={() => setAndroidOpen(true)}
+        style={[styles.timeChip, { backgroundColor: colors.white }]}
+      >
+        <Text style={[styles.timeChipText, { color: colors.text }]}>{value}</Text>
+      </TouchableOpacity>
+      {androidOpen && (
+        <DateTimePicker value={timeToDate(value)} mode="time" is24Hour onChange={handleChange} />
+      )}
+    </>
+  );
+};
 
 const SKIN_TYPES: { id: SkinType; labelEn: string; labelTr: string; icon: string }[] = [
-  { id: 'Combination', labelEn: 'Combination (Karma)', labelTr: 'Karma', icon: 'partly-sunny-outline' },
-  { id: 'Dry', labelEn: 'Dry (Kuru)', labelTr: 'Kuru', icon: 'water-outline' },
-  { id: 'Oily', labelEn: 'Oily (Yağlı)', labelTr: 'Yağlı', icon: 'sparkles-outline' },
-  { id: 'Sensitive', labelEn: 'Sensitive (Hassas)', labelTr: 'Hassas', icon: 'leaf-outline' },
+  { id: 'Combination', labelEn: 'Combination', labelTr: 'Karma', icon: 'partly-sunny-outline' },
+  { id: 'Dry', labelEn: 'Dry', labelTr: 'Kuru', icon: 'water-outline' },
+  { id: 'Oily', labelEn: 'Oily', labelTr: 'Yağlı', icon: 'sparkles-outline' },
+  { id: 'Sensitive', labelEn: 'Sensitive', labelTr: 'Hassas', icon: 'leaf-outline' },
   { id: 'Normal', labelEn: 'Normal', labelTr: 'Normal', icon: 'sunny-outline' },
 ];
 
@@ -54,8 +106,6 @@ export default function ProfileScreen() {
     themeMode: 'system',
   });
 
-  const [loading, setLoading] = useState(true);
-
   // Edit Profile Modal State
   const [editProfileModalVisible, setEditProfileModalVisible] = useState(false);
   const [editName, setEditName] = useState('');
@@ -65,21 +115,21 @@ export default function ProfileScreen() {
   const [restoreModalVisible, setRestoreModalVisible] = useState(false);
   const [backupJsonText, setBackupJsonText] = useState('');
 
-  useEffect(() => {
-    loadSettings();
-  }, []);
-
-  const loadSettings = async () => {
+  const loadSettings = useCallback(async () => {
     try {
-      setLoading(true);
       const data = await settingsService.getSettings();
       setSettings(data);
     } catch (e) {
       console.error('Failed to load settings:', e);
-    } finally {
-      setLoading(false);
     }
-  };
+  }, []);
+
+  // Reload on focus: onboarding and backup restore change settings outside this screen
+  useFocusEffect(
+    useCallback(() => {
+      loadSettings();
+    }, [loadSettings])
+  );
 
   const handleUpdateHydration = async (delta: number) => {
     const newGoal = Math.max(4, Math.min(20, settings.hydrationGoal + delta));
@@ -87,33 +137,51 @@ export default function ProfileScreen() {
     await settingsService.updateSetting('hydrationGoal', newGoal);
   };
 
-  const handleToggleMorningReminder = async (value: boolean) => {
-    setSettings((prev) => ({ ...prev, morningReminderEnabled: value }));
-    await settingsService.updateSetting('morningReminderEnabled', value);
-    await notificationService.scheduleRoutineReminder('morning', settings.morningReminderTime || '08:00', value);
+  const showNotificationPermissionAlert = () => {
+    Alert.alert(
+      t('profile.notificationsDeniedTitle'),
+      t('profile.notificationsDeniedDesc'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('profile.openSettings'), onPress: () => Linking.openSettings() },
+      ]
+    );
   };
 
-  const handleSelectMorningTime = async (time: string) => {
-    setSettings((prev) => ({ ...prev, morningReminderTime: time }));
-    await settingsService.updateSetting('morningReminderTime', time);
-    if (settings.morningReminderEnabled) {
-      await notificationService.scheduleRoutineReminder('morning', time, true);
+  const updateReminder = async (
+    type: 'morning' | 'evening',
+    enabled: boolean,
+    time: string
+  ) => {
+    const enabledKey = type === 'morning' ? 'morningReminderEnabled' : 'eveningReminderEnabled';
+    const timeKey = type === 'morning' ? 'morningReminderTime' : 'eveningReminderTime';
+
+    setSettings((prev) => ({ ...prev, [enabledKey]: enabled, [timeKey]: time }));
+    const scheduled = await notificationService.scheduleRoutineReminder(type, time, enabled, language);
+
+    if (!scheduled) {
+      // Permission denied: don't leave the switch on for a reminder that will never fire
+      setSettings((prev) => ({ ...prev, [enabledKey]: false }));
+      await settingsService.updateSetting(enabledKey, false);
+      showNotificationPermissionAlert();
+      return;
     }
+
+    await settingsService.updateSetting(enabledKey, enabled);
+    await settingsService.updateSetting(timeKey, time);
   };
 
-  const handleToggleEveningReminder = async (value: boolean) => {
-    setSettings((prev) => ({ ...prev, eveningReminderEnabled: value }));
-    await settingsService.updateSetting('eveningReminderEnabled', value);
-    await notificationService.scheduleRoutineReminder('evening', settings.eveningReminderTime || '21:00', value);
-  };
+  const handleToggleMorningReminder = (value: boolean) =>
+    updateReminder('morning', value, settings.morningReminderTime || '08:00');
 
-  const handleSelectEveningTime = async (time: string) => {
-    setSettings((prev) => ({ ...prev, eveningReminderTime: time }));
-    await settingsService.updateSetting('eveningReminderTime', time);
-    if (settings.eveningReminderEnabled) {
-      await notificationService.scheduleRoutineReminder('evening', time, true);
-    }
-  };
+  const handleSelectMorningTime = (time: string) =>
+    updateReminder('morning', settings.morningReminderEnabled, time);
+
+  const handleToggleEveningReminder = (value: boolean) =>
+    updateReminder('evening', value, settings.eveningReminderTime || '21:00');
+
+  const handleSelectEveningTime = (time: string) =>
+    updateReminder('evening', settings.eveningReminderEnabled, time);
 
   const handleExportBackup = async () => {
     try {
@@ -123,7 +191,7 @@ export default function ProfileScreen() {
         title: 'GlowLog_Backup.json',
       });
     } catch (e: any) {
-      Alert.alert(language === 'tr' ? 'Yedekleme Hatası' : 'Backup Error', e?.message || 'Failed to export backup data.');
+      Alert.alert(t('profile.backupErrorTitle'), e?.message || t('profile.backupErrorDesc'));
     }
   };
 
@@ -137,12 +205,10 @@ export default function ProfileScreen() {
     const trimmed = editName.trim();
     setSettings((prev) => ({
       ...prev,
-      userName: trimmed || prev.userName,
+      userName: trimmed,
       skinType: editSkinType,
     }));
-    if (trimmed) {
-      await settingsService.updateSetting('userName', trimmed);
-    }
+    await settingsService.updateSetting('userName', trimmed);
     await settingsService.updateSetting('skinType', editSkinType);
     setEditProfileModalVisible(false);
   };
@@ -152,22 +218,35 @@ export default function ProfileScreen() {
     setRestoreModalVisible(true);
   };
 
-  const handleExecuteRestore = async () => {
-    if (!backupJsonText.trim()) return;
+  const runRestore = async () => {
     try {
       await backupService.importBackup(backupJsonText.trim());
       setRestoreModalVisible(false);
-      Alert.alert(
-        language === 'tr' ? 'Başarılı ✨' : 'Success ✨',
-        language === 'tr' ? 'Veri yedeğiniz başarıyla geri yüklendi.' : 'Your data backup has been successfully restored.'
-      );
-      loadSettings();
+
+      // Apply restored preferences app-wide, then re-create reminders from them
+      const restored = await settingsService.getSettings();
+      setSettings(restored);
+      await setLanguage(restored.language ?? 'tr');
+      await setThemeMode(restored.themeMode);
+      await notificationService.syncRemindersFromSettings();
+
+      Alert.alert(t('profile.restoreSuccessTitle'), t('profile.restoreSuccessDesc'));
     } catch (err: any) {
-      Alert.alert(
-        language === 'tr' ? 'Yükleme Başarısız' : 'Import Failed',
-        err?.message || (language === 'tr' ? 'Geçersiz yedek verisi formatı.' : 'Invalid backup data format.')
-      );
+      Alert.alert(t('profile.restoreFailedTitle'), err?.message || t('profile.restoreFailedDesc'));
     }
+  };
+
+  const handleExecuteRestore = () => {
+    if (!backupJsonText.trim()) return;
+    // Restoring replaces everything on this device, so confirm first
+    Alert.alert(
+      t('profile.restoreConfirmTitle'),
+      t('profile.restoreConfirmDesc'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('profile.restoreConfirmAction'), style: 'destructive', onPress: runRestore },
+      ]
+    );
   };
 
   const getSkinTypeBadgeLabel = (st?: SkinType) => {
@@ -186,332 +265,248 @@ export default function ProfileScreen() {
   };
 
   return (
-    <Screen scrollable padding={16}>
+    <>
+      <Screen scrollable padding={16}>
       <View style={styles.header}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Text style={[Typography.h1, { color: colors.text }]}>{t('profile.title')}</Text>
-          <Ionicons name="sparkles" size={20} color="#E59935" style={{ marginLeft: 6 }} />
+          <Text style={[Typography.h1, styles.pageTitle, { color: colors.text }]}>{t('profile.title')}</Text>
         </View>
-        <Text style={[Typography.subtitle, { color: colors.textSecondary }]}>
+        <Text style={[Typography.subtitle, styles.pageSubtitle, { color: colors.textSecondary }]}>
           {t('profile.subtitle')}
         </Text>
       </View>
 
       {/* User Profile Card */}
-      <GlowCard variant="pink" padding={Spacing.lg} style={styles.card}>
+      <GlowCard variant="pink" padding={Spacing.lg} style={styles.card} onPress={handleOpenEditProfile}>
         <View style={styles.rowBetween}>
-          <TouchableOpacity
-            style={styles.flex1}
-            activeOpacity={0.7}
-            onPress={handleOpenEditProfile}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={[Typography.h2, { color: colors.text }]}>
-                {settings.userName ? settings.userName : t('profile.defaultName')}
+          <View style={[styles.avatar, { backgroundColor: colors.white }]}>
+            <Text style={[styles.avatarText, { color: colors.text }]}>
+              {(settings.userName || t('profile.defaultName')).trim().charAt(0).toLocaleUpperCase(language === 'tr' ? 'tr-TR' : 'en-US')}
+            </Text>
+          </View>
+          <View style={styles.flex1}>
+            <Text style={[Typography.h2, styles.profileName, { color: colors.text }]} numberOfLines={1}>
+              {settings.userName ? settings.userName : t('profile.defaultName')}
+            </Text>
+            <View style={[styles.skinBadgeBtn, { backgroundColor: colors.text }]}>
+              <Ionicons name="sparkles" size={11} color={colors.background} style={{ marginRight: 4 }} />
+              <Text style={[styles.skinBadgeText, { color: colors.background }]}>
+                {getSkinTypeBadgeLabel(settings.skinType)}
               </Text>
-              <Ionicons name="heart" size={16} color="#E86339" style={{ marginLeft: 6 }} />
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
-              <View
-                style={[
-                  styles.skinBadgeBtn,
-                  { backgroundColor: isDark ? colors.white : Colors.text },
-                ]}
-              >
-                <Ionicons
-                  name="sparkles"
-                  size={12}
-                  color={isDark ? colors.text : Colors.white}
-                  style={{ marginRight: 4 }}
-                />
-                <Text
-                  style={[
-                    styles.skinBadgeText,
-                    { color: isDark ? colors.text : Colors.white },
-                  ]}
-                >
-                  {getSkinTypeBadgeLabel(settings.skinType)}
-                </Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-          <IconButton
-            icon={<Ionicons name="pencil" size={16} color={colors.text} />}
-            onPress={handleOpenEditProfile}
-            backgroundColor={colors.white}
-            size={36}
-          />
+          </View>
+          <View style={[styles.editCircle, { backgroundColor: colors.white }]}>
+            <Ionicons name="pencil" size={15} color={colors.text} />
+          </View>
         </View>
       </GlowCard>
 
-      {/* Daily Hydration Goal Setting */}
-      <GlowCard variant="cream" padding={Spacing.lg} style={styles.card}>
+      {/* Daily Hydration Goal */}
+      <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>{t('profile.goalsSection')}</Text>
+      <GlowCard variant="softBlue" padding={Spacing.lg} style={styles.card}>
         <View style={styles.rowBetween}>
+          <View style={[styles.rowIconCircle, { backgroundColor: colors.white }]}>
+            <Ionicons name="water" size={16} color="#5294E2" />
+          </View>
           <View style={styles.flex1}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={[Typography.h3, { color: colors.text }]}>{t('profile.hydrationGoalTitle')}</Text>
-              <Ionicons name="water" size={16} color="#5294E2" style={{ marginLeft: 6 }} />
-            </View>
-            <Text style={[styles.cardSubtext, { color: colors.textSecondary }]}>
-              {t('profile.hydrationGoalDesc')}
+            <Text style={[styles.rowTitle, { color: colors.text }]}>{t('profile.hydrationGoalTitle')}</Text>
+            <Text style={[styles.rowSubtitle, { color: colors.textSecondary }]}>
+              {t('profile.hydrationGoalValue', { count: settings.hydrationGoal, liters: (settings.hydrationGoal * 0.25).toFixed(1) })}
             </Text>
           </View>
-          <View
-            style={[
-              styles.stepperContainer,
-              { backgroundColor: colors.white, borderColor: isDark ? colors.border : 'transparent', borderWidth: isDark ? 1 : 0 },
-            ]}
-          >
-            <IconButton
-              icon={<Ionicons name="remove" size={18} color={colors.text} />}
+          <View style={[styles.stepperContainer, { backgroundColor: colors.white }]}>
+            <TouchableOpacity
+              activeOpacity={0.7}
               onPress={() => handleUpdateHydration(-1)}
-              backgroundColor={colors.white}
-              size={36}
-            />
+              disabled={settings.hydrationGoal <= 4}
+              accessibilityRole="button"
+              accessibilityLabel={t('profile.decreaseGoal')}
+              style={[styles.stepperBtn, settings.hydrationGoal <= 4 && styles.disabled]}
+            >
+              <Ionicons name="remove" size={16} color={colors.text} />
+            </TouchableOpacity>
             <Text style={[styles.stepperValue, { color: colors.text }]}>{settings.hydrationGoal}</Text>
-            <IconButton
-              icon={<Ionicons name="add" size={18} color={colors.text} />}
+            <TouchableOpacity
+              activeOpacity={0.7}
               onPress={() => handleUpdateHydration(1)}
-              backgroundColor={colors.white}
-              size={36}
-            />
+              disabled={settings.hydrationGoal >= 20}
+              accessibilityRole="button"
+              accessibilityLabel={t('profile.increaseGoal')}
+              style={[styles.stepperBtn, settings.hydrationGoal >= 20 && styles.disabled]}
+            >
+              <Ionicons name="add" size={16} color={colors.text} />
+            </TouchableOpacity>
           </View>
         </View>
       </GlowCard>
 
       {/* Routine Notifications */}
-      <GlowCard variant="softLilac" padding={Spacing.lg} style={styles.card}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-          <Text style={[Typography.h3, { color: colors.text }]}>{t('profile.remindersTitle')}</Text>
-          <Ionicons name="notifications" size={16} color="#7C5CBF" style={{ marginLeft: 6 }} />
-        </View>
-        <Text style={[styles.cardSubtext, { color: colors.textSecondary }]}>
-          {t('profile.remindersDesc')}
-        </Text>
-
-        {/* Morning Reminder */}
-        <View style={[styles.reminderSection, { borderBottomColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]}>
-          <View style={styles.rowBetween}>
-            <View style={styles.rowIcon}>
-              <Ionicons name="sunny-outline" size={20} color="#E59935" style={{ marginRight: 6 }} />
-              <Text style={[styles.reminderTitle, { color: colors.text }]}>{t('profile.morningReminder')}</Text>
+      <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>{t('profile.remindersTitle')}</Text>
+      <GlowCard variant="softLilac" padding={0} style={styles.card}>
+        {([
+          {
+            type: 'morning' as const,
+            icon: 'sunny-outline' as const,
+            iconColor: '#E59935',
+            title: t('profile.morningReminder'),
+            enabled: settings.morningReminderEnabled,
+            time: settings.morningReminderTime || '08:00',
+            onToggle: handleToggleMorningReminder,
+            onTime: handleSelectMorningTime,
+          },
+          {
+            type: 'evening' as const,
+            icon: 'moon-outline' as const,
+            iconColor: '#7C5CBF',
+            title: t('profile.eveningReminder'),
+            enabled: settings.eveningReminderEnabled,
+            time: settings.eveningReminderTime || '21:00',
+            onToggle: handleToggleEveningReminder,
+            onTime: handleSelectEveningTime,
+          },
+        ]).map((reminder, index) => (
+          <View
+            key={reminder.type}
+            style={[styles.listRow, index === 0 && [styles.listDivider, { borderBottomColor: 'rgba(21,21,21,0.06)' }]]}
+          >
+            <View style={[styles.rowIconCircle, { backgroundColor: colors.white }]}>
+              <Ionicons name={reminder.icon} size={16} color={reminder.iconColor} />
             </View>
+            <View style={styles.flex1}>
+              <Text style={[styles.rowTitle, { color: colors.text }]}>{reminder.title}</Text>
+              <Text style={[styles.rowSubtitle, { color: colors.textSecondary }]}>
+                {reminder.enabled ? t('profile.reminderAt', { time: reminder.time }) : t('profile.reminderOff')}
+              </Text>
+            </View>
+            {reminder.enabled && (
+              <ReminderTimePicker value={reminder.time} onChange={reminder.onTime} />
+            )}
             <Switch
-              value={settings.morningReminderEnabled}
-              onValueChange={handleToggleMorningReminder}
+              value={reminder.enabled}
+              onValueChange={reminder.onToggle}
               trackColor={{ false: colors.border, true: Colors.sageGreen }}
-              thumbColor={colors.white}
+              thumbColor={Colors.white}
             />
           </View>
-          {settings.morningReminderEnabled && (
-            <View style={styles.timeChipsRow}>
-              {MORNING_TIMES.map((t) => (
-                <TouchableOpacity
-                  key={t}
-                  style={[
-                    styles.timeChip,
-                    {
-                      backgroundColor: settings.morningReminderTime === t ? colors.text : colors.white,
-                      borderColor: settings.morningReminderTime === t ? colors.text : colors.border,
-                    },
-                  ]}
-                  onPress={() => handleSelectMorningTime(t)}
-                >
-                  <Text
-                    style={[
-                      styles.timeChipText,
-                      {
-                        color: settings.morningReminderTime === t ? (isDark ? colors.background : Colors.white) : colors.text,
-                      },
-                    ]}
-                  >
-                    {t}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-        </View>
-
-        {/* Evening Reminder */}
-        <View style={[styles.reminderSection, { borderBottomWidth: 0, paddingBottom: 0 }]}>
-          <View style={styles.rowBetween}>
-            <View style={styles.rowIcon}>
-              <Ionicons name="moon-outline" size={20} color="#7C5CBF" style={{ marginRight: 6 }} />
-              <Text style={[styles.reminderTitle, { color: colors.text }]}>{t('profile.eveningReminder')}</Text>
-            </View>
-            <Switch
-              value={settings.eveningReminderEnabled}
-              onValueChange={handleToggleEveningReminder}
-              trackColor={{ false: colors.border, true: Colors.sageGreen }}
-              thumbColor={colors.white}
-            />
-          </View>
-          {settings.eveningReminderEnabled && (
-            <View style={styles.timeChipsRow}>
-              {EVENING_TIMES.map((t) => (
-                <TouchableOpacity
-                  key={t}
-                  style={[
-                    styles.timeChip,
-                    {
-                      backgroundColor: settings.eveningReminderTime === t ? colors.text : colors.white,
-                      borderColor: settings.eveningReminderTime === t ? colors.text : colors.border,
-                    },
-                  ]}
-                  onPress={() => handleSelectEveningTime(t)}
-                >
-                  <Text
-                    style={[
-                      styles.timeChipText,
-                      {
-                        color: settings.eveningReminderTime === t ? (isDark ? colors.background : Colors.white) : colors.text,
-                      },
-                    ]}
-                  >
-                    {t}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-        </View>
+        ))}
       </GlowCard>
 
-      {/* Appearance / Theme Selector */}
-      <GlowCard variant="softBlue" padding={Spacing.lg} style={styles.card}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-          <Text style={[Typography.h3, { color: colors.text }]}>{t('profile.appearanceTitle')}</Text>
-          <Ionicons name="color-palette" size={16} color="#5294E2" style={{ marginLeft: 6 }} />
-        </View>
-        <Text style={[styles.cardSubtext, { color: colors.textSecondary }]}>{t('profile.appearanceDesc')}</Text>
-        <View style={styles.themeChipsRow}>
-          {[
-            { id: 'light', label: t('profile.themeLight'), icon: 'sunny-outline' },
-            { id: 'dark', label: t('profile.themeDark'), icon: 'moon-outline' },
-            { id: 'system', label: t('profile.themeSystem'), icon: 'settings-outline' },
-          ].map((modeOpt) => {
-            const isSelected = themeMode === modeOpt.id;
-            return (
-              <TouchableOpacity
-                key={modeOpt.id}
-                style={[
-                  styles.themeChip,
-                  {
-                    backgroundColor: isSelected ? colors.text : colors.white,
-                    borderColor: isSelected ? colors.text : colors.border,
-                  },
-                ]}
-                onPress={() => setThemeMode(modeOpt.id as ThemeMode)}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Ionicons
-                    name={modeOpt.icon as any}
-                    size={14}
-                    color={isSelected ? (isDark ? colors.background : Colors.white) : colors.text}
-                  />
-                  <Text
-                    style={[
-                      styles.themeChipText,
-                      {
-                        color: isSelected ? (isDark ? colors.background : Colors.white) : colors.text,
-                      },
-                    ]}
-                  >
+      {/* Appearance / Theme Selector (hidden while dark mode is locked off) */}
+      {DARK_MODE_ENABLED && (
+        <GlowCard variant="white" padding={Spacing.lg} style={styles.card}>
+          <Text style={[styles.rowTitle, { color: colors.text }]}>{t('profile.appearanceTitle')}</Text>
+          <View style={styles.segmentRow}>
+            {([
+              { id: 'light', label: t('profile.themeLight') },
+              { id: 'dark', label: t('profile.themeDark') },
+              { id: 'system', label: t('profile.themeSystem') },
+            ] as { id: ThemeMode; label: string }[]).map((modeOpt) => {
+              const isSelected = themeMode === modeOpt.id;
+              return (
+                <TouchableOpacity
+                  key={modeOpt.id}
+                  style={[styles.segment, isSelected && { backgroundColor: colors.text }]}
+                  onPress={() => setThemeMode(modeOpt.id)}
+                >
+                  <Text style={[styles.segmentText, { color: isSelected ? colors.background : colors.text }]}>
                     {modeOpt.label}
                   </Text>
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      </GlowCard>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </GlowCard>
+      )}
 
-      {/* Language Selector */}
-      <GlowCard variant="cream" padding={Spacing.lg} style={styles.card}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-          <Text style={[Typography.h3, { color: colors.text }]}>{t('profile.languageTitle')}</Text>
-          <Ionicons name="language" size={16} color="#E59935" style={{ marginLeft: 6 }} />
-        </View>
-        <Text style={[styles.cardSubtext, { color: colors.textSecondary }]}>{t('profile.languageDesc')}</Text>
-        <View style={styles.themeChipsRow}>
-          {[
-            { id: 'en', label: t('profile.langEnglish') },
-            { id: 'tr', label: t('profile.langTurkish') },
-          ].map((langOpt) => {
-            const isSelected = language === langOpt.id;
-            return (
-              <TouchableOpacity
-                key={langOpt.id}
-                style={[
-                  styles.themeChip,
-                  {
-                    backgroundColor: isSelected ? colors.text : colors.white,
-                    borderColor: isSelected ? colors.text : colors.border,
-                  },
-                ]}
-                onPress={() => setLanguage(langOpt.id as any)}
-              >
-                <Text
-                  style={[
-                    styles.themeChipText,
-                    {
-                      color: isSelected ? (isDark ? colors.background : Colors.white) : colors.text,
-                    },
-                  ]}
+      {/* App settings: language + data */}
+      <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>{t('profile.appSection')}</Text>
+      <GlowCard variant="white" padding={0} style={styles.card}>
+        <View style={[styles.listRow, styles.listDivider, { borderBottomColor: colors.border }]}>
+          <View style={[styles.rowIconCircle, { backgroundColor: colors.background }]}>
+            <Ionicons name="language" size={16} color="#E59935" />
+          </View>
+          <Text style={[styles.rowTitle, styles.flex1, { color: colors.text }]}>{t('profile.languageTitle')}</Text>
+          <View style={[styles.segmentRow, styles.segmentCompact, { backgroundColor: colors.background }]}>
+            {([
+              { id: 'tr', label: 'TR' },
+              { id: 'en', label: 'EN' },
+            ] as { id: LanguageMode; label: string }[]).map((langOpt) => {
+              const isSelected = language === langOpt.id;
+              return (
+                <TouchableOpacity
+                  key={langOpt.id}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: isSelected }}
+                  accessibilityLabel={langOpt.id === 'tr' ? 'Türkçe' : 'English'}
+                  style={[styles.segment, isSelected && { backgroundColor: colors.text }]}
+                  onPress={() => setLanguage(langOpt.id)}
                 >
-                  {langOpt.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+                  <Text style={[styles.segmentText, { color: isSelected ? colors.background : colors.text }]}>
+                    {langOpt.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
-      </GlowCard>
 
-      {/* Data Backup & Restore */}
-      <GlowCard variant="white" padding={Spacing.lg} style={styles.card}>
-        <Text style={[Typography.h3, { color: colors.text }]}>{t('profile.backupTitle')} 💾</Text>
-        <Text style={[styles.cardSubtext, { color: colors.textSecondary }]}>
-          {t('profile.backupDesc')}
-        </Text>
-        <View style={styles.backupBtnRow}>
-          <PillButton
-            title={t('profile.exportData')}
-            onPress={handleExportBackup}
-            variant="secondary"
-            size="md"
-            style={styles.flex1}
-          />
-          <PillButton
-            title={t('profile.importData')}
-            onPress={handleOpenRestoreBackup}
-            variant="outline"
-            size="md"
-            style={styles.flex1}
-          />
-        </View>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={handleExportBackup}
+          accessibilityRole="button"
+          style={[styles.listRow, styles.listDivider, { borderBottomColor: colors.border }]}
+        >
+          <View style={[styles.rowIconCircle, { backgroundColor: colors.background }]}>
+            <Ionicons name="share-outline" size={16} color={colors.text} />
+          </View>
+          <View style={styles.flex1}>
+            <Text style={[styles.rowTitle, { color: colors.text }]}>{t('profile.exportData')}</Text>
+            <Text style={[styles.rowSubtitle, { color: colors.textSecondary }]}>{t('profile.exportDesc')}</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={handleOpenRestoreBackup}
+          accessibilityRole="button"
+          style={styles.listRow}
+        >
+          <View style={[styles.rowIconCircle, { backgroundColor: colors.background }]}>
+            <Ionicons name="download-outline" size={16} color={colors.text} />
+          </View>
+          <View style={styles.flex1}>
+            <Text style={[styles.rowTitle, { color: colors.text }]}>{t('profile.importData')}</Text>
+            <Text style={[styles.rowSubtitle, { color: colors.textSecondary }]}>{t('profile.importDesc')}</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+        </TouchableOpacity>
       </GlowCard>
 
       {/* Developer Playground if __DEV__ */}
       {__DEV__ && (
-        <GlowCard variant="butterYellow" padding={Spacing.lg} style={styles.card}>
-          <Text style={[Typography.h3, { color: colors.text }]}>
-            {language === 'tr' ? 'Geliştirici Alanı 🛠️' : 'Developer Playground 🛠️'}
-          </Text>
-          <Text style={[styles.cardSubtext, { color: colors.textSecondary }]}>
-            {language === 'tr' ? 'Bileşen galerisini görsel olarak test edin.' : 'Visually inspect all GlowLog components & states.'}
-          </Text>
-          <PillButton
-            title={language === 'tr' ? 'Bileşen Galerisini Aç' : 'Open Component Gallery'}
-            onPress={() => router.push('/dev/components' as any)}
-            variant="primary"
-            size="md"
-            style={{ marginTop: Spacing.md }}
-          />
+        <GlowCard
+          variant="butterYellow"
+          padding={0}
+          style={styles.card}
+          onPress={() => router.push('/dev/components' as any)}
+        >
+          <View style={styles.listRow}>
+            <View style={[styles.rowIconCircle, { backgroundColor: colors.white }]}>
+              <Ionicons name="construct-outline" size={16} color={colors.text} />
+            </View>
+            <Text style={[styles.rowTitle, styles.flex1, { color: colors.text }]}>
+              {language === 'tr' ? 'Bileşen Galerisi (geliştirici)' : 'Component Gallery (dev)'}
+            </Text>
+            <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+          </View>
         </GlowCard>
       )}
 
-    </Screen>
+      <Text style={[styles.versionText, { color: colors.textMuted }]}>
+        GlowLog {Constants.expoConfig?.version ?? ''}
+      </Text>
+      </Screen>
 
     {/* Edit Profile Modal */}
     <Modal
@@ -546,7 +541,6 @@ export default function ProfileScreen() {
                   <Text style={[Typography.h2, { color: colors.text, fontSize: 20 }]}>
                     {language === 'tr' ? 'Profili Düzenle' : 'Edit Profile'}
                   </Text>
-                  <Ionicons name="sparkles" size={16} color="#E59935" style={{ marginLeft: 6 }} />
                 </View>
                 <Text style={[Typography.caption, { color: colors.textSecondary, marginTop: 3 }]}>
                   {language === 'tr'
@@ -752,6 +746,21 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
+  // Matches the Shelf and History tab headers
+  pageTitle: {
+    fontSize: 24,
+    lineHeight: 28,
+  },
+  pageSubtitle: {
+    fontSize: 13,
+    marginTop: 2,
+  },
+  versionText: {
+    ...Typography.caption,
+    fontSize: 11,
+    textAlign: 'center',
+    marginTop: Spacing.md,
+  },
   header: {
     marginTop: Spacing.xs,
     marginBottom: Spacing.md,
@@ -759,94 +768,138 @@ const styles = StyleSheet.create({
   card: {
     marginVertical: Spacing.xs,
   },
-  cardSubtext: {
-    ...Typography.body,
-    fontSize: 13,
-    marginTop: 2,
-    marginBottom: Spacing.xs,
+  sectionLabel: {
+    ...Typography.badge,
+    fontSize: 11,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginTop: Spacing.md,
+    marginBottom: 2,
+    paddingHorizontal: 4,
   },
   rowBetween: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: Spacing.md,
   },
   flex1: {
     flex: 1,
+    minWidth: 0,
+  },
+  disabled: {
+    opacity: 0.3,
+  },
+  avatar: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
+    ...Typography.h2,
+    fontSize: 22,
+  },
+  profileName: {
+    fontSize: 20,
+  },
+  editCircle: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  skinBadgeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 10,
+    marginTop: 4,
+  },
+  skinBadgeText: {
+    ...Typography.caption,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  listRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    minHeight: 64,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+  },
+  listDivider: {
+    borderBottomWidth: 1,
+  },
+  rowIconCircle: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rowTitle: {
+    ...Typography.bodyBold,
+    fontSize: 15,
+  },
+  rowSubtitle: {
+    ...Typography.caption,
+    fontSize: 12,
+    marginTop: 1,
   },
   stepperContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 20,
-    padding: 2,
-    marginLeft: 8,
+    borderRadius: Spacing.radiusPill,
+    padding: 3,
+  },
+  stepperBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   stepperValue: {
-    ...Typography.h2,
-    fontSize: 16,
-    paddingHorizontal: 12,
-  },
-  reminderSection: {
-    marginTop: Spacing.sm,
-    paddingBottom: Spacing.sm,
-    borderBottomWidth: 1,
-  },
-  rowIcon: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  reminderTitle: {
     ...Typography.h3,
-    fontSize: 14,
+    fontSize: 16,
+    minWidth: 26,
+    textAlign: 'center',
   },
-  timeChipsRow: {
-    flexDirection: 'row',
-    marginTop: Spacing.xs,
-    gap: 8,
+  timePicker: {
+    marginRight: -4,
   },
   timeChip: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
-    borderWidth: 1,
   },
   timeChipText: {
-    ...Typography.body,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  themeChipsRow: {
-    flexDirection: 'row',
-    marginTop: Spacing.sm,
-    gap: 8,
-  },
-  themeChip: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 10,
-    borderRadius: 14,
-    borderWidth: 1,
-  },
-  themeChipText: {
-    ...Typography.body,
+    ...Typography.bodyBold,
     fontSize: 13,
-    fontWeight: '600',
   },
-  backupBtnRow: {
+  segmentRow: {
     flexDirection: 'row',
-    marginTop: Spacing.md,
-    gap: 10,
+    borderRadius: Spacing.radiusPill,
+    padding: 3,
+    marginTop: Spacing.sm,
   },
-  skinBadgeBtn: {
-    flexDirection: 'row',
+  segmentCompact: {
+    marginTop: 0,
+  },
+  segment: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: Spacing.radiusPill,
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
   },
-  skinBadgeText: {
-    ...Typography.caption,
-    fontSize: 12,
-    fontWeight: '700',
+  segmentText: {
+    ...Typography.bodyBold,
+    fontSize: 13,
   },
   modalBackdropContainer: {
     flex: 1,
@@ -856,7 +909,7 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
   },
   modalBackdrop: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   modalKeyboardAvoid: {
     width: '100%',
@@ -932,4 +985,3 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
 });
-

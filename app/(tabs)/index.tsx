@@ -1,21 +1,20 @@
 import React, { useMemo, useState, useCallback } from 'react';
-import { StyleSheet, Text, View, Alert } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Screen } from '../../src/components/ui/Screen';
-import { IconButton } from '../../src/components/ui/IconButton';
 import { GlowScoreCard } from '../../src/components/dashboard/GlowScoreCard';
 import { StreakCard } from '../../src/components/dashboard/StreakCard';
 import { RoutineCard } from '../../src/components/routine/RoutineCard';
 import { WaterTracker } from '../../src/components/hydration/WaterTracker';
 import { ProductAlertCard } from '../../src/components/dashboard/ProductAlertCard';
 import { useTodayRoutine } from '../../src/features/routines/hooks/useTodayRoutine';
-import { getTimeBasedGreeting } from '../../src/utils/glowScore';
 import { Typography } from '../../src/constants/typography';
 import { Spacing } from '../../src/constants/spacing';
 import { Colors } from '../../src/constants/colors';
 import { useTranslation } from '../../src/hooks/useTranslation';
 import { useTheme } from '../../src/context/ThemeContext';
+import { parseDateKey } from '../../src/features/routines/utils/routineDate.utils';
 
 export default function TodayScreen() {
   const router = useRouter();
@@ -33,12 +32,16 @@ export default function TodayScreen() {
   );
 
   const {
+    todayDateStr,
     morningSteps,
     eveningSteps,
     hydrationCurrent,
     hydrationGoal,
+    hydrationWeeklyAverage,
+    expiredProductNames,
     userName,
     streakDays,
+    completedDates,
     glowScoreBreakdown,
     toggleStep,
     completeAllSteps,
@@ -46,26 +49,27 @@ export default function TodayScreen() {
     decrementWater,
   } = useTodayRoutine();
 
-  const { greetingEn, greetingTr, iconName, iconColor } = useMemo(() => {
+  // Re-evaluated on focus and on day change so the greeting matches the current time of day
+  const { greetingKey, iconName, iconColor } = useMemo(() => {
     const hours = new Date().getHours();
     if (hours < 12) {
-      return { greetingEn: 'Good morning', greetingTr: 'Günaydın', iconName: 'sunny-outline', iconColor: '#E59935' };
-    } else if (hours < 17) {
-      return { greetingEn: 'Good afternoon', greetingTr: 'Tünaydın', iconName: 'sunny', iconColor: '#E59935' };
-    } else {
-      return { greetingEn: 'Good evening', greetingTr: 'İyi akşamlar', iconName: 'moon-outline', iconColor: '#7C5CBF' };
+      return { greetingKey: 'today.greetingMorning', iconName: 'sunny-outline', iconColor: '#E59935' };
+    } else if (hours < 18) {
+      return { greetingKey: 'today.greetingAfternoon', iconName: 'sunny', iconColor: '#E59935' };
     }
-  }, []);
+    return { greetingKey: 'today.greetingEvening', iconName: 'moon-outline', iconColor: '#7C5CBF' };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [todayDateStr, isFocused]);
 
-  const greeting = language === 'tr' ? greetingTr : greetingEn;
+  const greeting = t(greetingKey);
 
   const formattedDate = useMemo(() => {
-    return new Date().toLocaleDateString(language === 'tr' ? 'tr-TR' : 'en-US', {
+    return parseDateKey(todayDateStr).toLocaleDateString(language === 'tr' ? 'tr-TR' : 'en-US', {
       weekday: 'long',
       month: 'long',
       day: 'numeric',
     });
-  }, [language]);
+  }, [language, todayDateStr]);
 
   const displayGreeting = userName ? `${greeting}, ${userName}` : greeting;
 
@@ -80,12 +84,6 @@ export default function TodayScreen() {
             <Ionicons name={iconName as any} size={22} color={iconColor} style={{ marginLeft: 6 }} />
           </View>
         </View>
-        <IconButton
-          icon={<Ionicons name="person-outline" size={18} color={colors.text} />}
-          onPress={() => router.push('/(tabs)/profile')}
-          backgroundColor={colors.white}
-          size={36}
-        />
       </View>
 
       {/* Hero Glow Score Card */}
@@ -98,7 +96,7 @@ export default function TodayScreen() {
       />
 
       {/* 7-Day Horizontal Streak Strip (Placed above Morning Routine) */}
-      <StreakCard streakDays={streakDays} />
+      <StreakCard streakDays={streakDays} completedDates={completedDates} todayKey={todayDateStr} />
 
       {/* Morning Routine Card */}
       <RoutineCard
@@ -120,17 +118,24 @@ export default function TodayScreen() {
       <WaterTracker
         current={hydrationCurrent}
         goal={hydrationGoal}
+        weeklyAverage={hydrationWeeklyAverage}
         onIncrement={incrementWater}
         onDecrement={decrementWater}
       />
 
-      {/* Product Notice Card */}
-      <ProductAlertCard
-        title="Shelf check"
-        message="Check opened product dates on your Shelf periodically."
-        actionText="View Shelf"
-        onAction={() => router.push('/(tabs)/shelf')}
-      />
+      {/* Product Notice Card: only when something on the shelf is past its PAO */}
+      {expiredProductNames.length > 0 && (
+        <ProductAlertCard
+          title={t('today.shelfCheck')}
+          message={
+            expiredProductNames.length === 1
+              ? t('today.expiredProductOne', { name: expiredProductNames[0] })
+              : t('today.expiredProductMany', { count: expiredProductNames.length })
+          }
+          actionText={t('today.viewShelf')}
+          onAction={() => router.push('/(tabs)/shelf')}
+        />
+      )}
     </Screen>
   );
 }

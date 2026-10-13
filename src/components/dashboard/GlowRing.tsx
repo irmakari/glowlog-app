@@ -14,6 +14,8 @@ import Animated, {
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { GlowScoreBreakdown } from '../../types';
+import { useTheme } from '../../context/ThemeContext';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface GlowRingProps {
   scoreBreakdown: GlowScoreBreakdown;
@@ -26,6 +28,8 @@ export const GlowRing: React.FC<GlowRingProps> = ({
   size = 210,
   isFocused = true,
 }) => {
+  const { colors, isDark } = useTheme();
+  const { t } = useTranslation();
   const scaleVal = useSharedValue(0.92);
   const opacityVal = useSharedValue(0);
   const breathVal = useSharedValue(1);
@@ -37,7 +41,7 @@ export const GlowRing: React.FC<GlowRingProps> = ({
       scaleVal.value = withSpring(1, { damping: 13, stiffness: 90 });
       opacityVal.value = withTiming(1, { duration: 350 });
     }
-  }, [isFocused, scoreBreakdown.score]);
+  }, [isFocused, opacityVal, scaleVal, scoreBreakdown.score]);
 
   useEffect(() => {
     breathVal.value = withRepeat(
@@ -48,7 +52,7 @@ export const GlowRing: React.FC<GlowRingProps> = ({
       -1,
       false
     );
-  }, []);
+  }, [breathVal]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scaleVal.value * breathVal.value }],
@@ -119,7 +123,7 @@ export const GlowRing: React.FC<GlowRingProps> = ({
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           fill="none"
-          opacity={routineActive ? 1 : 0.4}
+          opacity={routineActive ? 1 : (isDark ? 0.68 : 0.4)}
         />
 
         {/* Arc 2: Soft Lilac (Evening Routine) - Bottom Right: 100° to 170° */}
@@ -129,7 +133,7 @@ export const GlowRing: React.FC<GlowRingProps> = ({
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           fill="none"
-          opacity={routineActive ? 1 : 0.4}
+          opacity={routineActive ? 1 : (isDark ? 0.68 : 0.4)}
         />
 
         {/* Arc 3: Soft Blue (Hydration) - Bottom Left: 190° to 260° */}
@@ -139,7 +143,7 @@ export const GlowRing: React.FC<GlowRingProps> = ({
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           fill="none"
-          opacity={hydrationActive ? 1 : 0.4}
+          opacity={hydrationActive ? 1 : (isDark ? 0.68 : 0.4)}
         />
 
         {/* Arc 4: Sage Green (Streak) - Top Left: 280° to 350° */}
@@ -149,7 +153,7 @@ export const GlowRing: React.FC<GlowRingProps> = ({
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           fill="none"
-          opacity={streakActive ? 1 : 0.4}
+          opacity={streakActive ? 1 : (isDark ? 0.68 : 0.4)}
         />
       </Svg>
 
@@ -182,13 +186,16 @@ export const GlowRing: React.FC<GlowRingProps> = ({
             width: innerSize,
             height: innerSize,
             borderRadius: innerSize / 2,
+            backgroundColor: colors.white,
+            borderWidth: isDark ? 1 : 0,
+            borderColor: colors.border,
           },
         ]}
       >
-        <Text style={[styles.scoreText, { fontSize: scoreFontSize, lineHeight: scoreFontSize + 4 }]}>
+        <Text style={[styles.scoreText, { fontSize: scoreFontSize, lineHeight: scoreFontSize + 4, color: colors.text }]}>
           {scoreBreakdown.score.toFixed(1)}
         </Text>
-        <Text style={styles.scoreLabel}>today's glow</Text>
+        <Text style={[styles.scoreLabel, { color: colors.textSecondary }]}>{t('today.glowTitle')}</Text>
 
         {perfectGlow && (
           <View style={styles.sparkleBadge}>

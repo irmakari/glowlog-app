@@ -1,4 +1,4 @@
-import { getLocalDateString } from '../../routines/utils/routineDate.utils';
+import { calculateStreakFromLogs, parseDateKey } from '../../routines/utils/routineDate.utils';
 
 /**
  * Calculates current streak and best streak from array of completed date strings (YYYY-MM-DD)
@@ -22,8 +22,7 @@ export function calculateStreaks(completedDates: string[]): {
   let lastDate: Date | null = null;
 
   for (const dateStr of uniqueSorted) {
-    const [y, m, d] = dateStr.split('-').map(Number);
-    const currentDate = new Date(y, m - 1, d);
+    const currentDate = parseDateKey(dateStr);
 
     if (lastDate === null) {
       tempStreak = 1;
@@ -42,29 +41,8 @@ export function calculateStreaks(completedDates: string[]): {
     }
   }
 
-  // 2. Calculate Current Streak (going backward from today or yesterday)
-  const todayStr = getLocalDateString();
-  const dateSet = new Set(uniqueSorted);
-
-  let checkDate = new Date();
-  checkDate.setHours(0, 0, 0, 0);
-
-  // If today is not completed yet, allow streak to continue from yesterday
-  const checkStr = getLocalDateString(checkDate);
-  if (!dateSet.has(checkStr)) {
-    checkDate.setDate(checkDate.getDate() - 1);
-  }
-
-  let currentStreak = 0;
-  while (true) {
-    const key = getLocalDateString(checkDate);
-    if (dateSet.has(key)) {
-      currentStreak += 1;
-      checkDate.setDate(checkDate.getDate() - 1);
-    } else {
-      break;
-    }
-  }
+  // 2. Current streak (going backward from today, or yesterday if today isn't done yet)
+  const currentStreak = calculateStreakFromLogs(uniqueSorted);
 
   return {
     currentStreak,

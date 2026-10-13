@@ -1,4 +1,5 @@
-import { getDb } from '../../../services/database/db';
+import { getDb, getTrackingStartKey } from '../../../services/database/db';
+import { settingsService } from '../../../services/settingsService';
 import { waterService } from './waterService';
 import {
   MonthlyHistory,
@@ -52,6 +53,7 @@ export const historyService = {
       routineCompletedMap[r.date] = (routineCompletedMap[r.date] || 0) + 1;
     });
 
+    const { hydrationGoal } = await settingsService.getSettings();
     const daysInMonth = new Date(year, month, 0).getDate();
     const days: Record<string, DayHistorySummary> = {};
     const todayKey = getLocalDateString();
@@ -79,7 +81,7 @@ export const historyService = {
         completedSteps,
         totalSteps: totalConfiguredSteps,
         hydration,
-        hydrationGoal: 8,
+        hydrationGoal,
         productsUsedCount,
         isToday: dateKey === todayKey,
       };
@@ -107,7 +109,10 @@ export const historyService = {
     const completedDates = allCompletedRows.map((r) => r.date);
     const streaks = calculateStreaks(completedDates);
 
-    const dayEntries = Object.values(history.days).filter((d) => !isFutureDateKey(d.date));
+    const startKey = await getTrackingStartKey();
+    const dayEntries = Object.values(history.days).filter(
+      (d) => !isFutureDateKey(d.date) && d.date >= startKey
+    );
     const trackedDays = dayEntries.length;
     const completedDays = dayEntries.filter((d) => d.status === 'complete').length;
 
@@ -163,9 +168,10 @@ export const historyService = {
         id: r.id,
         title: r.title,
         completed: Boolean(r.completed),
-        productId: r.product_id ?? undefined,
-        productName: r.prod_name ? `${r.prod_brand ? r.prod_brand + ' ' : ''}${r.prod_name}` : undefined,
-        isProductArchived: Boolean(r.prod_archived),
+        // Archived products are no longer logged as used when the step is checked
+        productId: r.product_id && !r.prod_archived ? r.product_id : undefined,
+        productName: r.prod_name && !r.prod_archived ? `${r.prod_brand ? r.prod_brand + ' ' : ''}${r.prod_name}` : undefined,
+        isProductArchived: Boolean(r.product_id && r.prod_archived),
       };
 
       if (r.routine_type === 'morning') {
@@ -177,6 +183,7 @@ export const historyService = {
 
     // 2. Hydration for dateKey
     const hydration = await waterService.getWaterForDate(dateKey);
+    const { hydrationGoal } = await settingsService.getSettings();
 
     // 3. Products used on dateKey
     const usageRows = await db.getAllAsync<{
@@ -224,7 +231,7 @@ export const historyService = {
       morningSteps,
       eveningSteps,
       hydration,
-      hydrationGoal: 8,
+      hydrationGoal,
       productsUsed,
     };
   },

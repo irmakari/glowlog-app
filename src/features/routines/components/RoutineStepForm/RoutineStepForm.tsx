@@ -6,22 +6,25 @@ import { ProductSelector } from '../ProductSelector';
 import { RoutineStepFormProps } from './RoutineStepForm.types';
 import { styles } from './RoutineStepForm.styles';
 import { Colors } from '../../../../constants/colors';
+import { useTranslation } from '../../../../hooks/useTranslation';
 
 export const RoutineStepForm: React.FC<RoutineStepFormProps> = ({
   initialValues,
   onSubmit,
   onCancel,
 }) => {
+  const { t } = useTranslation();
   const [title, setTitle] = useState(initialValues?.title || '');
+  // `product` is only set for active products, so an archived link starts as "none"
   const [productId, setProductId] = useState<string | undefined>(
-    initialValues?.productId
+    initialValues?.product?.id
   );
   const [error, setError] = useState<string | undefined>(undefined);
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
     if (!title.trim()) {
-      setError('Step name is required');
+      setError(t('routineEditor.stepNameRequired'));
       return;
     }
     setError(undefined);
@@ -30,7 +33,7 @@ export const RoutineStepForm: React.FC<RoutineStepFormProps> = ({
       setSubmitting(true);
       await onSubmit(title.trim(), productId);
     } catch (err: any) {
-      Alert.alert('Error', err?.message || 'Failed to save step');
+      Alert.alert(t('common.error'), err?.message || t('routineEditor.saveStepFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -38,10 +41,10 @@ export const RoutineStepForm: React.FC<RoutineStepFormProps> = ({
 
   return (
     <View style={styles.container}>
-      <FormField label="Step Name" required error={error}>
+      <FormField label={t('routineEditor.stepName')} required error={error}>
         <TextInput
           style={[styles.textInput, error ? styles.textInputError : null]}
-          placeholder="e.g. Cleanser, Vitamin C, SPF..."
+          placeholder={t('routineEditor.stepNamePlaceholder')}
           placeholderTextColor={Colors.textMuted}
           value={title}
           onChangeText={(val) => {
@@ -51,7 +54,7 @@ export const RoutineStepForm: React.FC<RoutineStepFormProps> = ({
         />
       </FormField>
 
-      <FormField label="Linked Product (Optional)">
+      <FormField label={t('routineEditor.linkedProduct')}>
         <ProductSelector
           selectedProductId={productId}
           onSelectProduct={setProductId}
@@ -60,13 +63,13 @@ export const RoutineStepForm: React.FC<RoutineStepFormProps> = ({
 
       <View style={styles.buttonRow}>
         <PillButton
-          title="Cancel"
+          title={t('common.cancel')}
           onPress={onCancel}
           variant="ghost"
           size="md"
         />
         <PillButton
-          title={initialValues ? 'Update Step' : 'Add Step'}
+          title={initialValues ? t('routineEditor.updateStep') : t('routineEditor.addStep')}
           onPress={handleSubmit}
           variant="primary"
           size="md"

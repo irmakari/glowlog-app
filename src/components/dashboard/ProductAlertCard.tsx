@@ -7,6 +7,7 @@ import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing } from '../../constants/spacing';
 import { useTheme } from '../../context/ThemeContext';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface ProductAlertCardProps {
   title: string;
@@ -22,6 +23,7 @@ export const ProductAlertCard: React.FC<ProductAlertCardProps> = ({
   onAction,
 }) => {
   const { colors, isDark } = useTheme();
+  const { t } = useTranslation();
   const buttonBg = isDark ? 'rgba(255, 255, 255, 0.12)' : Colors.white;
 
   return (
@@ -34,7 +36,7 @@ export const ProductAlertCard: React.FC<ProductAlertCardProps> = ({
           <Text style={[Typography.h3, { color: colors.text }]}>{title}</Text>
         </View>
         <View style={[styles.badge, { backgroundColor: buttonBg }]}>
-          <Text style={[styles.badgeText, { color: colors.text }]}>Notice</Text>
+          <Text style={[styles.badgeText, { color: colors.text }]}>{t('today.notice')}</Text>
         </View>
       </View>
 

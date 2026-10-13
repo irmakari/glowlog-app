@@ -54,6 +54,25 @@ export function calculateGlowScore(input: GlowScoreInput): GlowScoreBreakdown {
 }
 
 /**
+ * Glow Score for a single logged day (history views).
+ * The streak part only reflects whether that day itself was active, so an empty day scores 0.
+ */
+export function calculateDayGlowScore(
+  completedStepsCount: number,
+  totalStepsCount: number,
+  currentHydration: number,
+  hydrationGoal: number
+): number {
+  return calculateGlowScore({
+    completedStepsCount,
+    totalStepsCount,
+    currentHydration,
+    hydrationGoal,
+    streakDays: completedStepsCount > 0 ? 1 : 0,
+  }).score;
+}
+
+/**
  * Helper to generate time-based greeting string and vector icon
  */
 export function getTimeBasedGreeting(date: Date = new Date()): {

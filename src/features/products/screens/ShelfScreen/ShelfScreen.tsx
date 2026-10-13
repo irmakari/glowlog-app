@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, TextInput, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, TextInput, ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '../../../../components/ui/Screen';
@@ -8,8 +8,7 @@ import { ProductCard } from '../../components/ProductCard';
 import { EmptyShelfState } from '../../components/EmptyShelfState';
 import { CategoryFilterChips } from '../../components/CategoryFilterChips';
 import { useProducts } from '../../hooks/useProducts';
-import { productService } from '../../services/productService';
-import { PRODUCT_CATEGORIES } from '../../../../constants/productCategories';
+import { PRODUCT_CATEGORIES, getCategoryFilterId } from '../../../../constants/productCategories';
 import { styles } from './ShelfScreen.styles';
 import { Colors } from '../../../../constants/colors';
 import { Spacing } from '../../../../constants/spacing';
@@ -19,11 +18,21 @@ import { useTranslation } from '../../../../hooks/useTranslation';
 
 export const ShelfScreen: React.FC = () => {
   const router = useRouter();
-  const { colors, isDark } = useTheme();
-  const { t, language } = useTranslation();
-  const { products, loading, refreshProducts } = useProducts();
+  const { colors } = useTheme();
+  const { t } = useTranslation();
+  const { products: activeProducts, archivedProducts, loading } = useProducts();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [showArchived, setShowArchived] = useState<boolean>(false);
+  // Leave the archive view automatically once its last product is restored or deleted
+  const isArchiveView = showArchived && archivedProducts.length > 0;
+  const products = isArchiveView ? archivedProducts : activeProducts;
+
+  const handleToggleArchive = () => {
+    setShowArchived((prev) => !prev);
+    setSelectedCategory('all');
+    setSearchQuery('');
+  };
 
   const handleAddProduct = () => {
     router.push('/product/add');
@@ -33,21 +42,16 @@ export const ShelfScreen: React.FC = () => {
     router.push(`/product/${id}`);
   };
 
-  const handleSeedDemo = async () => {
-    await productService.seedDemoProducts();
-    await refreshProducts();
-  };
-
   // Build category filter list dynamically based on active products
   const categoryFilterItems = useMemo(() => {
     const counts: Record<string, number> = {};
     products.forEach((p) => {
-      const cat = p.category.toLowerCase();
+      const cat = getCategoryFilterId(p.category);
       counts[cat] = (counts[cat] || 0) + 1;
     });
 
     const items = [
-      { id: 'all', label: language === 'tr' ? 'Tüm Ürünler' : 'All Products', count: products.length },
+      { id: 'all', label: t('shelf.allProducts'), count: products.length },
     ];
 
     PRODUCT_CATEGORIES.forEach((catOpt) => {
@@ -55,20 +59,20 @@ export const ShelfScreen: React.FC = () => {
       if (cnt > 0) {
         items.push({
           id: catOpt.id,
-          label: catOpt.label,
+          label: t(`products.${catOpt.id}`),
           count: cnt,
         });
       }
     });
 
     return items;
-  }, [products, language]);
+  }, [products, t]);
 
   // Filter products based on selected category & search query
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
       const matchesCategory =
-        selectedCategory === 'all' || p.category.toLowerCase() === selectedCategory;
+        selectedCategory === 'all' || getCategoryFilterId(p.category) === selectedCategory;
       const q = searchQuery.toLowerCase().trim();
       const matchesSearch =
         !q ||
@@ -86,20 +90,28 @@ export const ShelfScreen: React.FC = () => {
         <View style={styles.headerTextCol}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <Text style={[styles.title, { color: colors.text }]}>
-              {language === 'tr' ? 'Rafım' : 'My Shelf'}
+              {isArchiveView ? t('shelf.archiveTitle') : t('shelf.title')}
             </Text>
-            <Ionicons name="sparkles" size={18} color="#E59935" style={{ marginLeft: 6 }} />
           </View>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            {language === 'tr' ? 'Bakım rutininizdeki tüm ürünler.' : 'Everything currently in your routine.'}
+            {isArchiveView ? t('shelf.archiveSubtitle') : t('shelf.subtitle')}
           </Text>
         </View>
-        <IconButton
-          icon={<Ionicons name="add" size={22} color={colors.text} />}
-          onPress={handleAddProduct}
-          backgroundColor={colors.white}
-          size={38}
-        />
+        {isArchiveView ? (
+          <IconButton
+            icon={<Ionicons name="close" size={20} color={colors.text} />}
+            onPress={handleToggleArchive}
+            backgroundColor={colors.white}
+            size={38}
+          />
+        ) : (
+          <IconButton
+            icon={<Ionicons name="add" size={22} color={colors.text} />}
+            onPress={handleAddProduct}
+            backgroundColor={colors.white}
+            size={38}
+          />
+        )}
       </View>
 
       {/* Search Bar */}
@@ -116,7 +128,7 @@ export const ShelfScreen: React.FC = () => {
           <Ionicons name="search-outline" size={18} color={colors.textSecondary} style={{ marginRight: 8 }} />
           <TextInput
             style={[localStyles.searchInput, { color: colors.text }]}
-            placeholder={language === 'tr' ? 'Ürün veya marka ara...' : 'Search products or brands...'}
+            placeholder={t('shelf.searchPlaceholder')}
             placeholderTextColor={colors.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -153,25 +165,62 @@ export const ShelfScreen: React.FC = () => {
         /* Empty State */
         <EmptyShelfState
           onAddProduct={handleAddProduct}
-          onSeedDemo={handleSeedDemo}
         />
       ) : (
         /* Clean Filtered Product Cards List */
         <View style={styles.productList}>
-          {filteredProducts.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              onPress={handleProductPress}
-            />
-          ))}
+          {filteredProducts.length === 0 ? (
+            <Text style={[localStyles.noResultsText, { color: colors.textSecondary }]}>
+              {t('shelf.noResults')}
+            </Text>
+          ) : (
+            filteredProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onPress={handleProductPress}
+              />
+            ))
+          )}
         </View>
+      )}
+
+      {/* Archive entry point */}
+      {!loading && !isArchiveView && archivedProducts.length > 0 && (
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={handleToggleArchive}
+          style={localStyles.archiveLink}
+          accessibilityRole="button"
+        >
+          <Ionicons name="archive-outline" size={16} color={colors.textSecondary} />
+          <Text style={[localStyles.archiveLinkText, { color: colors.textSecondary }]}>
+            {t('shelf.viewArchived', { count: archivedProducts.length })}
+          </Text>
+        </TouchableOpacity>
       )}
     </Screen>
   );
 };
 
 const localStyles = StyleSheet.create({
+  noResultsText: {
+    ...Typography.body,
+    fontSize: 14,
+    textAlign: 'center',
+    paddingVertical: Spacing.xl,
+  },
+  archiveLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: Spacing.md,
+  },
+  archiveLinkText: {
+    ...Typography.bodyBold,
+    fontSize: 13,
+  },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -192,4 +241,3 @@ const localStyles = StyleSheet.create({
     padding: 0,
   },
 });
-
